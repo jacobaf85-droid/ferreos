@@ -2762,6 +2762,19 @@ function initReportes(){
 
 
 function setupApp(){
+  // Cargar catálogo desde localStorage
+  try{const _p=localStorage.getItem('ferreos_prods');if(_p)PRODS=JSON.parse(_p);}catch(e){}
+  // Cargar stock en INV_SUCS desde localStorage
+  try{
+    const _inv=JSON.parse(localStorage.getItem('ferreos_inv_stock')||'{}');
+    Object.keys(_inv).forEach(function(sucId){
+      if(INV_SUCS[sucId]){
+        Object.keys(_inv[sucId]).forEach(function(prodId){
+          INV_SUCS[sucId].stock[prodId]={total:_inv[sucId][prodId]||0,lotes:[]};
+        });
+      }
+    });
+  }catch(e){}
   document.getElementById('sb-avatar').textContent  = SESION.avatar;
   document.getElementById('sb-nombre').textContent  = SESION.nombre;
   document.getElementById('sb-rol').textContent     = labelRol(SESION.rol);
@@ -4694,8 +4707,8 @@ function mostrarFactErr(msg){
    STOCK_MIN y PRODS
 ══════════════════════════════════════ */
 // STOCK_MIN defined in caja module
-// Catálogo — carga desde localStorage (importado vía script de sucursal)
-let PRODS=(function(){try{const r=localStorage.getItem('ferreos_prods');return r?JSON.parse(r):[];}catch(e){return[];}})();
+// Catálogo — se carga en setupApp desde localStorage
+let PRODS=[];
 /* ══════════════════════════════════════
    INV_SUCS v3 — Estructura con Lotes PEPS
    stock[prodId] = { total: N, lotes: [{idLote, cant, fCad}] }
@@ -4760,20 +4773,6 @@ const INV_SUCS = {
   cedis_tuxtla:{n:'CEDIS Tuxtla',   stock:{}},
   cedis_comitan:{n:'CEDIS Comitán', stock:{}},
 };
-// Cargar stock desde localStorage al iniciar
-(function(){
-  try{
-    const invStock=JSON.parse(localStorage.getItem('ferreos_inv_stock')||'{}');
-    Object.keys(invStock).forEach(function(sucId){
-      if(INV_SUCS[sucId]){
-        const sucStock=invStock[sucId];
-        Object.keys(sucStock).forEach(function(prodId){
-          INV_SUCS[sucId].stock[prodId]={total:sucStock[prodId]||0,lotes:[]};
-        });
-      }
-    });
-  }catch(e){}
-})();
 
 const TRP_STATUS_LABEL={pendiente:'Pendiente',aprobado:'Aprobado',en_transito:'En tránsito',recibido:'Recibido',cancelado:'Cancelado'};
 const TRP_STATUS_CLASS={pendiente:'pend',aprobado:'apro',en_transito:'tran',recibido:'rec',cancelado:'can'};
