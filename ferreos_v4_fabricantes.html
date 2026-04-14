@@ -1952,7 +1952,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
    URL: https://xqezbplfwubddwsbobhi.supabase.co
 ══════════════════════════════════════ */
 const SUPABASE_URL='https://xqezbplfwubddwsbobhi.supabase.co';
-const SUPABASE_KEY='sb_publishable_0FZZoFyKGpFiuF_f5f-lYQ_xlzGuIZR';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxZXpicGxmd3ViZGR3c2JvYmhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjE1MjUsImV4cCI6MjA5MTYzNzUyNX0.5lUXAPQsGMSsAGOw1UPfzmdLHmBTq-6KGNOg355e1Lc';
 let _sbReady=false;
 let _sbClient=null;
 
@@ -2761,26 +2761,78 @@ function initReportes(){
 }
 
 
-function setupApp(){
-  // Cargar catálogo desde localStorage
-  try{const _p=localStorage.getItem('ferreos_prods');if(_p)PRODS=JSON.parse(_p);}catch(e){}
-  // Cargar stock en INV_SUCS desde localStorage
+
+const SB_URL='https://xqezbplfwubddwsbobhi.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxZXpicGxmd3ViZGR3c2JvYmhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjE1MjUsImV4cCI6MjA5MTYzNzUyNX0.5lUXAPQsGMSsAGOw1UPfzmdLHmBTq-6KGNOg355e1Lc';
+
+async function sbFetch(tabla, params=''){
   try{
-    const _inv=JSON.parse(localStorage.getItem('ferreos_inv_stock')||'{}');
-    Object.keys(_inv).forEach(function(sucId){
+    const r=await fetch(SB_URL+'/rest/v1/'+tabla+'?'+params,{
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}
+    });
+    if(!r.ok)return null;
+    return await r.json();
+  }catch(e){return null;}
+}
+
+async function sbUpsert(tabla, data){
+  try{
+    await fetch(SB_URL+'/rest/v1/'+tabla,{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify(Array.isArray(data)?data:[data])
+    });
+  }catch(e){}
+}
+
+async function cargarDatosIniciales(){
+  // 1. Cargar productos desde Supabase
+  const prods = await sbFetch('productos','select=*&limit=5000');
+  if(prods&&prods.length>0){
+    PRODS=prods;
+    localStorage.setItem('ferreos_prods',JSON.stringify(prods));
+  } else {
+    // fallback localStorage
+    try{const _p=localStorage.getItem('ferreos_prods');if(_p)PRODS=JSON.parse(_p);}catch(e){}
+  }
+
+  // 2. Cargar inventario desde Supabase
+  const inv = await sbFetch('inventario','select=*&limit=50000');
+  if(inv&&inv.length>0){
+    const invStock={};
+    inv.forEach(function(row){
+      if(!invStock[row.suc_id])invStock[row.suc_id]={};
+      invStock[row.suc_id][row.prod_id]=row.total;
+    });
+    localStorage.setItem('ferreos_inv_stock',JSON.stringify(invStock));
+    Object.keys(invStock).forEach(function(sucId){
       if(INV_SUCS[sucId]){
-        Object.keys(_inv[sucId]).forEach(function(prodId){
-          INV_SUCS[sucId].stock[prodId]={total:_inv[sucId][prodId]||0,lotes:[]};
+        Object.keys(invStock[sucId]).forEach(function(prodId){
+          if(!INV_SUCS[sucId].stock[prodId])INV_SUCS[sucId].stock[prodId]={total:0,lotes:[]};
+          INV_SUCS[sucId].stock[prodId].total=invStock[sucId][prodId]||0;
         });
       }
     });
-  }catch(e){}
-  document.getElementById('sb-avatar').textContent  = SESION.avatar;
-  document.getElementById('sb-nombre').textContent  = SESION.nombre;
-  document.getElementById('sb-rol').textContent     = labelRol(SESION.rol);
-  document.getElementById('sb-suc-label').textContent = SESION.suc_n;
-  resetCostosVisibilidad();
-  buildNav();
+  } else {
+    try{
+      const _inv=JSON.parse(localStorage.getItem('ferreos_inv_stock')||'{}');
+      Object.keys(_inv).forEach(function(sucId){
+        if(INV_SUCS[sucId]){
+          Object.keys(_inv[sucId]).forEach(function(prodId){
+            INV_SUCS[sucId].stock[prodId]={total:_inv[sucId][prodId]||0,lotes:[]};
+          });
+        }
+      });
+    }catch(e){}
+  }
+
+  // 3. Cargar clientes
+  const clis = await sbFetch('clientes','select=*&limit=10000');
+  if(clis&&clis.length>0){
+    localStorage.setItem('ferreos_clientes',JSON.stringify(clis));
+  }
+
+  // Renderizar después de cargar
   recuperarInventario();
   recuperarTraspasos();
   const primeras={cajero:'caja',cedis:'recepcion',admin:'dashboard',dueno:'dashboard'};
@@ -2791,7 +2843,19 @@ function setupApp(){
     if(paginaInicial==='dashboard')initDashboard();
     initTraspasos();initRecepcion();initCedis();initInventario();initReportes();
     renderConfig();
-  },50);
+  },100);
+}
+
+function setupApp(){
+  // Cargar datos desde Supabase (con fallback a localStorage)
+  cargarDatosIniciales();
+  document.getElementById('sb-avatar').textContent  = SESION.avatar;
+  document.getElementById('sb-nombre').textContent  = SESION.nombre;
+  document.getElementById('sb-rol').textContent     = labelRol(SESION.rol);
+  document.getElementById('sb-suc-label').textContent = SESION.suc_n;
+  resetCostosVisibilidad();
+  buildNav();
+  // inicialización manejada por cargarDatosIniciales()
 }
 function labelRol(r){return {cajero:'Cajera',cedis:'Operador CEDIS',admin:'Administradora',dueno:'Dueño'}[r]||r;}
 function tieneAcceso(m){return ACCESOS[m]?.[ROLES_IDX[SESION.rol]]||false;}
@@ -4708,7 +4772,7 @@ function mostrarFactErr(msg){
 ══════════════════════════════════════ */
 // STOCK_MIN defined in caja module
 // Catálogo — se carga en setupApp desde localStorage
-let PRODS=[];
+let PRODS=(function(){try{var r=localStorage.getItem('ferreos_prods');return r?JSON.parse(r):[]}catch(e){return[]}})();
 /* ══════════════════════════════════════
    INV_SUCS v3 — Estructura con Lotes PEPS
    stock[prodId] = { total: N, lotes: [{idLote, cant, fCad}] }
