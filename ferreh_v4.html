@@ -5698,13 +5698,30 @@ function iniciarRealtime(){
         msg('📱 Dispositivo enrolado: '+(e?e.nombre:'emp #'+row.emp_id));
         if(ciTab==='dispositivos')renderCIDispositivos();
       })
-      // ── CI Realtime: check-ins desde celular ──
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'rh_checkin_logs'},function(payload){
+      // ── CI Realtime: check-ins desde celular (INSERT + UPDATE + DELETE) ──
+      .on('postgres_changes',{event:'*',schema:'public',table:'rh_checkin_logs'},function(payload){
+        var evType=payload.eventType; // 'INSERT' | 'UPDATE' | 'DELETE'
+        if(evType==='DELETE'){
+          var oldId=payload.old&&payload.old.id;
+          if(oldId){ciLogs=ciLogs.filter(function(l){return l.id!==oldId;});ciSave();}
+          if(ciTab==='log')renderCILog();
+          return;
+        }
         if(!payload.new)return;
         var row=payload.new;
+        if(evType==='UPDATE'){
+          // RH editó un check-in existente — actualizar en memoria
+          var idx=ciLogs.findIndex(function(l){return l.id===row.id;});
+          var updated={id:row.id,emp_id:row.emp_id,emp_nombre:row.emp_nombre||'',suc_id:row.suc_id,fecha:row.fecha,hora:row.hora,lat:row.lat,lng:row.lng,dist:row.dist,estado:row.estado,ua:row.ua||'',selfie_url:row.selfie_url||null};
+          if(idx>=0){ciLogs[idx]=updated;}else{ciLogs.push(updated);}
+          ciSave();
+          if(ciTab==='log')renderCILog();
+          if(ciTab==='qr')renderCIQR();
+          return;
+        }
+        // INSERT — viene de celular remoto
         var exists=ciLogs.find(function(l){return l.id===row.id;});
         if(exists)return; // ya lo procesamos nosotros mismos
-        // Viene de un celular remoto — procesar puente a nómina
         ciLogs.push({id:row.id,emp_id:row.emp_id,emp_nombre:row.emp_nombre||'',suc_id:row.suc_id,fecha:row.fecha,hora:row.hora,lat:row.lat,lng:row.lng,dist:row.dist,estado:row.estado,ua:row.ua||'',selfie_url:row.selfie_url||null});
         nCiLog=Math.max(nCiLog,(row.id||0)+1);
         ciSave();
@@ -5723,7 +5740,7 @@ function iniciarRealtime(){
         if(ciTab==='log')renderCILog();
         if(ciTab==='qr')renderCIQR();
         var eCI=emp.find(function(x){return x.id===row.emp_id;});
-        if(row.estado==='ok')msg('✓ Check-in registrado: '+(eCI?eCI.nombre:'emp #'+row.emp_id)+' — '+row.hora);
+        if(row.estado==='ok')msg('\u2713 Check-in registrado: '+(eCI?eCI.nombre:'emp #'+row.emp_id)+' \u2014 '+row.hora);
       })
       .subscribe(function(status){
         var btn=document.getElementById('syncBtn');
