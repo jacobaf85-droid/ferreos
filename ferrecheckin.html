@@ -551,7 +551,7 @@ async function enviarCheckin(lat,lng){
           var fDate=hoyStr.replace(/-/g,'');
           var fname="checkin/"+fDate+"/suc"+sucId+"/"+Date.now()+"_emp"+empId+".jpg";
           var upRes=await _sb.storage.from('checkin-selfies').upload(fname,blob,{contentType:'image/jpeg',upsert:true});
-          if(!upRes.error){var pub=_sb.storage.from('checkin-selfies').getPublicUrl(fname);selfieUrl=pub.data.publicUrl||null;}
+          if(!upRes.error){var {data:signedData,error:signErr}=await _sb.storage.from('checkin-selfies').createSignedUrl(fname,86400);selfieUrl=(!signErr&&signedData)?signedData.signedUrl:null;}
         }catch(ex){}
       }
       // GPS obligatorio — sin ubicacion no se puede marcar
