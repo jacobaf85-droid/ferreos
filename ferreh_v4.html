@@ -878,7 +878,7 @@ function showLoginErr(t){
   var el=document.getElementById('lgErr');el.textContent=t;el.style.display='block';
   setTimeout(function(){el.style.display='none';},4000);
 }
-function doLogin(nombre,rol,sbUser){
+async function doLogin(nombre,rol,sbUser){
   currentUser={nombre:nombre,rol:rol,sbUser:sbUser};
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appRoot').style.display='block';
@@ -889,7 +889,8 @@ function doLogin(nombre,rol,sbUser){
   aplicarPermisosUsuarios();
   mostrarResetPanel();
   renderHome();
-  if(sb)syncFromCloud();
+  if(sb)await syncFromCloud();
+  renderHome();
 }
 function aplicarPermisosRol(rol){
   // Solo dueño y admin pueden ver/editar sucursales y configuración
