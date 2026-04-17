@@ -512,7 +512,7 @@ function iniciarEnvio(){
       var msgs={1:"Bloqueaste el acceso a tu ubicacion. Ve a Configuracion del navegador y permite el GPS para este sitio.",2:"Tu GPS no pudo obtener una ubicacion. Sal al exterior o desactiva el WiFi e intenta de nuevo.",3:"El GPS tardó demasiado. Intenta de nuevo en un lugar con mejor señal."};
       mostrarResultado("err","&#x1F4CD;","Ubicacion no disponible",msgs[err.code]||"No se pudo obtener tu ubicacion. Activa el GPS e intenta de nuevo.",true);
     },
-    {timeout:10000,maximumAge:30000,enableHighAccuracy:true}
+    {timeout:12000,maximumAge:30000,enableHighAccuracy:true}
   );
 }
 
@@ -572,7 +572,7 @@ async function enviarCheckin(lat,lng){
           var dLat=(lat-sucRow.lat)*r,dLng=(lng-sucRow.lng)*r;
           var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(sucRow.lat*r)*Math.cos(lat*r)*Math.sin(dLng/2)*Math.sin(dLng/2);
           dist=Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
-          estadoGPS=dist<=(sucRow.radio||10)?'ok':'fuera_rango';
+          estadoGPS=dist<=(sucRow.radio||30)?'ok':'fuera_rango';
         }
       }
       var hora=(function(){var d=new Date();return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);})();
