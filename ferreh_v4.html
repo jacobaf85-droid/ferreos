@@ -887,7 +887,7 @@ async function doLogin(nombre,rol,sbUser){
   // Mostrar/ocultar elementos según rol
   aplicarPermisosRol(rol);
   aplicarPermisosUsuarios();
-  mostrarResetPanel();
+
   renderHome();
   if(sb)await syncFromCloud();
   renderHome();
