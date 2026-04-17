@@ -203,7 +203,8 @@ function renderKiosk(){
   window.addEventListener("message",function(ev){
     if(!ev.data||ev.data.type!=="ferrecheckin_result")return;
     var _ko=ev.origin||'';
-    var _kok=(_ko==='null')||(_ko===window.location.origin)||(_ko.indexOf('netlify.app')!==-1)||(_ko.indexOf('localhost')!==-1)||(_ko.indexOf('127.0.0.1')!==-1)||(_ko.indexOf('ferrepinturas')!==-1);
+    var _ciWhitelist=['https://rrhhftpops.netlify.app','http://localhost:8080','http://localhost:3000','http://127.0.0.1:8080'];
+    var _kok=(_ko==='null')||(_ko===window.location.origin)||(_ciWhitelist.indexOf(_ko)!==-1);
     if(!_kok)return;
     var r=ev.data.result;
     if(r&&r.ok) addKioskEntry(r.nombre||"Empleado", r.selfie_url||null);

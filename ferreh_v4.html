@@ -3217,21 +3217,11 @@ function registrarLogCI(payload,estado,dist,empNombre){
 
 // ── Handle postMessage from ferrecheckin.html ──
 // Dominio permitido para postMessage — actualizar si cambia el dominio
-var ALLOWED_ORIGINS=['https://rrhhftpops.netlify.app','http://localhost:8080','http://localhost:3000','http://127.0.0.1:8080'];
+var ORIGIN_WHITELIST=['https://rrhhftpops.netlify.app','http://localhost:8080','http://localhost:3000','http://127.0.0.1:8080'];
 function originOK(origin){
   if(!origin||origin==='null')return true; // file:// or same-origin iframe
   if(origin===window.location.origin)return true;
-  if(ALLOWED_ORIGINS.indexOf(origin)!==-1)return true;
-  // BUG #10 FIX: Verificar dominios por hostname exacto — evitar substring matching permisivo
-  // (antes: indexOf permitía evil-netlify.app o ferrepinturas.evil.com)
-  try{
-    var _u=new URL(origin);
-    var _h=_u.hostname;
-    if(_h==='localhost'||_h==='127.0.0.1')return true;
-    if(_h.endsWith('.netlify.app'))return true;
-    if(_h==='ferrepinturas.mx'||_h.endsWith('.ferrepinturas.mx'))return true;
-  }catch(e2){}
-  return false;
+  return ORIGIN_WHITELIST.indexOf(origin)!==-1;
 }
 
 window.addEventListener('message',function(ev){
