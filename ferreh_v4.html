@@ -921,8 +921,8 @@ async function syncFromCloud(){
     var _f90=fechaLocalCST(new Date(Date.now()-90*864e5));
     var _f2=fechaLocalCST(new Date(Date.now()-2*864e5));
     var[r1,r2,r3,r4,r5,r6,r7,r8,r9]=await Promise.all([
-      sb.from('rh_empleados').select('*').catch(function(e){console.error('syncFromCloud r1 error:',e);return {data:[]};}),
-      sb.from('rh_sucursales').select('*').catch(function(e){console.error('syncFromCloud r2 error:',e);return {data:[]};}),
+      Promise.resolve(sb.from('rh_empleados').select('*')).catch(function(e){console.error('syncFromCloud r1 error:',e);return {data:[]};}),
+      Promise.resolve(sb.from('rh_sucursales').select('*')).catch(function(e){console.error('syncFromCloud r2 error:',e);return {data:[]};}),
       sb.from('rh_asistencia').select('*').gte('fecha',_f90).catch(function(){return {data:[]};}),
       sb.from('rh_permisos').select('*').catch(function(){return {data:[]};}),
       sb.from('rh_prestamos').select('*').catch(function(){return {data:[]};}),
