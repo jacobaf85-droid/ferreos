@@ -918,7 +918,7 @@ async function syncFromCloud(){
     var[r1,r2,r3,r4,r5,r6,r7,r8,r9]=await Promise.all([
       sb.from('rh_empleados').select('*'),
       sb.from('rh_sucursales').select('*'),
-      sb.from('rh_incidencias').select('*').gte('fecha',new Date(Date.now()-90*864e5).toISOString().split('T')[0]).catch(function(){return {data:[]};}),
+      sb.from('rh_asistencia').select('*').gte('fecha',new Date(Date.now()-90*864e5).toISOString().split('T')[0]).catch(function(){return {data:[]};}),
       sb.from('rh_permisos').select('*').catch(function(){return {data:[]};}),
       sb.from('rh_prestamos').select('*').catch(function(){return {data:[]};}),
       sb.from('rh_contratos').select('*').catch(function(){return {data:[]};}),
