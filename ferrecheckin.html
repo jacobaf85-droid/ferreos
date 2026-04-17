@@ -574,12 +574,15 @@ async function enviarCheckin(lat,lng){
       // Obtener nombre ANTES del insert para incluirlo en el log (kiosk realtime lo necesita)
       var {data:empRow}=await _sb.from('rh_empleados').select('nombre').eq('id',empId).single();
       var nombre=empRow?empRow.nombre:"Empleado";
+      if(estadoGPS==='fuera_rango'){
+        mostrarResultado("err","&#x1F4CD;","Fuera de rango","Estas a "+dist+" metros de la sucursal. Debes estar a menos de 30 metros para registrar tu llegada.",true);return;
+      }
       var pb4=document.getElementById("pb");if(pb4)pb4.style.width="90%";
       // Insertar log con emp_nombre para kiosk realtime
       // hora y fecha NO se envían — Supabase las asigna con el trigger server_timestamp
       var {error:logErr}=await _sb.from('rh_checkin_logs').insert({emp_id:empId,emp_nombre:nombre,suc_id:sucId,lat:lat,lng:lng,dist:dist,estado:estadoGPS,ua:ua,selfie_url:selfieUrl});
       if(logErr){
-        // BUG #3 FIX: Manejar violación de constraint único (doble check-in por race condition)
+        // Manejar violación de constraint único (doble check-in por race condition)
         if(logErr.code==='23505'){
           var {data:dup2}=await _sb.from('rh_checkin_logs').select('hora').eq('emp_id',empId).eq('fecha',hoyStr).eq('estado','ok').maybeSingle();
           mostrarResultado("warn","&#x2714;","Ya marcaste","Ya registraste tu asistencia hoy"+(dup2?' a las '+dup2.hora:'')+". ¡Buen dia!",false);return;
@@ -588,9 +591,6 @@ async function enviarCheckin(lat,lng){
       }
       var pb5=document.getElementById("pb");if(pb5)pb5.style.width="100%";
       var fotoHtml=selfieUrl?"<img src='"+selfieUrl+"' style='width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;border:2px solid #86efac'>": "";
-      if(estadoGPS==='fuera_rango'){
-        mostrarResultado("err","&#x1F4CD;","Fuera de rango","Estas a "+dist+" metros de la sucursal. Debes estar a menos de 30 metros para registrar tu llegada.",true);return;
-      }
       mostrarResultado("ok","","Llegada registrada",fotoHtml+"Buen dia, <strong>"+nombre+"</strong>!<br>"+hora,false);
       return;
     }catch(ex){
