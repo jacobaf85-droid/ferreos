@@ -279,48 +279,72 @@ function renderEnrol(){
 
 async function confirmarEnrol(){
   var btn=document.getElementById("enrolBtn");
+  var statusDiv=document.getElementById("enrolStatus");
+  function setEnrolErr(msg){
+    statusDiv.innerHTML="<div style='margin-top:14px;padding:12px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;font-size:14px;color:#991b1b;text-align:center'>"+msg+"</div>";
+    btn.disabled=false;
+    btn.innerHTML="&#x1F504; Intentar de nuevo";
+  }
   btn.disabled=true;
   btn.innerHTML="<span class='spin'></span> Activando...";
+  statusDiv.innerHTML="";
   var t=genToken();
-  setToken(t);
   var ua=navigator.userAgent.substring(0,80);
-  var payload={type:"ferrecheckin_enrol",enrol_token:enrol,disp_token:t,ua:ua};
-  var exito=false;
+  var pn=empN?empN.split(" ")[0]:"";
+
   // Flujo 1: Supabase directo (celular remoto)
   if(_sb){
     try{
-      // Verificar token en rh_enrol_tokens
-      var {data:tkRow,error:tkErr}=await _sb.from('rh_enrol_tokens').select('emp_id,usado,expira').eq('token',enrol).single();
-      if(!tkErr&&tkRow&&!tkRow.usado&&new Date(tkRow.expira)>new Date()){
-        // Registrar dispositivo directamente
-        var {error:dispErr}=await _sb.from('rh_dispositivos').upsert({emp_id:tkRow.emp_id,token:t,ua:ua,enrolled_at:new Date().toISOString(),activo:true,enrol_token:enrol},{onConflict:'emp_id'});
-        if(!dispErr){
-          // Marcar token como usado
-          await _sb.from('rh_enrol_tokens').update({usado:true}).eq('token',enrol);
-          exito=true;
-        }
-      }
-    }catch(ex){}
-  }
-  // Flujo 2: postMessage fallback (kiosk — misma PC)
-  if(!exito){
-    localStorage.setItem("ferre_enrol_p",JSON.stringify(payload));
-    postToParent(payload);
-    exito=true; // optimistic
-  }
-  var pn=empN?empN.split(" ")[0]:"";
-  if(exito){
-    setTimeout(function(){
+      // Paso 1 — Verificar token válido y no usado
+      var {data:tkRow,error:tkErr}=await _sb.from('rh_enrol_tokens')
+        .select('emp_id,usado,expira').eq('token',enrol).single();
+      if(tkErr||!tkRow){setEnrolErr("Token no encontrado. Pide un nuevo enlace a RH.");return;}
+      if(tkRow.usado){setEnrolErr("Este enlace ya fue usado. Pide uno nuevo a RH.");return;}
+      if(new Date(tkRow.expira)<=new Date()){setEnrolErr("El enlace expir\xf3. Pide uno nuevo a RH.");return;}
+
+      // Paso 2 — Registrar dispositivo (si falla, NO se marca el token)
+      var {error:dispErr}=await _sb.from('rh_dispositivos').upsert(
+        {emp_id:tkRow.emp_id,token:t,ua:ua,enrolled_at:new Date().toISOString(),activo:true,enrol_token:enrol},
+        {onConflict:'emp_id'}
+      );
+      if(dispErr){setEnrolErr("Error al registrar el celular. Revisa tu conexi\xf3n e int\xe9ntalo de nuevo.");return;}
+
+      // Paso 3 — Solo AHORA guardar token localmente y marcar usado
+      setToken(t);
+      var {error:markErr}=await _sb.from('rh_enrol_tokens').update({usado:true}).eq('token',enrol);
+      if(markErr){console.warn("No se pudo marcar token como usado, pero dispositivo qued\xf3 registrado");}
+
+      // \xc9xito confirmado
       document.getElementById("app").innerHTML=
         "<div class='logo'>Ferrepinturas de Tuxtla</div>"+
         "<div class='card'><div class='card-body' style='text-align:center;padding:32px 24px'>"+
         "<div style='font-size:56px;margin-bottom:12px'>&#x1F389;</div>"+
         "<div style='font-size:22px;font-weight:800;color:var(--green);margin-bottom:8px'>Listo"+(pn?", "+pn:"")+"!</div>"+
-        "<div style='font-size:15px;color:#374151;line-height:1.7;margin-bottom:24px'>Tu celular ya esta registrado.<br><strong>Manana y cada dia:</strong><br>Llega a tu sucursal, abre la camara<br>y escanea el codigo QR.</div>"+
+        "<div style='font-size:15px;color:#374151;line-height:1.7;margin-bottom:24px'>Tu celular ya est\xe1 registrado.<br><strong>Ma\xf1ana y cada d\xeda:</strong><br>Llega a tu sucursal, abre la c\xe1mara<br>y escanea el c\xf3digo QR.</div>"+
         "<div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:3px;padding:14px;font-size:13px;color:#14532d'>Ya puedes cerrar esta pantalla</div>"+
         "</div></div>";
-    },600);
+      return;
+    }catch(ex){
+      setEnrolErr("Error de red. Revisa tu conexi\xf3n e int\xe9ntalo de nuevo.");
+      return;
+    }
   }
+
+  // Flujo 2: postMessage fallback (solo cuando está en kiosk — misma PC sin Supabase)
+  var payload={type:"ferrecheckin_enrol",enrol_token:enrol,disp_token:t,ua:ua};
+  setToken(t);
+  localStorage.setItem("ferre_enrol_p",JSON.stringify(payload));
+  postToParent(payload);
+  setTimeout(function(){
+    document.getElementById("app").innerHTML=
+      "<div class='logo'>Ferrepinturas de Tuxtla</div>"+
+      "<div class='card'><div class='card-body' style='text-align:center;padding:32px 24px'>"+
+      "<div style='font-size:56px;margin-bottom:12px'>&#x1F389;</div>"+
+      "<div style='font-size:22px;font-weight:800;color:var(--green);margin-bottom:8px'>Listo"+(pn?", "+pn:"")+"!</div>"+
+      "<div style='font-size:15px;color:#374151;line-height:1.7;margin-bottom:24px'>Tu celular ya est\xe1 registrado.<br><strong>Ma\xf1ana y cada d\xeda:</strong><br>Llega a tu sucursal, abre la c\xe1mara<br>y escanea el c\xf3digo QR.</div>"+
+      "<div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:3px;padding:14px;font-size:13px;color:#14532d'>Ya puedes cerrar esta pantalla</div>"+
+      "</div></div>";
+  },600);
 }
 
 // ════════════════════════════════════════════
