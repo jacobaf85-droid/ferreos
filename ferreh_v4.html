@@ -2706,7 +2706,9 @@ async function subirArchivoRH(base64data, path, mime){
     var blob=new Blob([arr],{type:mimeReal});
     var res=await sb.storage.from('rh-documentos').upload(path,blob,{contentType:mimeReal,upsert:true});
     if(res.error){console.warn('Storage upload error:',res.error.message);return null;}
-    return sb.storage.from('rh-documentos').getPublicUrl(path).data.publicUrl||null;
+    var signed=await sb.storage.from('rh-documentos').createSignedUrl(path,31536000);
+    if(signed.error){console.warn('Storage signedUrl error:',signed.error.message);return null;}
+    return signed.data.signedUrl||null;
   }catch(ex){console.warn('subirArchivoRH error:',ex);return null;}
 }
 
