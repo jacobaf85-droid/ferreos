@@ -92,12 +92,10 @@ var empS    = params.get("suc") ? decodeURIComponent(params.get("suc")) : "";
 
 var DISP_KEY = "ferre_disp_v1";
 
-// Fecha local Chiapas (CST = UTC-6) — evita bug de día siguiente después de 6pm
-function fechaLocalCST(){
-  var d=new Date();
-  // Offset CST: UTC-6 (no cambia con horario de verano en Chiapas)
-  var cst=new Date(d.getTime()-(6*60*60*1000));
-  return cst.toISOString().split('T')[0];
+// Fecha local Chiapas — America/Mexico_City, respeta reglas históricas de DST
+function fechaLocalCST(d){
+  d=d||new Date();
+  return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Mexico_City',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
 }
 function getToken(){ return localStorage.getItem(DISP_KEY)||null; }
 function setToken(t){ localStorage.setItem(DISP_KEY,t); }

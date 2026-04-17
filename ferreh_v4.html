@@ -918,13 +918,13 @@ async function syncFromCloud(){
     var[r1,r2,r3,r4,r5,r6,r7,r8,r9]=await Promise.all([
       sb.from('rh_empleados').select('*'),
       sb.from('rh_sucursales').select('*'),
-      sb.from('rh_asistencia').select('*').gte('fecha',new Date(Date.now()-90*864e5).toISOString().split('T')[0]).catch(function(){return {data:[]};}),
+      sb.from('rh_asistencia').select('*').gte('fecha',fechaLocalCST(new Date(Date.now()-90*864e5))).catch(function(){return {data:[]};}),
       sb.from('rh_permisos').select('*').catch(function(){return {data:[]};}),
       sb.from('rh_prestamos').select('*').catch(function(){return {data:[]};}),
       sb.from('rh_contratos').select('*').catch(function(){return {data:[]};}),
       sb.from('rh_evaluaciones').select('*').catch(function(){return {data:[]};}),
       sb.from('rh_dispositivos').select('*').catch(function(){return {data:[]};}),
-      sb.from('rh_checkin_logs').select('*').gte('fecha',new Date(Date.now()-2*864e5).toISOString().split('T')[0]).catch(function(){return {data:[]};})
+      sb.from('rh_checkin_logs').select('*').gte('fecha',fechaLocalCST(new Date(Date.now()-2*864e5))).catch(function(){return {data:[]};})
     ]);
     if(r1.data&&r1.data.length){emp=r1.data.map(mapEmpFromDB);S.set('emp',emp);}
     if(r2.data&&r2.data.length){suc=r2.data.map(mapSucFromDB);S.set('suc',suc);try{localStorage.setItem('ferre_suc_cache',JSON.stringify(suc.map(function(s){return {id:s.id,nombre:s.nombre,lat:s.lat,lng:s.lng,radio:s.radio};})));}catch(ex){}}
@@ -1051,9 +1051,13 @@ async function pushEval(e){if(!sb)return;try{await sb.from('rh_evaluaciones').up
 // ═══════════════════════════════════════════════════════════
 // UTILS NÓMINA
 // ═══════════════════════════════════════════════════════════
+function fechaLocalCST(d){
+  d=d||new Date();
+  return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Mexico_City',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+}
 function getLunes(off){var h=new Date(),d=h.getDay(),l=new Date(h);l.setDate(h.getDate()+(d===0?-6:1-d)+(off||0)*7);l.setHours(0,0,0,0);return l;}
 function dFecha(sOff,dIdx){var l=getLunes(sOff);l.setDate(l.getDate()+dIdx);return l.toISOString().split('T')[0];}
-function hoyFecha(){return new Date().toISOString().split('T')[0];}
+function hoyFecha(){return fechaLocalCST();}
 function semLbl(off){var l=getLunes(off),v=new Date(l);v.setDate(l.getDate()+5);var f=function(d){return d.toLocaleDateString('es-MX',{day:'numeric',month:'short'});};return f(l)+' - '+f(v)+' '+l.getFullYear();}
 function mesLbl(off){var h=new Date();h.setDate(1);h.setMonth(h.getMonth()+off);return h.toLocaleDateString('es-MX',{month:'long',year:'numeric'});}
 function fFecha(f){if(!f)return '-';return new Date(f+'T12:00:00').toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short',year:'numeric'});}
@@ -1071,7 +1075,7 @@ function incsMes(empId,anio,mes){var count=0,h=new Date(anio,mes,1);while(h.getM
 function ganaBono(empId,anio,mes){var e=emp.find(function(x){return x.id===empId;});return e&&incsMes(empId,anio,mes)<=(e.maxInc||0);}
 function imssObrero(e){var sbc=(salarioSemana(e)/7);return Math.round((sbc*0.0275)*7*100)/100;}
 function getLunesDeFecha(fechaStr){var d=new Date(fechaStr+'T12:00:00');var dow=d.getDay();var diff=dow===0?-6:1-dow;d.setDate(d.getDate()+diff);return d.toISOString().split('T')[0];}
-function prestamoAbonoActual(empId){var hoy=new Date();var lunesHoy=getLunesDeFecha(hoy.toISOString().split('T')[0]);var total=0;(prestamos[empId]||[]).filter(function(p){return !p.liquidado;}).forEach(function(pr){pr.abonos.forEach(function(ab){if(!ab.pagado&&ab.fecha===lunesHoy)total+=ab.monto;});});return total;}
+function prestamoAbonoActual(empId){var lunesHoy=getLunesDeFecha(fechaLocalCST());var total=0;(prestamos[empId]||[]).filter(function(p){return !p.liquidado;}).forEach(function(pr){pr.abonos.forEach(function(ab){if(!ab.pagado&&ab.fecha===lunesHoy)total+=ab.monto;});});return total;}
 function abonoSemana(e){var calAbono=prestamoAbonoActual(e.id);if(calAbono>0)return calAbono;if(!e.abono||e.abono<=0)return 0;return e.abono;}
 function netoSemana(e){var d=0;for(var i=0;i<6;i++){var f=dFecha(semOff,i);var io=inc[f]&&inc[f][e.id];if(io&&io.descApl)d+=calcDesc(e,io);}var bruto=Math.max(0,salarioSemana(e)-d+(e.comision||0));return Math.max(0,bruto-imssObrero(e)-abonoSemana(e));}
 function brutoSemana(e){var d=0;for(var i=0;i<6;i++){var f=dFecha(semOff,i);var io=inc[f]&&inc[f][e.id];if(io&&io.descApl)d+=calcDesc(e,io);}return Math.max(0,salarioSemana(e)-d+(e.comision||0));}
@@ -1818,7 +1822,7 @@ function eliminarPrestamo(empId,prestId){if(!confirm('¿Eliminar este préstamo?
 function renderPrestamos(){
   var el=document.getElementById('rhp-prestamos');if(!el)return;
   var pEmp=prestamos[rhEmpId]||[];
-  var hoy=new Date().toISOString().split('T')[0];
+  var hoy=fechaLocalCST();
   var lunesHoy=getLunesDeFecha(hoy);
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><strong style="font-size:13px">Préstamos y adeudos</strong><button class="btn br" onclick="abrirModalPrestamo()">+ Nuevo préstamo</button></div>';
   if(!pEmp.length){html+='<div style="text-align:center;padding:40px 20px;color:var(--dim);font-size:12px">Sin préstamos registrados.</div>';document.getElementById('rhp-prestamos').innerHTML=html;return;}
@@ -2653,7 +2657,7 @@ function go(mod){
 // ═══════════════════════════════════════════════════════════
 
 // ── Utils ──
-function ciHoy(){return new Date().toISOString().split('T')[0];}
+function ciHoy(){return fechaLocalCST();}
 function ciHora(){var d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
 function distGPS(lat1,lng1,lat2,lng2){
   var R=6371000,r=Math.PI/180;
