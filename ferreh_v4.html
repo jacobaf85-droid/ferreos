@@ -980,6 +980,8 @@ async function syncFromCloud(){
       ciSave();
     }
     renderHome();
+    // Re-render active view if user already navigated away from home before sync finished
+    (function(){var s=document.querySelector('.scr.on');var id=s&&s.id;if(id==='scr-sucursales')renderSucursales();else if(id==='scr-empleados')renderEmpleados();})();
     showSync(null);
   }catch(e){
     console.error('syncFromCloud catch:', e);
@@ -2653,7 +2655,8 @@ function go(mod){
     vacaciones:renderVacaciones,
     contratos:renderContratos,
     evaluaciones:renderEvaluaciones,
-    organigrama:renderOrganigrama
+    organigrama:renderOrganigrama,
+    sucursales:renderSucursales
   };
   if(fns[mod])fns[mod]();
 }
@@ -5379,8 +5382,9 @@ async function crearTablaAuditoria(){
   }catch(e){}
 }
 
+var _renderExpedienteRHDocs=renderExpediente;
 renderExpediente=function(){
-  _renderExpedienteOrig();
+  _renderExpedienteRHDocs();
   var panel=document.getElementById('rhp-expediente');
   if(panel&&rhEmpId){panel.innerHTML+=agregarBotonesDocumentosRH(rhEmpId);}
 };
