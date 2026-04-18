@@ -964,7 +964,7 @@ async function syncFromCloud(){
       Promise.resolve(sb.from('rh_contratos').select('*')).catch(function(){return {data:[]};}),
       Promise.resolve(sb.from('rh_evaluaciones').select('*')).catch(function(){return {data:[]};}),
       Promise.resolve(sb.from('rh_dispositivos').select('*')).catch(function(){return {data:[]};}),
-      Promise.resolve(sb.from('rh_checkin_logs').select('*').gte('fecha',_f2)).catch(function(){return {data:[];};}),
+      Promise.resolve(sb.from('rh_checkin_logs').select('*').gte('fecha',_f2)).catch(function(){return {data:[]};}),
       Promise.resolve(sb.from('rh_finiquitos').select('*')).catch(function(){return {data:[]};}),
       Promise.resolve(sb.from('rh_auditoria').select('*').order('ts',{ascending:false}).limit(500)).catch(function(){return {data:[]};})
     ]);
