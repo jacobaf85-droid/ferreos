@@ -995,7 +995,10 @@ async function syncFromCloud(){
       });
       S.set('prestamos',prestamos);
     }
-    if(r6.data){contratos=r6.data;S.set('contratos',contratos);}
+    if(r6.data){contratos=r6.data;S.set('contratos',contratos);
+      var _maxC=contratos.reduce(function(m,c){return Math.max(m,c.id||0);},0);
+      if(_maxC>=nContrato){nContrato=_maxC+1;S.set('nContrato',nContrato);}
+    }
     if(r7.data){evaluaciones=r7.data;S.set('evaluaciones',evaluaciones);}
     // ── CI: dispositivos y logs desde Supabase ──
     if(r8&&r8.data&&r8.data.length){
@@ -6048,7 +6051,7 @@ function iniciarRealtime(){
         if(payload.new&&payload.new.id){
           var idx=contratos.findIndex(function(x){return x.id===payload.new.id;});
           if(idx>=0) contratos[idx]=payload.new; else contratos.push(payload.new);
-          S.set('contratos',contratos);renderHome();
+          S.set('contratos',contratos);renderHome();renderContratos();
         }
       })
       // ── CI Realtime: dispositivos enrolados desde celular ──
