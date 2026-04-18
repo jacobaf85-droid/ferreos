@@ -95,6 +95,10 @@ DROP POLICY IF EXISTS "rh_finiquitos_authed" ON public.rh_finiquitos;
 CREATE POLICY "rh_finiquitos_authed" ON public.rh_finiquitos
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+-- ── rh_enrol_tokens: columnas opcionales que usa el código JS ─
+ALTER TABLE public.rh_enrol_tokens ADD COLUMN IF NOT EXISTS emp_nombre TEXT DEFAULT '';
+ALTER TABLE public.rh_enrol_tokens ADD COLUMN IF NOT EXISTS usado_en TIMESTAMPTZ DEFAULT NULL;
+
 -- ── rh_auditoria ──────────────────────────────────────────────
 ALTER TABLE public.rh_auditoria ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "rh_auditoria_authed" ON public.rh_auditoria;

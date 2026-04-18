@@ -954,7 +954,7 @@ async function syncFromCloud(){
   try{
     var _f90=fechaLocalCST(new Date(Date.now()-90*864e5));
     var _f2=fechaLocalCST(new Date(Date.now()-2*864e5));
-    var[r1,r2,r3,r4,r5,r6,r7,r8,r9]=await Promise.all([
+    var[r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11]=await Promise.all([
       Promise.resolve(sb.from('rh_empleados').select('*')).catch(function(e){console.error('syncFromCloud r1 error:',e);return {data:[]};}),
       Promise.resolve(sb.from('rh_sucursales').select('*')).catch(function(e){console.error('syncFromCloud r2 error:',e);return {data:[]};}),
       Promise.resolve(sb.from('rh_asistencia').select('*').gte('fecha',_f90)).catch(function(){return {data:[]};}),
@@ -963,7 +963,9 @@ async function syncFromCloud(){
       Promise.resolve(sb.from('rh_contratos').select('*')).catch(function(){return {data:[]};}),
       Promise.resolve(sb.from('rh_evaluaciones').select('*')).catch(function(){return {data:[]};}),
       Promise.resolve(sb.from('rh_dispositivos').select('*')).catch(function(){return {data:[]};}),
-      Promise.resolve(sb.from('rh_checkin_logs').select('*').gte('fecha',_f2)).catch(function(){return {data:[]};})
+      Promise.resolve(sb.from('rh_checkin_logs').select('*').gte('fecha',_f2)).catch(function(){return {data:[];};}),
+      Promise.resolve(sb.from('rh_finiquitos').select('*')).catch(function(){return {data:[]};}),
+      Promise.resolve(sb.from('rh_auditoria').select('*').order('ts',{ascending:false}).limit(500)).catch(function(){return {data:[]};})
     ]);
     if(r1.data&&r1.data.length){emp=r1.data.map(mapEmpFromDB);S.set('emp',emp);}
     if(r2.data&&r2.data.length){suc=r2.data.map(mapSucFromDB);S.set('suc',suc);try{localStorage.setItem('ferre_suc_cache',JSON.stringify(suc.map(function(s){return {id:s.id,nombre:s.nombre,lat:s.lat,lng:s.lng,radio:s.radio};})));}catch(ex){}}
@@ -1012,6 +1014,24 @@ async function syncFromCloud(){
         }
       });
       ciSave();
+    }
+    // ── Finiquitos desde Supabase ──
+    if(r10&&r10.data&&r10.data.length){finiquitos=r10.data;S.set('finiquitos',finiquitos);}
+    // ── Auditoría: últimos 500 registros desde Supabase ──
+    if(r11&&r11.data&&r11.data.length){
+      var existingLog=S.get('audit_log',[]);
+      var remoteIds={};existingLog.forEach(function(l){remoteIds[l.id]=true;});
+      r11.data.forEach(function(row){
+        if(!remoteIds[row.id]){
+          existingLog.push({id:row.id,ts:row.ts,usuario:row.usuario,rol:row.rol,tipo:row.tipo,
+            accion:row.accion,detalle:row.detalle,empId:row.emp_id,empNombre:row.emp_nombre,
+            valorAnterior:row.valor_anterior,valorNuevo:row.valor_nuevo});
+          remoteIds[row.id]=true;
+        }
+      });
+      existingLog.sort(function(a,b){return b.ts>a.ts?1:-1;});
+      if(existingLog.length>2000)existingLog=existingLog.slice(0,2000);
+      S.set('audit_log',existingLog);
     }
     renderHome();
     // Re-render active view if user already navigated away from home before sync finished
@@ -2369,7 +2389,15 @@ function abrirEval(modo,empId){
   setStars(0);
   om('modalEval');
 }
-function prefillEvalData(){}
+function prefillEvalData(){
+  var curNombre=currentUser?(currentUser.nombre||currentUser.email||''):'';
+  var evEvSel=document.getElementById('evEvaluador');
+  if(evEvSel&&curNombre){
+    for(var i=0;i<evEvSel.options.length;i++){
+      if(evEvSel.options[i].text===curNombre){evEvSel.selectedIndex=i;break;}
+    }
+  }
+}
 function evSyncPeriodo(){
   var ini=document.getElementById('evPeriodoIni').value;
   var fin=document.getElementById('evPeriodoFin').value;
