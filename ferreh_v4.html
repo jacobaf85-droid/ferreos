@@ -411,7 +411,7 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
 <div class="scr" id="scr-reportes">
   <div class="ph"><div><div class="ph-title">Reportes de nómina</div><div class="ph-sub">Semanal y mensual por sucursal</div></div>
   <div class="ph-acts no-print"><button class="btn bo" onclick="go('home')">← Inicio</button><button class="btn bo" onclick="expCSV()">Exportar CSV</button><button class="btn bn" onclick="window.print()">Imprimir PDF</button><button class="btn bn" style="background:#1A2B4A" onclick="abrirReporteMensual('ejecutivo')">📈 Reporte Mensual — Dirección</button><button class="btn bn" style="background:#166534" onclick="abrirReporteMensual('contador')">📋 Reporte Mensual — Contador</button></div></div>
-  <div class="ptabs" id="repTabs"><div class="ptab on" onclick="setRepT('semana',this)">Semanal</div><div class="ptab" onclick="setRepT('mes',this)">Mensual</div></div>
+  <div class="ptabs" id="repTabs"><div class="ptab on" onclick="setRepT('semana',this)">Semanal</div><div class="ptab" onclick="setRepT('mes',this)">Mensual</div><div class="ptab" onclick="setRepT('quincenal',this)">Quincenal</div></div>
   <div class="ph no-print" style="margin-bottom:16px"><div class="snav"><button class="snbtn" onclick="chgRep(-1)">‹</button><div class="snlbl" id="repLbl">-</div><button class="snbtn" onclick="chgRep(1)">›</button></div></div>
   <div class="print-hd"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCA1MjAgMzYiPjx0ZXh0IHk9IjI4IiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2ssc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmZmZiI+RkVSUkVQSU5UVVJBUzx0c3BhbiBmaWxsPSIjRDkxQjFCIj5SSDwvdHNwYW4+PC90ZXh0Pjwvc3ZnPg==" style="height:30px"><div class="print-hd-txt">REPORTE DE NÓMINA - FERREPINTURAS DE TUXTLA<br><span id="pPer" style="color:var(--dim)">-</span></div></div>
   <div id="repContent"></div>
@@ -924,6 +924,7 @@ async function doLogin(nombre,rol,sbUser){
   renderHome();
   if(sb)await syncFromCloud();
   renderHome();
+  actualizarBadgeNotif();
 }
 function aplicarPermisosRol(rol){
   // Solo dueño y admin pueden ver/editar sucursales y configuración
@@ -1034,6 +1035,7 @@ async function syncFromCloud(){
       S.set('audit_log',existingLog);
     }
     renderHome();
+    actualizarBadgeNotif();
     // Re-render active view if user already navigated away from home before sync finished
     (function(){var s=document.querySelector('.scr.on');var id=s&&s.id;if(id==='scr-sucursales')renderSucursales();else if(id==='scr-empleados')renderEmpleados();})();
     showSync(null);
@@ -2374,7 +2376,9 @@ function abrirEval(modo,empId){
   poblarEmpSel('evEmpId');
   poblarEmpSel('evEvaluador');
   document.getElementById('evId').value='';
-  if(empId)document.getElementById('evEmpId').value=empId;
+  var evEmpSel=document.getElementById('evEmpId');
+  evEmpSel.disabled=!!empId;
+  if(empId)evEmpSel.value=empId;
   document.getElementById('evPeriodoIni').value='';
   document.getElementById('evPeriodoFin').value='';
   document.getElementById('evPeriodo').value='';
@@ -2629,13 +2633,22 @@ function cerrarRecibo(){var w=document.getElementById('reciboWrap');if(w)w.remov
 // ═══════════════════════════════════════════════════════════
 function setRepT(t,el){repT=t;repOff=0;document.querySelectorAll('#repTabs .ptab').forEach(function(x){x.classList.remove('on');});el.classList.add('on');renderRep();}
 function chgRep(d){repOff+=d;renderRep();}
-function getRepFs(){var fs=[];if(repT==='semana'){for(var i=0;i<6;i++)fs.push(dFecha(repOff,i));}else{var h=new Date();h.setDate(1);h.setMonth(h.getMonth()+repOff);var m=h.getMonth(),y=h.getFullYear();var cur=new Date(y,m,1);while(cur.getMonth()===m){fs.push(cur.toISOString().split('T')[0]);cur.setDate(cur.getDate()+1);}}return fs;}
+function quincLbl(off){
+  var h=new Date();var q=h.getDate()<=15?0:1;
+  var base=q+(h.getMonth()*2)+(h.getFullYear()-2020)*24+(off||0);
+  var yr=2020+Math.floor(base/24);var rem=((base%24)+24)%24;
+  var m=Math.floor(rem/2);var quinc=(rem%2)+1;
+  var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return (quinc===1?'1ra':'2da')+' quincena de '+MESES[m]+' '+yr;
+}
+function getRepFs(){var fs=[];if(repT==='semana'){for(var i=0;i<6;i++)fs.push(dFecha(repOff,i));}else if(repT==='quincenal'){var hq=new Date();var qq=hq.getDate()<=15?0:1;var baseQ=qq+(hq.getMonth()*2)+(hq.getFullYear()-2020)*24+(repOff||0);var yrQ=2020+Math.floor(baseQ/24);var remQ=((baseQ%24)+24)%24;var mQ=Math.floor(remQ/2);var quincQ=remQ%2;var iniQ=quincQ===0?1:16;var finQ=quincQ===0?15:new Date(yrQ,mQ+1,0).getDate();for(var d2=iniQ;d2<=finQ;d2++)fs.push(new Date(yrQ,mQ,d2).toISOString().split('T')[0]);}else{var h=new Date();h.setDate(1);h.setMonth(h.getMonth()+repOff);var m=h.getMonth(),y=h.getFullYear();var cur=new Date(y,m,1);while(cur.getMonth()===m){fs.push(cur.toISOString().split('T')[0]);cur.setDate(cur.getDate()+1);}}return fs;}
 function renderRep(){
   var fs=getRepFs();
-  var lbl=repT==='semana'?semLbl(repOff):mesLbl(repOff);
+  var lbl=repT==='semana'?semLbl(repOff):(repT==='quincenal'?quincLbl(repOff):mesLbl(repOff));
   document.getElementById('repLbl').textContent=lbl;
   document.getElementById('pPer').textContent=lbl;
   var act=emp.filter(function(e){return e.activo;});
+  if(repT==='quincenal')act=act.filter(function(e){return e.modalidad==='quincenal';});
   var sucs=[...new Set(act.map(function(e){return e.sucursal;}))];
   var gtNom=0,gtFalt=0,gtRet=0,gtRetiro=0,gtDesc=0,gtBono=0;
   var firstDate=fs[0]?new Date(fs[0]+'T12:00:00'):new Date();
@@ -2769,7 +2782,7 @@ function cm(id){document.getElementById(id).classList.remove('on');}
   var el=document.getElementById(id);
   if(el)el.addEventListener('click',function(e){if(e.target.id===id)cm(id);});
 });
-function renderNotificaciones(){
+function calcularAlertas(){
   var alertas=[];
   var hoy=new Date();
   emp.forEach(function(e){
@@ -2810,11 +2823,18 @@ function renderNotificaciones(){
     });
   });
   alertas.sort(function(a,b){return a.prioridad-b.prioridad;});
+  return alertas;
+}
+function actualizarBadgeNotif(){
+  var alertas=calcularAlertas();
   var badge=document.getElementById('notifBadge');
   var bCard=document.getElementById('bNotif');
-  var hdrBtn=document.getElementById('notifBtn');
   if(badge){if(alertas.length>0){badge.textContent=alertas.length;badge.style.display='inline-block';}else{badge.style.display='none';}}
   if(bCard){bCard.style.display=alertas.length>0?'':'none';if(alertas.length>0)bCard.textContent=alertas.length;}
+}
+function renderNotificaciones(){
+  var alertas=calcularAlertas();
+  actualizarBadgeNotif();
   var container=document.getElementById('notifContainer');
   if(!container)return;
   var html=alertas.length===0?'<p style="color:var(--dim);padding:40px;text-align:center">Sin notificaciones pendientes ✓</p>':
@@ -2838,7 +2858,7 @@ function go(mod){
   if(mod==='home'){document.getElementById('bc').innerHTML='<span class="bcc">Inicio</span>';}
   else{document.getElementById('bc').innerHTML='<span class="bcl" onclick="go(\'home\')">Inicio</span><span class="bcs"> › </span><span class="bcc">'+lbls[mod]+'</span>';}
   var fns={
-    home:renderHome,
+    home:function(){renderHome();actualizarBadgeNotif();},
     asistencia:function(){renderSemLbl();renderDias();},
     empleados:function(){renderEmpleados();},
     rh:function(){renderRH();},
@@ -3916,7 +3936,7 @@ function guardarFiniquito(){
   S.set('finiquitos',finiquitos);
   var e=emp.find(function(x){return x.id===empId;});
   if(e){e.activo=false;e.fechaBaja=fechaBaja;S.set('emp',emp);}
-  if(sb) sb.from('rh_finiquitos').upsert([{emp_id:empId,fecha_baja:fechaBaja,tipo:obj.tipo,total:obj.total,desglose:obj.desglose,obs:obj.obs}]);
+  if(sb){var _fq={emp_id:empId,fecha_baja:fechaBaja,tipo:obj.tipo,total:obj.total,desglose:obj.desglose,obs:obj.obs};if(fId)_fq.id=fId;sb.from('rh_finiquitos').upsert([_fq]).catch(function(e){console.error('Error guardando finiquito en nube:',e);});}
   cm('modalFiniquito');
   renderFiniquitos();
   alert('Finiquito guardado. Empleado marcado como baja.');
@@ -5887,17 +5907,17 @@ function imprimirListaPago(){
 // ██████████ BALANCE DE VACACIONES ██████████
 // ═══════════════════════════════════════════════════════════
 function diasVacacionesLFT(anos){
-  // Tabla LFT vigente 2024
-  if(anos>=25)return 20;
-  if(anos>=20)return 18;
-  if(anos>=15)return 16;
-  if(anos>=10)return 14;
-  if(anos>=5)return 12;
-  if(anos>=4)return 10;
-  if(anos>=3)return 8;
-  if(anos>=2)return 8;
-  if(anos>=1)return 6;
-  return 6;
+  // Reforma LFT 2023 — Vacaciones Dignas (Art. 76, vigente 2023-01-01)
+  if(anos>=25)return 28;
+  if(anos>=20)return 26;
+  if(anos>=15)return 24;
+  if(anos>=10)return 22;
+  if(anos>=5)return 20;
+  if(anos>=4)return 18;
+  if(anos>=3)return 16;
+  if(anos>=2)return 14;
+  if(anos>=1)return 12;
+  return 12;
 }
 
 function calcVacaciones(empId){
@@ -5922,15 +5942,17 @@ function renderVacaciones(){
   }
   var sucs=[...new Set(activos.map(function(e){return e.sucursal;}))].sort();
   var html='<div style="background:var(--abg);border-left:3px solid var(--amber);padding:10px 16px;font-size:11px;color:var(--amber);margin-bottom:16px">'+
-    '📋 Los días acumulados se calculan conforme a la tabla LFT vigente 2024. Los días usados corresponden a permisos de vacaciones aprobados en el sistema.</div>';
+    '📋 Días acumulados conforme a Reforma LFT 2023 (Vacaciones Dignas — Art. 76). Los días usados corresponden a permisos de vacaciones aprobados en el sistema.</div>';
   sucs.forEach(function(s){
     var emps=activos.filter(function(e){return e.sucursal===s;});
     var rows=emps.map(function(e){
       var vac=calcVacaciones(e.id);
       var pct=vac.acumulados>0?Math.round(vac.usados/vac.acumulados*100):0;
       var color=vac.disponibles===0?'var(--rojo)':vac.disponibles<=2?'var(--amber)':'var(--green)';
+      var sinFecha=!e.fechaIngreso;
       return '<tr>'+
-        '<td><strong>'+sane(e.nombre)+'</strong><br><span style="font-size:10px;color:var(--dim)">'+sane(e.puesto)+'</span></td>'+
+        '<td><strong>'+sane(e.nombre)+'</strong>'+(sinFecha?' <span style="font-size:9px;background:var(--amber);color:#fff;padding:1px 5px;border-radius:3px">Sin fecha ingreso</span>':'')+
+        '<br><span style="font-size:10px;color:var(--dim)">'+sane(e.puesto)+'</span></td>'+
         '<td style="font-family:var(--mono);font-size:11px">'+vac.anos+' año(s)</td>'+
         '<td style="font-family:var(--mono);font-size:13px;font-weight:500">'+vac.acumulados+' días</td>'+
         '<td style="font-family:var(--mono);font-size:11px;color:var(--rojo)">'+(vac.usados>0?vac.usados+' días':'-')+'</td>'+
@@ -6087,6 +6109,21 @@ function iniciarRealtime(){
           if(document.getElementById('scr-evaluaciones')&&document.getElementById('scr-evaluaciones').classList.contains('on'))renderEvaluaciones();
         }
       })
+      // ── Finiquitos: sincroniza finiquitos guardados por cualquier usuario ──
+      .on('postgres_changes',{event:'*',schema:'public',table:'rh_finiquitos'},function(payload){
+        if(payload.eventType==='DELETE'&&payload.old&&payload.old.id){
+          finiquitos=finiquitos.filter(function(x){return x.id!==payload.old.id;});
+          S.set('finiquitos',finiquitos);
+          if(document.getElementById('scr-finiquitos')&&document.getElementById('scr-finiquitos').classList.contains('on'))renderFiniquitos();
+          return;
+        }
+        if(payload.new&&payload.new.id){
+          var idx=finiquitos.findIndex(function(x){return x.id===payload.new.id;});
+          if(idx>=0){finiquitos[idx]=payload.new;}else{finiquitos.push(payload.new);}
+          S.set('finiquitos',finiquitos);
+          if(document.getElementById('scr-finiquitos')&&document.getElementById('scr-finiquitos').classList.contains('on'))renderFiniquitos();
+        }
+      })
       // ── Auditoría: acciones de otros usuarios en tiempo real ──
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'rh_auditoria'},function(payload){
         if(!payload.new)return;
@@ -6104,7 +6141,7 @@ function iniciarRealtime(){
         console.log('[Realtime] Status:', status);
         var btn=document.getElementById('syncBtn');
         if(status==='SUBSCRIBED'){
-          console.log('[Realtime] \u2713 Suscrito correctamente a ferreh_changes (7 tablas)');
+          console.log('[Realtime] \u2713 Suscrito correctamente a ferreh_changes (8 tablas)');
           if(btn){btn.textContent='● Live';btn.className='hdr-sync syncing';}
           try{var cfg2=getSBConfig();if(cfg2.url&&cfg2.key){localStorage.setItem('ferre_sb_url',cfg2.url);localStorage.setItem('ferre_sb_key',cfg2.key);}}catch(ex){}
         } else if(status==='CHANNEL_ERROR'){
@@ -6144,5 +6181,7 @@ if(sb){
     }
   }, 5*60*1000);
 }
+// Actualizar badge de notificaciones cada 60 segundos
+setInterval(actualizarBadgeNotif, 60000);
 
 </script></body></html>

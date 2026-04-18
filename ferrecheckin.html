@@ -91,7 +91,7 @@ var kiosk   = params.get("kiosk")==="1";
 var empN    = params.get("n") ? decodeURIComponent(params.get("n")) : "";
 var empS    = params.get("suc") ? decodeURIComponent(params.get("suc")) : "";
 
-var DISP_KEY = "ferre_disp_v1";
+var DISP_KEY = "ferrerh_device_token";
 
 // Fecha local Chiapas — America/Mexico_City, respeta reglas históricas de DST
 function fechaLocalCST(d){
@@ -301,24 +301,29 @@ async function confirmarEnrol(){
   // Flujo 1: Supabase directo (celular remoto)
   if(_sb){
     try{
-      // Paso 1 — Verificar token válido y no usado
+      // Paso 1 — Verificar token válido, no usado y no expirado en una sola query
       var {data:tkRow,error:tkErr}=await _sb.from('rh_enrol_tokens')
-        .select('emp_id,usado,expira').eq('token',enrol).single();
-      if(tkErr||!tkRow){setEnrolErr("Token no encontrado. Pide un nuevo enlace a RH.");return;}
-      if(tkRow.usado){setEnrolErr("Este enlace ya fue usado. Pide uno nuevo a RH.");return;}
-      if(new Date(tkRow.expira)<=new Date()){setEnrolErr("El enlace expir\xf3. Pide uno nuevo a RH.");return;}
+        .select('emp_id')
+        .eq('token',enrol)
+        .eq('usado',false)
+        .gt('expira',new Date().toISOString())
+        .single();
+      if(tkErr||!tkRow){setEnrolErr("Token inv\xe1lido, expirado o ya usado. Pide un nuevo enlace a RH.");return;}
+      console.log('[Enrol] Paso 1 OK \u2014 token v\xe1lido, emp_id:'+tkRow.emp_id);
 
       // Paso 2 — Registrar dispositivo (si falla, NO se marca el token)
       var {error:dispErr}=await _sb.from('rh_dispositivos').upsert(
-        {emp_id:tkRow.emp_id,token:t,ua:ua,enrolled_at:new Date().toISOString(),activo:true,enrol_token:enrol},
+        {emp_id:tkRow.emp_id,token:t,ua:ua,activo:true,enrol_token:enrol},
         {onConflict:'emp_id'}
       );
-      if(dispErr){setEnrolErr("Error al registrar el celular. Revisa tu conexi\xf3n e int\xe9ntalo de nuevo.");return;}
+      if(dispErr){setEnrolErr("Error al registrar el celular: "+dispErr.message+(dispErr.code?" ["+dispErr.code+"]":""));return;}
+      console.log('[Enrol] Paso 2 OK \u2014 dispositivo registrado');
 
-      // Paso 3 — Solo AHORA guardar token localmente y marcar usado
+      // Paso 3 — Guardar token localmente y marcar token de enrolamiento como usado
       setToken(t);
       var {error:markErr}=await _sb.from('rh_enrol_tokens').update({usado:true}).eq('token',enrol);
-      if(markErr){console.warn("No se pudo marcar token como usado, pero dispositivo qued\xf3 registrado");}
+      if(markErr){console.error("No se pudo marcar token como usado:",markErr);}
+      console.log('[Enrol] Paso 3 OK \u2014 token marcado como usado');
 
       // \xc9xito confirmado
       document.getElementById("app").innerHTML=
@@ -331,7 +336,7 @@ async function confirmarEnrol(){
         "</div></div>";
       return;
     }catch(ex){
-      setEnrolErr("Error de red. Revisa tu conexi\xf3n e int\xe9ntalo de nuevo.");
+      setEnrolErr("Error: "+(ex.message||ex.toString())+" [EXC]");
       return;
     }
   }
@@ -539,7 +544,7 @@ async function enviarCheckin(lat,lng){
       }
       var empId=dispRow.emp_id;
       var hoyStr=fechaLocalCST(); // fecha local Chiapas CST
-      // Seed eliminado — validacion 100% por GPS (radio 30m)
+      // Seed eliminado — validacion 100% por GPS (radio 100m)
       // Verificar duplicado
       var {data:dupRow}=await _sb.from('rh_checkin_logs').select('id,hora').eq('emp_id',empId).eq('fecha',hoyStr).eq('estado','ok').maybeSingle();
       if(dupRow){mostrarResultado("warn","&#x2714;","Ya marcaste","Ya registraste tu asistencia hoy a las "+dupRow.hora+". Buen dia!",false);return;}
@@ -572,7 +577,7 @@ async function enviarCheckin(lat,lng){
           var dLat=(lat-sucRow.lat)*r,dLng=(lng-sucRow.lng)*r;
           var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(sucRow.lat*r)*Math.cos(lat*r)*Math.sin(dLng/2)*Math.sin(dLng/2);
           dist=Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
-          estadoGPS=dist<=(sucRow.radio||30)?'ok':'fuera_rango';
+          estadoGPS=dist<=(sucRow.radio||100)?'ok':'fuera_rango';
         }
       }
       var hora=(function(){var d=new Date();return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);})();
@@ -580,7 +585,7 @@ async function enviarCheckin(lat,lng){
       var {data:empRow}=await _sb.from('rh_empleados').select('nombre').eq('id',empId).single();
       var nombre=empRow?empRow.nombre:"Empleado";
       if(estadoGPS==='fuera_rango'){
-        mostrarResultado("err","&#x1F4CD;","Fuera de rango","Estas a "+dist+" metros de la sucursal. Debes estar a menos de 30 metros para registrar tu llegada.",true);return;
+        mostrarResultado("err","&#x1F4CD;","Fuera de rango","Estas a "+dist+" metros de la sucursal. Debes estar a menos de 100 metros para registrar tu llegada.",true);return;
       }
       var pb4=document.getElementById("pb");if(pb4)pb4.style.width="90%";
       // Insertar log con emp_nombre para kiosk realtime
