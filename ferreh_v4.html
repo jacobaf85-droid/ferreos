@@ -1095,7 +1095,8 @@ async function syncAll(){
     if(contratos.length)await sb.from('rh_contratos').upsert(contratos);
     // Evaluaciones
     if(evaluaciones.length)await sb.from('rh_evaluaciones').upsert(evaluaciones);
-    showSync(null);msg('✓ Sincronizado con la nube');
+    await syncFromCloud();
+    msg('✓ Sincronizado con la nube');
   }catch(e){
     showSync('Error al sincronizar',true);
     msg('Error de sync: '+e.message,true);
