@@ -5367,8 +5367,13 @@ function audit(tipo, accion, detalle, empId, valorAnterior, valorNuevo){
   // Mantener últimos 2000 registros
   if(log.length>2000)log=log.slice(0,2000);
   S.set('audit_log',log);
-  // Push a Supabase si está disponible
-  if(sb){sb.from('rh_auditoria').insert(entry).then(function(){}).catch(function(){});}
+  // Push a Supabase — snake_case para coincidir con columnas de rh_auditoria
+  if(sb){sb.from('rh_auditoria').insert({
+    id:entry.id,ts:entry.ts,usuario:entry.usuario,rol:entry.rol,
+    tipo:entry.tipo,accion:entry.accion,detalle:entry.detalle,
+    emp_id:entry.empId,emp_nombre:entry.empNombre,
+    valor_anterior:entry.valorAnterior,valor_nuevo:entry.valorNuevo
+  }).then(function(){}).catch(function(e){console.warn('[Audit] Supabase error:',e&&e.message);});}
 }
 
 function renderAuditoria(){
@@ -6054,11 +6059,24 @@ function iniciarRealtime(){
           if(document.getElementById('scr-evaluaciones')&&document.getElementById('scr-evaluaciones').classList.contains('on'))renderEvaluaciones();
         }
       })
+      // ── Auditoría: acciones de otros usuarios en tiempo real ──
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'rh_auditoria'},function(payload){
+        if(!payload.new)return;
+        var row=payload.new;
+        var log=S.get('audit_log',[]);
+        if(log.find(function(l){return l.id===row.id;}))return; // ya la tenemos (fue nuestra)
+        log.unshift({id:row.id,ts:row.ts,usuario:row.usuario,rol:row.rol,tipo:row.tipo,
+          accion:row.accion,detalle:row.detalle,empId:row.emp_id,empNombre:row.emp_nombre,
+          valorAnterior:row.valor_anterior,valorNuevo:row.valor_nuevo});
+        if(log.length>2000)log=log.slice(0,2000);
+        S.set('audit_log',log);
+        if(document.getElementById('scr-auditoria')&&document.getElementById('scr-auditoria').classList.contains('on'))renderAuditoria();
+      })
       .subscribe(function(status){
         console.log('[Realtime] Status:', status);
         var btn=document.getElementById('syncBtn');
         if(status==='SUBSCRIBED'){
-          console.log('[Realtime] \u2713 Suscrito correctamente a ferreh_changes (6 tablas)');
+          console.log('[Realtime] \u2713 Suscrito correctamente a ferreh_changes (7 tablas)');
           if(btn){btn.textContent='● Live';btn.className='hdr-sync syncing';}
           try{var cfg2=getSBConfig();if(cfg2.url&&cfg2.key){localStorage.setItem('ferre_sb_url',cfg2.url);localStorage.setItem('ferre_sb_key',cfg2.key);}}catch(ex){}
         } else if(status==='CHANNEL_ERROR'){

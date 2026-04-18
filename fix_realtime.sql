@@ -17,7 +17,8 @@ DECLARE
     'rh_dispositivos',
     'rh_checkin_logs',
     'rh_enrol_tokens',
-    'rh_finiquitos'
+    'rh_finiquitos',
+    'rh_auditoria'
   ];
   t TEXT;
 BEGIN

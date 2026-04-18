@@ -95,6 +95,12 @@ DROP POLICY IF EXISTS "rh_finiquitos_authed" ON public.rh_finiquitos;
 CREATE POLICY "rh_finiquitos_authed" ON public.rh_finiquitos
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+-- ── rh_auditoria ──────────────────────────────────────────────
+ALTER TABLE public.rh_auditoria ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "rh_auditoria_authed" ON public.rh_auditoria;
+CREATE POLICY "rh_auditoria_authed" ON public.rh_auditoria
+  FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
 -- ── rh_usuarios (login) ───────────────────────────────────────
 ALTER TABLE public.rh_usuarios ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "rh_usuarios_authed" ON public.rh_usuarios;
