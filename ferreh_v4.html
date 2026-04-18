@@ -3907,7 +3907,7 @@ function fqCalcular(){
   el.dataset.desglose=JSON.stringify({aguinaldo,vacProp,primaVac,primaAntig,indem,total,dias,anos:Math.floor(anos)});
 }
 
-function guardarFiniquito(){
+async function guardarFiniquito(){
   var empId=parseInt(document.getElementById('fqEmpId').value);
   var fechaBaja=document.getElementById('fqFechaBaja').value;
   if(!empId||!fechaBaja){alert('Completa empleado y fecha de baja.');return;}
@@ -3936,10 +3936,21 @@ function guardarFiniquito(){
   S.set('finiquitos',finiquitos);
   var e=emp.find(function(x){return x.id===empId;});
   if(e){e.activo=false;e.fechaBaja=fechaBaja;S.set('emp',emp);}
-  if(sb){var _fq={emp_id:empId,fecha_baja:fechaBaja,tipo:obj.tipo,total:obj.total,desglose:obj.desglose,obs:obj.obs};if(fId)_fq.id=fId;sb.from('rh_finiquitos').upsert([_fq]).catch(function(e){console.error('Error guardando finiquito en nube:',e);});}
   cm('modalFiniquito');
   renderFiniquitos();
   alert('Finiquito guardado. Empleado marcado como baja.');
+  if(sb){
+    var _fq={emp_id:empId,fecha_baja:fechaBaja,tipo:obj.tipo,total:obj.total,desglose:obj.desglose,obs:obj.obs};
+    if(fId)_fq.id=fId;
+    var {data:_fqData,error:_fqErr}=await sb.from('rh_finiquitos').upsert([_fq]).select('id');
+    if(_fqErr){console.error('[Finiquito] Error en nube:',_fqErr.message,_fqErr);return;}
+    if(!fId&&_fqData&&_fqData[0]&&_fqData[0].id){
+      var _fqIdx=finiquitos.findIndex(function(x){return x.id===obj.id;});
+      if(_fqIdx>=0){finiquitos[_fqIdx].id=_fqData[0].id;}
+      S.set('finiquitos',finiquitos);
+      console.log('[Finiquito] id Supabase asignado:',_fqData[0].id);
+    }
+  }
 }
 
 function verFiniquito(id){
