@@ -308,7 +308,8 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
   <img class="logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCA1MjAgMzYiPjx0ZXh0IHk9IjI4IiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2ssc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmZmZiI+RkVSUkVQSU5UVVJBUzx0c3BhbiBmaWxsPSIjRDkxQjFCIj5SSDwvdHNwYW4+PC90ZXh0Pjwvc3ZnPg==" alt="FerrepinturasRH">
   <div style="display:flex;align-items:center;gap:12px">
     <button class="hdr-sync" id="syncBtn" onclick="syncAll()">⟳ Sync</button>
-    <div class="hdr-r" style="display:flex;align-items:center;gap:12px"><div style="text-align:right"><strong id="hoyLbl">-</strong><br>FerrepinturasRH — <span id="hdrUser" style="color:rgba(255,255,255,.6)"></span></div><button onclick="cerrarSesion()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:5px 10px;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.05em">SALIR</button></div>
+    <button class="hdr-sync" id="notifBtn" onclick="go('notif')" title="Notificaciones" style="position:relative">🔔 <span id="notifBadge" style="display:none;position:absolute;top:2px;right:2px;background:var(--rojo);color:#fff;font-size:7px;padding:1px 4px;border-radius:8px;line-height:1.4;min-width:14px;text-align:center"></span></button>
+    <div class="hdr-r" style="display:flex;align-items:center;gap:12px"><div style="text-align:right"><strong id="hoyLbl">-</strong><br>FerrepinturasRH — <span id="hdrUser" style="color:rgba(255,255,255,.6)"></span></div><button onclick="cerrarSesion()" style="background:#b91c1c;border:1px solid #ef4444;color:#fff;padding:5px 12px;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.05em">🚪 SALIR</button></div>
   </div>
 </header>
 <div id="syncBanner" style="display:none" class="sync-banner"><div class="sync-dot"></div><span id="syncMsg">Sincronizando con la nube...</span></div>
@@ -351,6 +352,7 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
     <div class="hcard" onclick="go('cierre')"><div class="hcard-icon">🔒</div><div class="hcard-title">Cierre de período</div><div class="hcard-sub">Cerrar y bloquear nómina semanal o quincenal</div><span id="badgeCierre" style="display:none;position:absolute;top:12px;right:12px;font-family:var(--mono);font-size:8px;background:var(--amber);color:#fff;padding:2px 6px">PENDIENTE</span><div class="hcard-bar"></div></div>
     <div class="hcard" onclick="go('auditoria')"><div class="hcard-icon">📋</div><div class="hcard-title">Auditoría</div><div class="hcard-sub">Log de cambios: quién modificó qué y cuándo</div><div class="hcard-bar"></div></div>
     <div class="hcard" onclick="go('usuarios')" id="cardUsuarios"><div class="hcard-icon">👤</div><div class="hcard-title">Usuarios</div><div class="hcard-sub">Gestión de accesos al sistema</div><div class="hcard-bar"></div></div>
+    <div class="hcard" onclick="go('notif')" id="cardNotif"><div class="hcard-icon">🔔</div><div class="hcard-title">Notificaciones</div><div class="hcard-sub">Alertas: docs faltantes, licencias, permisos pendientes</div><span class="hcard-alert" id="bNotif" style="display:none">!</span><div class="hcard-bar"></div></div>
     <div class="hcard" onclick="go('pago')" style="border-color:var(--green)"><div class="hcard-icon">💵</div><div class="hcard-title">Pago de nómina</div><div class="hcard-sub">Lista de pago sábado — semanales y quincenales separados</div><span id="badgePago" style="position:absolute;top:12px;right:12px;font-family:var(--mono);font-size:8px;background:var(--green);color:#fff;padding:2px 6px">HOY</span><div class="hcard-bar"></div></div>
   </div>
 
@@ -371,7 +373,7 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
   <div class="ph"><div><div class="ph-title">Empleados</div><div class="ph-sub">Gestión de plantilla</div></div>
   <div class="ph-acts"><input class="fi" style="width:170px;padding:5px 9px" placeholder="Buscar..." oninput="renderEmpleados(this.value)"><button class="btn bo" onclick="go('home')">← Inicio</button><button class="btn br" onclick="abrirEmp('nuevo')">+ Agregar</button></div></div>
   <div class="tw"><div class="twh"><div class="twt">PLANTILLA — <span id="empCnt">0</span> empleados</div></div>
-  <div class="tscroll"><table><thead><tr><th>Nombre</th><th>Puesto</th><th>Sucursal</th><th>Salario / Período</th><th>Valor/hora</th><th>Bono</th><th>Antigüedad</th><th>Estado</th><th></th></tr></thead><tbody id="tbEmp"></tbody></table></div></div>
+  <div class="tscroll"><table><thead><tr><th>Nombre</th><th>Puesto</th><th>Sucursal</th><th>Salario / Período</th><th>$/Hora</th><th>Bono mensual</th><th>Antigüedad</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tbEmp"></tbody></table></div></div>
 </div>
 
 <!-- RH -->
@@ -389,6 +391,7 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
       <div class="rhtab" onclick="setRHTab('prestamos',this)">Préstamos</div>
       <div class="rhtab" onclick="setRHTab('permisos',this)">Permisos / Vacaciones</div>
       <div class="rhtab" onclick="setRHTab('historial',this)">Historial incidencias</div>
+      <div class="rhtab" onclick="setRHTab('licencias',this)">Licencias</div>
       <div class="rhtab" onclick="setRHTab('docs',this)">Documentos</div>
       <div class="rhtab" onclick="setRHTab('contratos_emp',this)">Contratos</div>
       <div class="rhtab" onclick="setRHTab('evals_emp',this)">Evaluaciones</div>
@@ -397,6 +400,7 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
     <div class="rhpanel" id="rhp-prestamos"></div>
     <div class="rhpanel" id="rhp-permisos"></div>
     <div class="rhpanel" id="rhp-historial"></div>
+    <div class="rhpanel" id="rhp-licencias"></div>
     <div class="rhpanel" id="rhp-docs"></div>
     <div class="rhpanel" id="rhp-contratos_emp"></div>
     <div class="rhpanel" id="rhp-evals_emp"></div>
@@ -485,6 +489,13 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
   <div id="usuariosContent"></div>
 </div>
 
+<!-- NOTIFICACIONES -->
+<div class="scr" id="scr-notif">
+  <div class="ph"><div><div class="ph-title">🔔 Notificaciones</div><div class="ph-sub">Alertas consolidadas — documentos, licencias, permisos y más</div></div>
+  <div class="ph-acts"><button class="btn bo" onclick="go('home')">← Inicio</button><button class="btn br" onclick="renderNotificaciones()">↺ Actualizar</button></div></div>
+  <div id="notifContainer"></div>
+</div>
+
 <!-- SEMÁFORO DE RED -->
 <div class="scr" id="scr-semaforo">
   <div class="ph"><div><div class="ph-title">&#x1F6A6; Red de Sucursales</div><div class="ph-sub">Estado en tiempo real — gestión por excepción</div></div>
@@ -560,7 +571,7 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
       </select>
     </div>
   </div>
-  <div class="fg"><label class="fl">Contraseña temporal</label><input class="fi" type="password" id="uPass" placeholder="Mínimo 6 caracteres"><div class="fhint">Solo para usuarios nuevos. Dejar vacío para no cambiar.</div></div>
+  <div class="fg" id="uPassWrap"><label class="fl">Contraseña</label><input class="fi" type="password" id="uPass" placeholder="Mínimo 8 caracteres (solo al crear nuevo)"><div class="fhint">Solo al crear usuario nuevo.</div></div>
   <div id="uMsg" style="display:none;padding:8px 12px;font-size:11px;margin-top:8px"></div>
 </div><div class="mfoot"><button class="btn bo" onclick="cm('modalUsuario')">Cancelar</button><button class="btn bn" id="uGuardarBtn" onclick="guardarUsuario()">Guardar usuario</button></div></div></div>
 
@@ -571,9 +582,10 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
   <div class="fg"><label class="fl">Link de activación</label>
     <div style="display:flex;gap:8px;align-items:center">
       <input class="fi" id="enrolLink" readonly style="font-family:var(--mono);font-size:11px;color:var(--dim)">
-      <button class="btn bo btn-sm" onclick="copiarEnrolLink()">Copiar</button>
+      <button class="btn bo btn-sm" onclick="copiarEnrolLink()">📋 Copiar enlace</button>
+      <button class="btn bo btn-sm" onclick="regenerarLinkEnrol(parseInt(document.getElementById('enrolEmpId').value))">↻ Regenerar</button>
     </div>
-    <div class="fhint">Isabel copia este link y lo envía al empleado por WhatsApp. El empleado lo abre desde su celular y queda enrolado.</div>
+    <div class="fhint">Pásale este QR al empleado o envíale el link. Expira en 48 horas.</div>
   </div>
   <div style="margin-top:14px;padding:10px 12px;background:#fafaf8;border:1px solid var(--border);font-size:11px;color:var(--dim)">
     ⚠ El link expira en 48 horas. Solo funciona una vez. Si el empleado cambia de celular, genera un nuevo link desde aquí.
@@ -591,13 +603,27 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
 </div><div class="mfoot"><button class="btn bo" onclick="cm('modalCobertura')">Cancelar</button><button class="btn bn" onclick="guardarCobertura()">Registrar</button></div></div></div>
 
 <!-- MODALES EMPLEADO / INCIDENCIA / PERMISO / DOC / SUCURSAL / PRESTAMO -->
-<div class="mbg" id="modalEmp"><div class="modal"><div class="mhd"><div class="mtitle" id="mEmpT">Agregar empleado</div><button class="mclose" onclick="cm('modalEmp')">✕</button></div><div class="mbody"><input type="hidden" id="eId"><div style="font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">Datos personales</div><div class="fg"><label class="fl">Nombre completo</label><input class="fi" id="eNombre" placeholder="Nombre Apellido Apellido"></div><div class="frow"><div class="fg"><label class="fl">Fecha de nacimiento</label><input class="fi" type="date" id="eFechaNac"></div><div class="fg"><label class="fl">Teléfono</label><input class="fi" id="eTel" placeholder="961 000 0000"></div></div><div class="frow"><div class="fg"><label class="fl">CURP</label><input class="fi" id="eCurp" placeholder="CURP (opcional)"></div><div class="fg"><label class="fl">NSS</label><input class="fi" id="eNSS" placeholder="NSS 11 dígitos"></div></div><div style="font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin:14px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">Datos laborales</div><div class="frow"><div class="fg"><label class="fl">Puesto</label><select class="fi" id="ePuesto" onchange="togglePuestoOtro()"><option>Vendedor</option><option>Cajero</option><option>Almacenista</option><option>Gerente de sucursal</option><option>Repartidor</option><option>Auxiliar administrativo</option><option>RH</option><option>Igualador</option><option>Aprendiz de igualador</option><option>Ayudante general</option><option>Mantenimiento</option><option>Limpieza</option><option>Sistemas</option><option>Otro</option></select><input class="fi" id="ePuestoOtro" placeholder="Especifica el puesto" style="display:none;margin-top:6px"></div><div class="fg"><label class="fl">Sucursal</label><select class="fi" id="eSuc"></select></div></div><div class="fg"><label class="fl">Fecha de ingreso</label><input class="fi" type="date" id="eFechaIng"></div><div class="frow"><div class="fg"><label class="fl">Modalidad de pago</label><select class="fi" id="eModalidad" onchange="calcHoraModal()"><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option></select></div><div class="fg"><label class="fl">Salario por período ($)</label><input class="fi" type="number" id="eSal" placeholder="2500" oninput="calcHoraModal()"><div class="fhint" id="eHoraCalc">— $/hora</div></div><div class="fg"><label class="fl">Bono mensual ($)</label><input class="fi" type="number" id="eBono" placeholder="400"></div></div><div class="frow"><div class="fg"><label class="fl">Comisión semanal ($)</label><input class="fi" type="number" id="eComision" placeholder="0"></div><div class="fg"><label class="fl">Abono semanal ($)</label><input class="fi" type="number" id="eAbono" placeholder="0"><div class="fhint">Descuento préstamo</div></div></div><div class="frow"><div class="fg"><label class="fl">Max incidencias para bono</label><input class="fi" type="number" id="eMaxInc" value="0"><div class="fhint">0 = cero tolerancia</div></div><div class="fg"><label class="fl">Días de vacaciones</label><input class="fi" type="number" id="eVacDias" value="6" min="0"></div><div class="fg"><label class="fl">Estado</label><select class="fi" id="eActivo"><option value="1">Activo</option><option value="0">Baja</option></select></div></div></div><div class="mfoot"><button class="btn bo" onclick="cm('modalEmp')">Cancelar</button><button class="btn bn" onclick="guardarEmp()">Guardar</button></div></div></div>
+<div class="mbg" id="modalEmp"><div class="modal"><div class="mhd"><div class="mtitle" id="mEmpT">Agregar empleado</div><button class="mclose" onclick="cm('modalEmp')">✕</button></div><div class="mbody"><input type="hidden" id="eId"><div style="font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">Datos personales</div><div class="fg"><label class="fl">Nombre completo</label><input class="fi" id="eNombre" placeholder="Nombre Apellido Apellido"></div><div class="frow"><div class="fg"><label class="fl">Fecha de nacimiento</label><input class="fi" type="date" id="eFechaNac"></div><div class="fg"><label class="fl">Teléfono</label><input class="fi" id="eTel" placeholder="961 000 0000"></div></div><div class="frow"><div class="fg"><label class="fl">CURP</label><input class="fi" id="eCurp" placeholder="CURP (opcional)"></div><div class="fg"><label class="fl">NSS</label><input class="fi" id="eNSS" placeholder="NSS 11 dígitos"></div></div><div style="font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin:14px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">Datos laborales</div><div class="frow"><div class="fg"><label class="fl">Puesto</label><select class="fi" id="ePuesto" onchange="togglePuestoOtro()"><option>Vendedor</option><option>Administradora de sucursal</option><option>Almacenista</option><option>Gerente de sucursal</option><option>Encargado de logística y reparto</option><option>Chofer</option><option>Encargado de inventarios</option><option>Gerente de operaciones</option><option>Auxiliar administrativo</option><option>RH</option><option>Igualador</option><option>Aprendiz de igualador</option><option>Ayudante general</option><option>Mantenimiento</option><option>Limpieza</option><option>Sistemas</option><option>Otro</option></select><input class="fi" id="ePuestoOtro" placeholder="Especifica el puesto" style="display:none;margin-top:6px"></div><div class="fg"><label class="fl">Sucursal</label><select class="fi" id="eSuc"></select></div></div><div class="fg"><label class="fl">Fecha de ingreso</label><input class="fi" type="date" id="eFechaIng"></div><div class="frow"><div class="fg"><label class="fl">Modalidad de pago</label><select class="fi" id="eModalidad" onchange="calcHoraModal()"><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option></select></div><div class="fg"><label class="fl">Salario por período ($)</label><input class="fi" type="number" id="eSal" placeholder="2500" oninput="calcHoraModal()"><div class="fhint" id="eHoraCalc">— $/hora</div></div><div class="fg"><label class="fl">Bono mensual ($)</label><input class="fi" type="number" id="eBono" placeholder="400"><div class="fhint">No integra SDI</div></div></div><div class="frow"><div class="fg"><label class="fl">Comisión semanal ($)</label><input class="fi" type="number" id="eComision" placeholder="0"></div><div class="fg"><label class="fl">Abono semanal ($)</label><input class="fi" type="number" id="eAbono" placeholder="0"><div class="fhint">Descuento préstamo</div></div></div><div class="frow"><div class="fg"><label class="fl">Máximo de faltas para ganar bono</label><input class="fi" type="number" id="eMaxInc" value="0"><div class="fhint">0 = cero tolerancia</div></div><div class="fg"><label class="fl">Días de vacaciones</label><input class="fi" type="number" id="eVacDias" value="6" min="0"></div><div class="fg"><label class="fl">Estado</label><select class="fi" id="eActivo"><option value="1">Activo</option><option value="0">Baja</option></select></div></div></div><div class="mfoot"><button class="btn bo" onclick="cm('modalEmp')">Cancelar</button><button class="btn bn" onclick="guardarEmp()">Guardar</button></div></div></div>
 
-<div class="mbg" id="modalInc"><div class="modal"><div class="mhd"><div class="mtitle" id="mIncT">Registrar incidencia</div><button class="mclose" onclick="cm('modalInc')">✕</button></div><div class="mbody"><input type="hidden" id="iEmpId"><input type="hidden" id="iFecha"><div id="iInfo" style="background:#fafaf8;border:1px solid var(--border);padding:10px 12px;margin-bottom:16px;font-size:12px;color:var(--dim);"></div><div class="fg"><label class="fl">Tipo de incidencia</label><select class="fi" id="iTipo" onchange="actualizarModalInc()"><option value="ninguna">Sin incidencia</option><option value="falta">Falta</option><option value="retardo">Retardo</option><option value="retiro">Retiro durante horario</option></select></div><div id="iRetWrap" style="display:none"><div class="fg"><label class="fl">Minutos de retardo</label><input class="fi" type="number" id="iMins" placeholder="30" oninput="calcDescModal()"><div class="fhint" id="iDescCalc">Descuento: $0.00</div></div></div><div id="iRetiroWrap" style="display:none"><div class="fg"><label class="fl">Horas fuera durante jornada</label><input class="fi" type="number" id="iHoras" placeholder="2" oninput="calcDescModal()"></div></div><div id="iDescWrap" style="display:none"><div class="fg"><label class="fl">¿Descuento aplicado?</label><label style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer"><input type="checkbox" id="iDescApl"><span style="font-family:var(--mono);font-size:11px">Sí, ya se aplicó</span></label></div></div><div class="fg"><label class="fl">Nota (opcional)</label><input class="fi" id="iNota" placeholder="Permiso, incapacidad, etc."></div></div><div class="mfoot"><button class="btn bo" onclick="cm('modalInc')">Cancelar</button><button class="btn bn" onclick="guardarInc()">Guardar</button></div></div></div>
+<div class="mbg" id="modalInc"><div class="modal"><div class="mhd"><div class="mtitle" id="mIncT">Registrar incidencia</div><button class="mclose" onclick="cm('modalInc')">✕</button></div><div class="mbody"><input type="hidden" id="iEmpId"><input type="hidden" id="iFecha"><div id="iInfo" style="background:#fafaf8;border:1px solid var(--border);padding:10px 12px;margin-bottom:16px;font-size:12px;color:var(--dim);"></div><div class="fg"><label class="fl">Tipo de incidencia</label><select class="fi" id="iTipo" onchange="actualizarModalInc()"><option value="ninguna">Sin incidencia</option><option value="falta">Falta</option><option value="retardo">Retardo</option><option value="retiro">Retiro durante horario</option></select></div><div id="iRetWrap" style="display:none"><div class="fg"><label class="fl">Minutos de retardo</label><input class="fi" type="number" id="iMins" placeholder="30" oninput="calcDescModal()"><div class="fhint" id="iDescCalc">Descuento: $0.00</div></div></div><div id="iRetiroWrap" style="display:none"><div class="fg"><label class="fl">Horas fuera durante jornada</label><input class="fi" type="number" id="iHoras" placeholder="2" oninput="calcDescModal()"></div></div><div id="iDescWrap" style="display:none"><div class="fg"><label class="fl">¿Descuento aplicado?</label><label style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer"><input type="checkbox" id="iDescApl"><span style="font-family:var(--mono);font-size:11px">Sí, ya se aplicó</span></label></div></div><div id="iJustWrap" style="display:none"><div class="fg"><label class="fl" style="color:#16a34a;font-weight:700">¿Falta justificada?</label><label style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer"><input type="checkbox" id="iJustific"><span style="font-family:var(--mono);font-size:11px">Sí — permiso, incapacidad o causa justificada (no genera acta)</span></label></div></div><div class="fg"><label class="fl">Nota (opcional)</label><input class="fi" id="iNota" placeholder="Permiso, incapacidad, etc."></div></div><div class="mfoot"><button class="btn bo" onclick="cm('modalInc')">Cancelar</button><button class="btn bn" onclick="guardarInc()">Guardar</button></div></div></div>
 
 <div class="mbg" id="modalPerm"><div class="modal"><div class="mhd"><div class="mtitle">Solicitar permiso / vacación</div><button class="mclose" onclick="cm('modalPerm')">✕</button></div><div class="mbody"><input type="hidden" id="pEmpId"><div class="fg"><label class="fl">Tipo</label><select class="fi" id="pTipo"><option>Vacaciones</option><option>Permiso con goce</option><option>Permiso sin goce</option><option>Incapacidad IMSS</option><option>Permiso personal</option></select></div><div class="frow"><div class="fg"><label class="fl">Fecha inicio</label><input class="fi" type="date" id="pFechaIni" onchange="calcDiasPerm()"></div><div class="fg"><label class="fl">Fecha fin</label><input class="fi" type="date" id="pFechaFin" onchange="calcDiasPerm()"></div></div><div style="background:#fafaf8;border:1px solid var(--border);padding:8px 12px;margin-bottom:13px;font-family:var(--mono);font-size:11px;">Total: <strong id="pDias">-</strong></div><div class="fg"><label class="fl">Motivo</label><input class="fi" id="pMotivo" placeholder="Describe el motivo del permiso"></div></div><div class="mfoot"><button class="btn bo" onclick="cm('modalPerm')">Cancelar</button><button class="btn bn" onclick="guardarPerm()">Registrar</button></div></div></div>
 
 <div class="mbg" id="modalDoc"><div class="modal"><div class="mhd"><div class="mtitle">Registrar documento</div><button class="mclose" onclick="cm('modalDoc')">✕</button></div><div class="mbody"><input type="hidden" id="dEmpId"><div class="fg"><label class="fl">Tipo de documento</label><select class="fi" id="dTipo"><optgroup label="— Documentos base —"><option>Contrato de trabajo</option><option>INE / Identificación</option><option>CURP</option><option>Comprobante de domicilio</option><option>NSS / IMSS</option><option>Acta de nacimiento</option><option>CV / Solicitud de empleo</option><option>Censo socioeconómico</option><option>Carta de recomendación</option></optgroup><optgroup label="— Por puesto —"><option>Licencia de conducir</option><option>Título profesional</option><option>Cédula profesional</option></optgroup><optgroup label="— Otros —"><option>Carta responsiva de bienes</option><option>Reglamento interior firmado</option><option>Acta administrativa</option><option>Constancia de trabajo</option><option>Otro</option></optgroup></select></div><div class="fg"><label class="fl">Descripción / Nombre del documento</label><input class="fi" id="dNombre" placeholder="Ej. Contrato firmado enero 2024"></div><div class="frow"><div class="fg"><label class="fl">Fecha del documento</label><input class="fi" type="date" id="dFecha"></div><div class="fg"><label class="fl">Notas (opcional)</label><input class="fi" id="dNotas" placeholder="Vencimiento, observaciones..."></div></div><div class="fg"><label class="fl">Subir archivo (PDF o imagen)</label><input class="fi" type="file" id="dArchivo" accept=".pdf,.jpg,.jpeg,.png" style="padding:4px"></div></div><div class="mfoot"><button class="btn bo" onclick="cm('modalDoc')">Cancelar</button><button class="btn bn" onclick="guardarDoc()">Guardar</button></div></div></div>
+
+<div class="mbg" id="modalResponsiva"><div class="modal" style="max-width:880px"><div class="mhd"><div class="mtitle">Carta Responsiva — Capturar bienes asignados</div><button class="mclose" onclick="cm('modalResponsiva')">✕</button></div><div class="mbody">
+  <input type="hidden" id="respEmpId">
+  <div id="respEmpInfo" style="background:#fafaf8;border:1px solid var(--border);padding:10px 12px;margin-bottom:12px;font-size:12px"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <strong style="font-size:12px;font-family:var(--mono)">BIENES ASIGNADOS</strong>
+    <button class="btn bo btn-sm" type="button" onclick="respAgregarBien()">+ Agregar bien</button>
+  </div>
+  <div id="respBienesContainer" style="max-height:380px;overflow-y:auto;border:1px solid var(--border);padding:8px;background:#fff"></div>
+  <p style="font-size:10px;color:var(--dim);margin-top:8px">Los bienes precargados son sugerencias por puesto. Edita, agrega o elimina. Se guardan por empleado.</p>
+</div><div class="mfoot">
+  <button class="btn bo" onclick="cm('modalResponsiva')">Cancelar</button>
+  <button class="btn bn" onclick="respGuardarYGenerar()">Guardar y generar PDF</button>
+</div></div></div>
 
 <div class="mbg" id="modalSuc"><div class="modal"><div class="mhd"><div class="mtitle" id="mSucT">Agregar sucursal</div><button class="mclose" onclick="cm('modalSuc')">✕</button></div><div class="mbody"><input type="hidden" id="sId"><div class="fg"><label class="fl">Nombre</label><input class="fi" id="sNombre" placeholder="Ej. Sucursal Norte"></div><div class="frow"><div class="fg"><label class="fl">Ciudad</label><input class="fi" id="sCiudad" placeholder="Tuxtla Gutiérrez"></div><div class="fg"><label class="fl">Estado</label><select class="fi" id="sActiva"><option value="1">Activa</option><option value="0">Inactiva</option></select></div></div><div style="font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin:14px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">Check-In — Geolocalización</div><div class="frow"><div class="fg"><label class="fl">Latitud</label><input class="fi" id="sLat" placeholder="16.7516" type="number" step="0.0001"></div><div class="fg"><label class="fl">Longitud</label><input class="fi" id="sLng" placeholder="-93.1147" type="number" step="0.0001"></div></div><div class="frow"><div class="fg"><label class="fl">Radio permitido (metros)</label><input class="fi" id="sRadio" placeholder="10" type="number" value="10"><div class="fhint">Distancia máxima desde la sucursal para aceptar check-in</div></div><div class="fg" style="display:flex;align-items:flex-end"><button class="btn bo" style="width:100%" onclick="capturarGPSSuc()">📍 Usar mi ubicación</button></div></div></div><div class="mfoot"><button class="btn bo" onclick="cm('modalSuc')">Cancelar</button><button class="btn bn" onclick="guardarSuc()">Guardar</button></div></div></div>
 
@@ -802,6 +828,13 @@ var nEval=S.get('nEval',1);
 
 var semOff=0,diaIdx=0,repT='semana',repOff=0;
 var rhEmpId=null,rhTab='expediente';
+// Migración de puestos obsoletos
+(function migrarPuestos(){
+  var MAP={'Cajera':'Vendedor','Cajero':'Vendedor','Repartidor':'Encargado de logística y reparto','Repartidora':'Encargado de logística y reparto','Almacenero':'Almacenista','Gerente':'Gerente de sucursal'};
+  var cambios=false;
+  (emp||[]).forEach(function(e){if(MAP[e.puesto]){e.puesto=MAP[e.puesto];cambios=true;}});
+  if(cambios){S.set('emp',emp);(emp||[]).forEach(function(e){if(typeof pushEmp==='function')pushEmp(e);});}
+})();
 var contrTab='todos',evalTab='todos';
 var DIAS=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 
@@ -1157,7 +1190,7 @@ function renderHome(){
   });
 
   // ── Alertas de licencias de repartidores próximas a vencer ──
-  var repartidores=(emp||[]).filter(function(e){return e.activo&&(e.puesto==='Repartidor'||e.puesto==='Chofer'||e.puesto==='Mantenimiento');});
+  var repartidores=(emp||[]).filter(function(e){return e.activo&&(e.puesto==='Encargado de logística y reparto'||e.puesto==='Chofer'||e.puesto==='Mantenimiento');});
   repartidores.forEach(function(e){
     // Buscar doc de licencia en el expediente
     var dEmp=docs[e.id]||[];
@@ -1184,6 +1217,16 @@ function renderHome(){
   });
 
   document.getElementById('alertasBanner').innerHTML=alHtml;
+  // Actualizar badge de notificaciones sin re-renderizar la página entera
+  setTimeout(function(){
+    var nb=document.getElementById('notifBadge');var bc=document.getElementById('bNotif');
+    if(!nb&&!bc)return;
+    var cnt=0;
+    emp.forEach(function(e){if(!e.activo)return;var dEmp=docs[e.id]||[];var DOCS_REQ=docsRequeridos(e.puesto||'');cnt+=DOCS_REQ.filter(function(t){return !dEmp.some(function(d){return d.tipo===t;});}).length>0?1:0;});
+    Object.keys(permisos||{}).forEach(function(eid){(permisos[eid]||[]).forEach(function(p){if(p.estado==='pendiente')cnt++;});});
+    if(nb){if(cnt>0){nb.textContent=cnt;nb.style.display='inline-block';}else nb.style.display='none';}
+    if(bc){bc.style.display=cnt>0?'':'none';if(cnt>0)bc.textContent=cnt;}
+  },0);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1251,7 +1294,7 @@ function renderTablaAsist(){
       '<span style="font-family:var(--mono);font-size:11px;color:#fff;font-weight:500">'+s.toUpperCase()+'</span>'+
       (incCount>0?'<span style="font-family:var(--mono);font-size:8px;padding:2px 6px;background:rgba(217,27,27,.3);color:#ff9090;margin-left:auto">'+incCount+' incidencia(s)</span>':'<span style="font-family:var(--mono);font-size:8px;padding:2px 6px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.4);margin-left:auto">sin incidencias</span>')+
       '</div><div style="overflow-x:auto"><table>'+
-      '<thead><tr><th>Empleado</th><th>Puesto</th><th>Salario sem.</th><th>Valor/hora</th><th>Incidencia</th><th>Detalle</th><th>Descuento</th><th>Aplicado</th><th></th></tr></thead>'+
+      '<thead><tr><th>Empleado</th><th>Puesto</th><th>Salario sem.</th><th>$/Hora</th><th>Incidencia</th><th>Detalle</th><th>Descuento</th><th>Aplicado</th><th></th></tr></thead>'+
       '<tbody>'+rows+'</tbody></table></div></div>';
   });
   document.getElementById('asistContent').innerHTML=html;
@@ -1273,7 +1316,9 @@ function abrirInc(empId,f){
   document.getElementById('iEmpId').value=empId;document.getElementById('iFecha').value=f;
   document.getElementById('iTipo').value=io.tipo;
   document.getElementById('iMins').value=io.mins||0;document.getElementById('iHoras').value=io.horas||0;
-  document.getElementById('iDescApl').checked=io.descApl||false;document.getElementById('iNota').value=io.nota||'';
+  document.getElementById('iDescApl').checked=io.descApl||false;
+  var jEl=document.getElementById('iJustific');if(jEl)jEl.checked=io.justificada||false;
+  document.getElementById('iNota').value=io.nota||'';
   actualizarModalInc();om('modalInc');
 }
 function actualizarModalInc(){
@@ -1281,6 +1326,8 @@ function actualizarModalInc(){
   document.getElementById('iRetWrap').style.display=tipo==='retardo'?'block':'none';
   document.getElementById('iRetiroWrap').style.display=tipo==='retiro'?'block':'none';
   document.getElementById('iDescWrap').style.display=tipo!=='ninguna'?'block':'none';
+  var jw=document.getElementById('iJustWrap');if(jw)jw.style.display=tipo==='falta'?'block':'none';
+  if(tipo!=='falta'){var jEl=document.getElementById('iJustific');if(jEl)jEl.checked=false;}
   calcDescModal();
 }
 function calcDescModal(){
@@ -1297,7 +1344,8 @@ function guardarInc(){
   var f=document.getElementById('iFecha').value;
   var tipo=document.getElementById('iTipo').value;
   if(!inc[f])inc[f]={};
-  inc[f][empId]={tipo:tipo,mins:tipo==='retardo'?parseFloat(document.getElementById('iMins').value)||0:0,horas:tipo==='retiro'?parseFloat(document.getElementById('iHoras').value)||0:0,descApl:tipo!=='ninguna'?document.getElementById('iDescApl').checked:false,nota:document.getElementById('iNota').value};
+  var _just=tipo==='falta'?(document.getElementById('iJustific').checked||false):false;
+  inc[f][empId]={tipo:tipo,mins:tipo==='retardo'?parseFloat(document.getElementById('iMins').value)||0:0,horas:tipo==='retiro'?parseFloat(document.getElementById('iHoras').value)||0:0,descApl:tipo!=='ninguna'?document.getElementById('iDescApl').checked:false,justificada:_just,nota:document.getElementById('iNota').value};
   S.set('inc',inc);pushInc(f,empId);cm('modalInc');renderDias();renderHome();
   // ── Verificar si se genera Acta Administrativa automática ──
   verificarActaAutomatica(empId,f,tipo);
@@ -1402,8 +1450,9 @@ function verificarActaAutomatica(empId,fecha,tipoInc){
       }
     },400);
   }
-  // Acta por falta injustificada
-  if(tipoInc==='falta'&&!yaHayActaMes){
+  // Acta por falta injustificada (solo si no está marcada como justificada)
+  var _incActual=inc[fecha]&&inc[fecha][empId];
+  if(tipoInc==='falta'&&!yaHayActaMes&&!(_incActual&&_incActual.justificada)){
     var actaFalta={id:Date.now()+1,empId:empId,empNombre:e.nombre,fecha:fecha,tipo:'Ausencia sin justificar',sancion:'Amonestación escrita',auto:true,mesKey:mesKey,detalle:'Falta injustificada registrada el '+fFechaCorta(fecha)+'. Total de faltas en el mes: '+faltasMes+'.'};
     actas[empId].push(actaFalta);
     S.set('actas',actas);
@@ -1419,6 +1468,29 @@ function verificarActaAutomatica(empId,fecha,tipoInc){
     var mesLabel=hoy.toLocaleDateString('es-MX',{month:'long',year:'numeric'});
     setTimeout(function(){msg('⚠ '+e.nombre+' pierde bono de $700 en '+mesLabel+' ('+incTotal+' incidencias)');},600);
   }
+}
+
+function renderLicencias(){
+  var e=emp.find(function(x){return x.id===rhEmpId;});if(!e)return;
+  var dEmp=docs[e.id]||[];
+  var licDocs=dEmp.filter(function(d){return d.tipo==='Licencia de conducir';}).sort(function(a,b){return(b.fecha||'')>(a.fecha||'')?1:-1;});
+  var hoy=new Date();hoy.setHours(0,0,0,0);
+  var requiereL=PUESTOS_LICENCIA.indexOf(e.puesto)!==-1;
+  var licHtml='';
+  if(!requiereL){
+    licHtml='<div style="padding:20px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;font-size:12px;color:#166534">✓ El puesto <b>'+sane(e.puesto)+'</b> no requiere licencia de conducir.</div>';
+  } else if(!licDocs.length){
+    licHtml='<div style="padding:16px;background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;font-size:12px;color:#991b1b">🪪 <b>Sin licencia registrada.</b> Agrega el documento desde la pestaña Documentos (tipo: Licencia de conducir).</div>';
+  } else {
+    licHtml=licDocs.map(function(d,i){
+      var vencStr=d.notas&&d.notas.match(/^\d{4}-\d{2}-\d{2}/)?d.notas.match(/^\d{4}-\d{2}-\d{2}/)[0]:null;
+      var diff=vencStr?Math.round((new Date(vencStr+'T12:00:00')-hoy)/(864e5)):null;
+      var estado=diff===null?'<span style="color:var(--dim)">Sin fecha de vencimiento</span>':diff<0?'<span style="color:var(--rojo);font-weight:700">⚠ Vencida hace '+(diff*-1)+' días</span>':diff<=30?'<span style="color:var(--amber);font-weight:700">⚠ Vence en '+diff+' días ('+fFechaCorta(vencStr)+')</span>':'<span style="color:var(--green)">✓ Vigente — vence '+fFechaCorta(vencStr)+'</span>';
+      return '<div class="tw" style="margin-bottom:8px"><div class="twh"><div class="twt">Licencia #'+(i+1)+(i===0?' (más reciente)':'')+'</div></div><div style="padding:12px 16px">'+fila('Fecha registro',fFechaCorta(d.fecha))+fila('Notas / Vencimiento',d.notas||'—')+fila('Estado',estado)+'</div></div>';
+    }).join('');
+  }
+  document.getElementById('rhp-licencias').innerHTML=
+    '<div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><strong>Licencias de '+sane(e.nombre)+'</strong><button class="btn bn btn-sm" onclick="setRHTab(\'docs\',document.querySelector(\'.rhtab:nth-child(6)\'))">+ Agregar licencia</button></div>'+licHtml;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1677,7 +1749,7 @@ function renderEmpleados(filtro){
       '<button class="btn bd2 btn-sm" onclick="toggleEmp('+e.id+')">'+(e.activo?'Baja':'Activar')+'</button>'+
       '</td></tr>';
   });
-  document.getElementById('tbEmp').innerHTML=rows||'<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--dim)">Sin empleados.</td></tr>';
+  document.getElementById('tbEmp').innerHTML=rows||'<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--dim)">👥 No hay empleados en la plantilla. Usa el botón <strong>+ Agregar</strong> para comenzar.</td></tr>';
 }
 function toggleEmp(id){var e=emp.find(function(x){return x.id===id;});e.activo=!e.activo;S.set('emp',emp);pushEmp(e);renderEmpleados();renderHome();msg(e.nombre+' '+(e.activo?'reactivado':'dado de baja'));}
 function togglePuestoOtro(){var sel=document.getElementById('ePuesto');var inp=document.getElementById('ePuestoOtro');if(inp)inp.style.display=sel.value==='Otro'?'block':'none';}
@@ -1769,6 +1841,7 @@ function renderRHTab(tab){
   if(tab==='expediente')renderExpediente();
   else if(tab==='permisos')renderPermisos();
   else if(tab==='historial')renderHistorial();
+  else if(tab==='licencias')renderLicencias();
   else if(tab==='prestamos')renderPrestamos();
   else if(tab==='docs')renderDocs();
   else if(tab==='contratos_emp')renderContratosEmp();
@@ -1790,14 +1863,16 @@ function renderExpediente(){
     fila('Comisión semanal','$'+fmt(e.comision||0))+fila('Abono semanal','$'+fmt(e.abono||0))+
     fila('IMSS obrero aprox.','$'+fmt(imssObrero(e)))+fila('Días de vacaciones',e.vacDias||6)+
     fila('NSS',e.nss||'—')+
-    (PUESTOS_LICENCIA.indexOf(e.puesto)!==-1?(function(){
+    (function(){
       var dEmp2=docs[e.id]||[];
       var licDoc2=dEmp2.filter(function(d){return d.tipo==='Licencia de conducir';}).sort(function(a,b){return(b.fecha||'')>(a.fecha||'')?1:-1;})[0];
-      var licStatus2=licDoc2?('<span style="color:var(--green);font-size:11px">✓ Registrada'+(licDoc2.notas?' · Venc: '+licDoc2.notas:'')+'</span>'):'<span style="color:var(--rojo);font-size:11px;font-weight:700">⚠ Sin licencia registrada</span>';
+      var licStatus2=licDoc2?('<span style="color:var(--green);font-size:11px">✓ Registrada'+(licDoc2.notas?' · Venc: '+licDoc2.notas:'')+'</span>'):'<span style="color:var(--dim);font-size:11px">No aplica / No registrada</span>';
       return fila('Licencia de conducir',licStatus2);
-    })():'') +
+    })() +
     fila('Gana bono este mes',ganaBono(e.id,new Date().getFullYear(),new Date().getMonth())?'Sí':'No')+
-    fila('Estado',e.activo?'Activo':'Baja')+'</div></div></div>'+
+    fila('Estado',e.activo?'Activo':'Baja')+
+    (function(){var ac=S.get('actas',{})[e.id]||[];var acMes=ac.filter(function(a){var hm=new Date();return a.mesKey===(hm.getFullYear()+'-'+String(hm.getMonth()+1).padStart(2,'0'));});var aStyle=ac.length>0?';color:var(--rojo);font-weight:700':'';return fila('Actas administrativas','<span style="'+aStyle+'">'+ac.length+' total &nbsp;|&nbsp; '+acMes.length+' este mes</span><button class="btn bo btn-sm" style="margin-left:8px" onclick="setRHTab(\'historial\',document.querySelector(\'.rhtab:nth-child(4)\'))">Ver historial</button>');})() +
+    '</div></div></div>'+
     '<div style="margin-top:14px;display:flex;gap:8px">'+
     '<button class="btn bn" onclick="abrirRecibo('+e.id+')">📋 Imprimir recibo de nómina</button>'+
     '<button class="btn bo" onclick="abrirContrato(\'nuevo\','+e.id+')">📄 Nuevo contrato</button>'+
@@ -1834,7 +1909,7 @@ function renderPrestamos(){
   var hoy=fechaLocalCST();
   var lunesHoy=getLunesDeFecha(hoy);
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><strong style="font-size:13px">Préstamos y adeudos</strong><button class="btn br" onclick="abrirModalPrestamo()">+ Nuevo préstamo</button></div>';
-  if(!pEmp.length){html+='<div style="text-align:center;padding:40px 20px;color:var(--dim);font-size:12px">Sin préstamos registrados.</div>';document.getElementById('rhp-prestamos').innerHTML=html;return;}
+  if(!pEmp.length){html+='<div style="text-align:center;padding:40px 20px;color:var(--dim);font-size:13px">💳 Este empleado no tiene préstamos registrados.</div>';document.getElementById('rhp-prestamos').innerHTML=html;return;}
   var activos=pEmp.filter(function(p){return !p.liquidado;});
   var totalPendiente=activos.reduce(function(a,p){return a+p.abonos.filter(function(ab){return !ab.pagado;}).reduce(function(b,ab){return b+ab.monto;},0);},0);
   html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">'+
@@ -1853,7 +1928,7 @@ function renderPrestamos(){
       else{statusCls='pendiente';statusTxt='Pendiente';}
       return '<div class="pr-cal-row"><span class="pr-cal-sem">'+ab.sem+'</span><span class="pr-cal-fecha">'+fFechaCorta(ab.fecha)+'</span><span class="pr-cal-monto">$'+fmt(ab.monto)+'</span><span class="pr-cal-status '+statusCls+'">'+statusTxt+'</span><button class="btn '+(ab.pagado?'bo':'bn')+' btn-sm" onclick="marcarAbono('+rhEmpId+','+pr.id+','+idx+')">'+(ab.pagado?'Desmarcar':'Marcar pagado')+'</button></div>';
     }).join('');
-    html+='<div class="pr-card"><div class="pr-card-hdr"><div><div class="pr-card-nm">'+pr.desc+'</div><div style="font-size:11px;color:var(--dim);margin-top:2px">$'+fmt(pr.monto)+' total · $'+fmt(pr.cuota)+'/semana · '+pr.semanas+' semanas</div></div><div style="display:flex;align-items:center;gap:8px"><span class="pr-badge '+(pr.liquidado?'liquidado':'activo')+'">'+(pr.liquidado?'Liquidado':'Activo')+' · '+pct+'%</span>'+(pr.liquidado?'':'<span style="font-size:12px;font-weight:700;color:var(--rojo)">Saldo: $'+fmt(saldoPend)+'</span>')+'<button class="btn bd2 btn-sm" onclick="eliminarPrestamo('+rhEmpId+','+pr.id+')">🗑</button></div></div><div class="pr-progress"><div class="pr-progress-bar" style="width:'+pct+'%"></div></div><div class="pr-cal">'+calRows+'</div></div>';
+    html+='<div class="pr-card"><div class="pr-card-hdr"><div><div class="pr-card-nm">'+pr.desc+'</div><div style="font-size:11px;color:var(--dim);margin-top:2px">$'+fmt(pr.monto)+' total · $'+fmt(pr.cuota)+'/semana · '+pr.semanas+' semanas</div></div><div style="display:flex;align-items:center;gap:8px"><span class="pr-badge '+(pr.liquidado?'liquidado':'activo')+'">'+(pr.liquidado?'✓ Liquidado':'Activo')+' · '+pct+'%</span>'+(pr.liquidado?'':'<span style="font-size:12px;font-weight:700;color:var(--rojo)">Saldo: $'+fmt(saldoPend)+'</span>')+'<button class="btn bd2 btn-sm" onclick="eliminarPrestamo('+rhEmpId+','+pr.id+')">🗑</button></div></div><div class="pr-progress"><div class="pr-progress-bar" style="width:'+pct+'%"></div></div><div class="pr-cal">'+calRows+'</div></div>';
   });
   el.innerHTML=html;
 }
@@ -1863,14 +1938,25 @@ function renderPrestamos(){
 // ═══════════════════════════════════════════════════════════
 function renderPermisos(){
   var pEmp=permisos[rhEmpId]||[];
-  var rows=pEmp.length===0?'<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--dim)">Sin permisos registrados.</td></tr>':
+  var rows=pEmp.length===0?'<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--dim)">📋 Sin permisos registrados para este empleado.</td></tr>':
     pEmp.slice().reverse().map(function(p){
       var estClass={pendiente:'b-pend',aprobado:'b-apro',rechazado:'b-rech'}[p.estado]||'b-ok';
-      return '<tr><td style="font-family:var(--mono);font-size:11px">'+fFechaCorta(p.fechaIni)+'</td><td style="font-family:var(--mono);font-size:11px">'+fFechaCorta(p.fechaFin)+'</td><td style="font-family:var(--mono)">'+p.dias+' día(s)</td><td><span style="font-family:var(--mono);font-size:10px;background:#f0f0f0;padding:2px 7px">'+p.tipo+'</span></td><td style="font-size:11px;color:var(--dim)">'+p.motivo+'</td><td><span class="badge '+estClass+'"><span class="bd"></span>'+p.estado+'</span></td><td style="display:flex;gap:4px">'+(p.estado==='pendiente'?'<button class="btn bg_ btn-sm" onclick="cambiarEstPerm('+rhEmpId+','+p.id+',\'aprobado\')">Aprobar</button><button class="btn bd2 btn-sm" onclick="cambiarEstPerm('+rhEmpId+','+p.id+',\'rechazado\')">Rechazar</button>':'')+'</td></tr>';
+      return '<tr><td style="font-family:var(--mono);font-size:11px">'+fFechaCorta(p.fechaIni)+'</td><td style="font-family:var(--mono);font-size:11px">'+fFechaCorta(p.fechaFin)+'</td><td style="font-family:var(--mono)">'+p.dias+' día(s)</td><td><span style="font-family:var(--mono);font-size:10px;background:#f0f0f0;padding:2px 7px">'+p.tipo+'</span></td><td style="font-size:11px;color:var(--dim)">'+p.motivo+'</td><td><span class="badge '+estClass+'"><span class="bd"></span>'+p.estado+'</span></td><td style="display:flex;gap:4px">'+(p.estado==='pendiente'?'<button class="btn bg_ btn-sm" onclick="cambiarEstPerm('+rhEmpId+','+p.id+',\'aprobado\')">Aprobar</button><button class="btn bd2 btn-sm" onclick="cambiarEstPerm('+rhEmpId+','+p.id+',\'rechazado\')">Rechazar</button>':p.estado==='aprobado'?'<button class="btn bd2 btn-sm" style="background:#dc2626;color:#fff;font-size:10px" onclick="desaprobarPermiso('+p.id+')">↩ Desaprobar</button>':p.estado==='rechazado'?'<button class="btn bg_ btn-sm" style="background:var(--green);color:#fff;font-size:10px" onclick="desaprobarPermiso('+p.id+')">↩ Reactivar</button>':'')+'</td></tr>';
     }).join('');
   document.getElementById('rhp-permisos').innerHTML='<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn br" onclick="abrirPerm()">+ Solicitar permiso / vacación</button></div><div class="tw"><div class="twh"><div class="twt">PERMISOS Y VACACIONES</div></div><div class="tscroll"><table><thead><tr><th>Desde</th><th>Hasta</th><th>Días</th><th>Tipo</th><th>Motivo</th><th>Estado</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 function cambiarEstPerm(empId,permId,estado){var p=(permisos[empId]||[]).find(function(x){return x.id===permId;});if(p){p.estado=estado;S.set('permisos',permisos);renderPermisos();renderHome();msg('Permiso '+estado);}}
+async function desaprobarPermiso(pid){
+  if(!confirm('¿Revertir aprobación? Regresa a pendiente.'))return;
+  if(sb){
+    var r=await sb.from('rh_permisos').update({estado:'pendiente'}).eq('id',pid);
+    if(r.error){msg('Error: '+r.error.message,true);return;}
+  }
+  Object.keys(permisos||{}).forEach(function(eid){(permisos[eid]||[]).forEach(function(p){if(p.id===pid)p.estado='pendiente';});});
+  S.set('permisos',permisos);
+  renderPermisos();
+  msg('Permiso regresado a pendiente');
+}
 function abrirPerm(){document.getElementById('pEmpId').value=rhEmpId;document.getElementById('pFechaIni').value=hoyFecha();document.getElementById('pFechaFin').value=hoyFecha();document.getElementById('pMotivo').value='';calcDiasPerm();om('modalPerm');}
 function calcDiasPerm(){var ini=document.getElementById('pFechaIni').value;var fin=document.getElementById('pFechaFin').value;if(ini&&fin){document.getElementById('pDias').textContent=diasEntre(ini,fin)+' día(s)';}}
 function guardarPerm(){
@@ -1898,7 +1984,7 @@ function renderHistorial(){
   var totalRetardos=historial.filter(function(x){return x.io.tipo==='retardo';}).length;
   var totalRetiros=historial.filter(function(x){return x.io.tipo==='retiro';}).length;
   var totalDesc=historial.reduce(function(s,x){return s+(x.io.descApl?calcDesc(e,x.io):0);},0);
-  var rows=historial.length===0?'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--dim)">Sin incidencias registradas.</td></tr>':
+  var rows=historial.length===0?'<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--dim)">✅ Sin incidencias registradas este mes.</td></tr>':
     historial.map(function(h){
       var desc=calcDesc(e,h.io);
       var detalle='-';
@@ -1906,13 +1992,19 @@ function renderHistorial(){
       if(h.io.tipo==='retiro'&&h.io.horas>0)detalle=h.io.horas+'h';
       return '<tr><td style="font-family:var(--mono);font-size:11px">'+fFecha(h.f)+'</td><td><span class="badge '+tipoClass[h.io.tipo]+'"><span class="bd"></span>'+tipoLabel[h.io.tipo]+'</span></td><td style="font-size:11px;color:var(--dim)">'+detalle+'</td><td style="font-family:var(--mono)">-$'+fmt(desc)+'</td><td style="font-family:var(--mono);font-size:10px;color:'+(h.io.descApl?'var(--green)':'var(--rojo)')+'">'+(h.io.descApl?'Sí':'No')+'</td><td style="font-size:11px;color:var(--dim)">'+(h.io.nota||'-')+'</td></tr>';
     }).join('');
+  var actas=S.get('actas',{})[e.id]||[];
+  var actasRows=actas.length?actas.map(function(a,i){
+    return '<tr><td style="font-family:var(--mono);font-size:11px">'+fFechaCorta(a.fecha)+'</td><td><span class="badge b-falt"><span class="bd"></span>Acta</span></td><td style="font-size:11px">'+sane(a.tipo)+'</td><td style="font-size:11px">'+sane(a.sancion)+'</td><td style="font-size:10px;color:var(--dim)">'+(a.auto?'Auto':'Manual')+'</td></tr>';
+  }).join(''):'<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--dim)">Sin actas administrativas</td></tr>';
   document.getElementById('rhp-historial').innerHTML=
-    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;">'+
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;">'+
     '<div class="stat r"><div class="s-l">Faltas total</div><div class="s-v red">'+totalFaltas+'</div></div>'+
     '<div class="stat a"><div class="s-l">Retardos total</div><div class="s-v amber">'+totalRetardos+'</div></div>'+
     '<div class="stat p"><div class="s-l">Retiros total</div><div class="s-v" style="color:var(--purple)">'+totalRetiros+'</div></div>'+
-    '<div class="stat r"><div class="s-l">Total desc. aplicados</div><div class="s-v red">-$'+fmt(totalDesc)+'</div></div></div>'+
-    '<div class="tw"><div class="twh"><div class="twt">HISTORIAL DE INCIDENCIAS</div></div><div class="tscroll"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Descuento</th><th>Aplicado</th><th>Nota</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    '<div class="stat r"><div class="s-l">Total desc. aplicados</div><div class="s-v red">-$'+fmt(totalDesc)+'</div></div>'+
+    '<div class="stat r"><div class="s-l">Actas administrativas</div><div class="s-v red">'+actas.length+'</div></div></div>'+
+    '<div class="tw" style="margin-bottom:12px"><div class="twh"><div class="twt">HISTORIAL DE INCIDENCIAS</div></div><div class="tscroll"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Descuento</th><th>Aplicado</th><th>Nota</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
+    '<div class="tw"><div class="twh"><div class="twt">ACTAS ADMINISTRATIVAS ('+actas.length+')</div><div><button class="btn bn btn-sm" onclick="verDocumento(\'acta\','+e.id+')">⚠ Nueva / Ver acta</button></div></div><div class="tscroll"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Infracción</th><th>Sanción</th><th>Origen</th></tr></thead><tbody>'+actasRows+'</tbody></table></div></div>';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1934,7 +2026,7 @@ var DOCS_BASE=[
 
 // Documentos adicionales por puesto
 // Licencia de conducir: puestos que operan vehículos
-var PUESTOS_LICENCIA=['Repartidor','Chofer','Mantenimiento'];
+var PUESTOS_LICENCIA=['Encargado de logística y reparto','Chofer','Mantenimiento'];
 // Título profesional: puestos con perfil técnico/profesional
 var PUESTOS_TITULO=['Gerente de sucursal','Auxiliar administrativo','RH','Sistemas','Igualador'];
 // Cédula profesional: puestos donde la cédula es exigible (título universitario / técnico certificado)
@@ -1955,7 +2047,7 @@ function renderDocs(){
   var completados=DOCS_REQ.filter(function(t){return dEmp.some(function(d){return d.tipo===t;});}).length;
   var pct=Math.round(completados/DOCS_REQ.length*100);
   var pctColor=pct===100?'#16a34a':pct>=60?'#ca8a04':'#dc2626';
-  var rows=dEmp.length===0?'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--dim)">Sin documentos registrados.</td></tr>':
+  var rows=dEmp.length===0?'<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--dim)">📁 Sin documentos cargados. Usa <strong>+ Documento</strong> para agregar.</td></tr>':
     dEmp.map(function(d){
       var tieneData=!!(d.tieneArchivo&&docArchivos[d.id])||!!d.firmaData;
       var verBtn=tieneData?'<button class="btn bo btn-sm" onclick="verDocRH('+d.id+')">👁 Ver</button> ':'';
@@ -2015,12 +2107,20 @@ function abrirDoc(){document.getElementById('dEmpId').value=rhEmpId;document.get
 function guardarDoc(){
   var empId=parseInt(document.getElementById('dEmpId').value);
   var nombre=document.getElementById('dNombre').value.trim();
+  var tipo=document.getElementById('dTipo').value;
   if(!nombre){msg('Descripción requerida',true);return;}
   var fileInp=document.getElementById('dArchivo');
   var file=fileInp&&fileInp.files&&fileInp.files[0];
   if(!docs[empId])docs[empId]=[];
+  var existingIdx=docs[empId].findIndex(function(d){return d.tipo===tipo;});
+  if(existingIdx>=0){
+    if(!confirm('Ya existe un documento de tipo "'+tipo+'" para este empleado. ¿Reemplazarlo?'))return;
+    var oldId=docs[empId][existingIdx].id;
+    delete docArchivos[oldId];
+    docs[empId].splice(existingIdx,1);
+  }
   var docId=nDoc++;
-  docs[empId].push({id:docId,tipo:document.getElementById('dTipo').value,nombre:nombre,fecha:document.getElementById('dFecha').value,notas:document.getElementById('dNotas').value,tieneArchivo:!!file});
+  docs[empId].push({id:docId,tipo:tipo,nombre:nombre,fecha:document.getElementById('dFecha').value,notas:document.getElementById('dNotas').value,tieneArchivo:!!file});
   S.set('docs',docs);S.set('nDoc',nDoc);
   if(file){
     if(file.size>10*1024*1024){msg('Archivo muy grande — max 10MB',true);return;}
@@ -2142,7 +2242,7 @@ function renderContratos(){
   var alertEl=document.getElementById('contratosAlerta');
   if(proxCount>0){alertEl.style.display='block';alertEl.textContent='⚠ '+proxCount+' contrato(s) vence(n) en los próximos 30 días. Revisa y renueva a tiempo.';}
   else{alertEl.style.display='none';}
-  if(!lista.length){document.getElementById('contratosContent').innerHTML='<div style="text-align:center;padding:40px;color:var(--dim);font-family:var(--mono);font-size:12px">Sin contratos en esta categoría.</div>';return;}
+  if(!lista.length){document.getElementById('contratosContent').innerHTML='<div style="text-align:center;padding:40px;color:var(--dim);font-family:var(--mono);font-size:12px">📄 Sin contratos en esta categoría.</div>';return;}
   var html=lista.map(function(c){
     var e=emp.find(function(x){return x.id===c.emp_id;});
     var diasFin=c.fecha_fin?Math.round((new Date(c.fecha_fin+'T12:00:00')-hoy)/(864e5)):null;
@@ -2160,6 +2260,9 @@ function renderContratos(){
           (c.firmado?'<span style="font-family:var(--mono);font-size:9px;background:#dcfce7;color:#166534;padding:2px 6px">✓ Firmado</span>':'<span style="font-family:var(--mono);font-size:9px;background:#fef9c3;color:#854d0e;padding:2px 6px">Sin firma</span>')+
           '<button class="btn bo btn-sm" onclick="verContratoTexto('+c.id+')">Ver PDF</button>'+
           (c.firmado?
+            (c.firma_patron?'':'<button class="btn bo btn-sm" style="border-color:var(--navy);color:var(--navy)" onclick="firmarContratoEmpresa('+c.id+')">🏢 Rep. legal</button>')+
+            (c.firma_testigo1?'':'<button class="btn bo btn-sm" onclick="firmarTestigoContrato('+c.id+',1)">👤 Testigo 1</button>')+
+            (c.firma_testigo2?'':'<button class="btn bo btn-sm" onclick="firmarTestigoContrato('+c.id+',2)">👤 Testigo 2</button>')+
             '<button class="btn bo btn-sm" onclick="toggleFirmaContrato('+c.id+')">Desmarcar firmado</button>':
             '<button class="btn bn btn-sm" onclick="firmarContrato('+c.id+')">✍ Firmar digitalmente</button>')+
           '<button class="btn bd2 btn-sm" onclick="eliminarContrato('+c.id+')">🗑</button>'+
@@ -2214,14 +2317,16 @@ function generarTextoContrato(c,e){
 function renderContratosEmp(){
   var lista=contratos.filter(function(c){return c.emp_id===rhEmpId;});
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><strong style="font-size:13px">Contratos del empleado</strong><button class="btn br" onclick="abrirContrato(\'nuevo\','+rhEmpId+')">+ Nuevo contrato</button></div>';
-  if(!lista.length){html+='<div style="text-align:center;padding:40px;color:var(--dim);font-size:12px">Sin contratos registrados.</div>';document.getElementById('rhp-contratos_emp').innerHTML=html;return;}
+  if(!lista.length){html+='<div style="text-align:center;padding:40px;color:var(--dim);font-size:12px">📄 Sin contratos. Usa <strong>+ Nuevo contrato</strong> para generar uno.</div>';document.getElementById('rhp-contratos_emp').innerHTML=html;return;}
   var hoy=new Date();hoy.setHours(0,0,0,0);
   html+=lista.sort(function(a,b){return b.creado_en>a.creado_en?1:-1;}).map(function(c){
     var diasFin=c.fecha_fin?Math.round((new Date(c.fecha_fin+'T12:00:00')-hoy)/(864e5)):null;
     var statusTxt=!c.fecha_fin?'Indefinido':diasFin<0?'Vencido':diasFin<=30?'Vence en '+diasFin+' días':'Vigente';
     var statusColor=statusTxt==='Vencido'?'var(--rojo)':statusTxt==='Indefinido'?'var(--dim)':statusTxt.startsWith('Vence')?'var(--amber)':'var(--green)';
-    var firmaEmpresaBtn=c.firmado&&!c.firma_patron?'<button class="btn bo btn-sm" style="border-color:var(--navy);color:var(--navy)" onclick="firmarContratoEmpresa('+c.id+')">🏢 Firma empresa</button>':'';
-    return '<div class="tw" style="margin-bottom:10px"><div class="twh"><div class="twt">'+c.tipo.toUpperCase()+'<span style="font-family:var(--mono);font-size:9px;font-weight:400;color:'+statusColor+';margin-left:8px">● '+statusTxt+'</span></div><div style="display:flex;gap:6px">'+firmaEmpresaBtn+'<button class="btn bo btn-sm" onclick="verContratoTexto('+c.id+')">Ver PDF</button>'+(c.firmado?'<button class="btn bo btn-sm" onclick="toggleFirmaContrato('+c.id+')">✓ Firmado</button>':'<button class="btn bn btn-sm" onclick="firmarContrato('+c.id+')">✍ Firmar</button>')+'</div></div><div style="padding:12px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'+
+    var firmaEmpresaBtn=c.firmado&&!c.firma_patron?'<button class="btn bo btn-sm" style="border-color:var(--navy);color:var(--navy)" onclick="firmarContratoEmpresa('+c.id+')">🏢 Firma rep. legal</button>':'';
+    var firmaTest1Btn=c.firmado&&!c.firma_testigo1?'<button class="btn bo btn-sm" onclick="firmarTestigoContrato('+c.id+',1)">👤 Testigo 1</button>':'';
+    var firmaTest2Btn=c.firmado&&!c.firma_testigo2?'<button class="btn bo btn-sm" onclick="firmarTestigoContrato('+c.id+',2)">👤 Testigo 2</button>':'';
+    return '<div class="tw" style="margin-bottom:10px"><div class="twh"><div class="twt">'+c.tipo.toUpperCase()+'<span style="font-family:var(--mono);font-size:9px;font-weight:400;color:'+statusColor+';margin-left:8px">● '+statusTxt+'</span></div><div style="display:flex;gap:6px;flex-wrap:wrap">'+firmaEmpresaBtn+firmaTest1Btn+firmaTest2Btn+'<button class="btn bo btn-sm" onclick="verContratoTexto('+c.id+')">Ver PDF</button>'+(c.firmado?'<button class="btn bo btn-sm" onclick="toggleFirmaContrato('+c.id+')">✓ Firmado</button>':'<button class="btn bn btn-sm" onclick="firmarContrato('+c.id+')">✍ Firmar</button>')+'</div></div><div style="padding:12px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'+
       fila('Inicio',fFechaCorta(c.fecha_inicio))+fila('Fin',c.fecha_fin?'<span style="color:'+statusColor+'">'+fFechaCorta(c.fecha_fin)+'</span>':'Indefinido')+fila('Estado','<span style="color:'+statusColor+';font-weight:600">'+statusTxt+'</span>')+
       fila('Salario','$'+fmt(c.salario_contrato))+fila('Puesto',c.puesto_contrato)+fila('Firmado',c.firmado?'<span style="color:#16a34a;font-weight:700">✓ Sí — '+fFechaCorta(c.fecha_firma)+'</span>':'<span style="color:#dc2626">No firmado</span>')+
       (c.notas?'<div style="grid-column:1/-1">'+fila('Notas',c.notas)+'</div>':'')+
@@ -2298,7 +2403,7 @@ function renderEvaluaciones(){
   if(evalTab==='pendiente')lista=lista.filter(function(e){return e.estado==='pendiente'||e.estado==='en_proceso';});
   else if(evalTab==='completado')lista=lista.filter(function(e){return e.estado==='completado';});
   lista.sort(function(a,b){return b.creado_en>a.creado_en?1:-1;});
-  if(!lista.length){document.getElementById('evalContent').innerHTML='<div style="text-align:center;padding:40px;color:var(--dim);font-family:var(--mono);font-size:12px">Sin evaluaciones en esta categoría.</div>';return;}
+  if(!lista.length){document.getElementById('evalContent').innerHTML='<div style="text-align:center;padding:40px;color:var(--dim);font-family:var(--mono);font-size:12px">⭐ Sin evaluaciones en esta categoría.</div>';return;}
   var starColors={0:'#9ca3af',1:'#ef4444',2:'#f97316',3:'#eab308',4:'#84cc16',5:'#22c55e'};
   var html=lista.map(function(ev){
     var e=emp.find(function(x){return x.id===ev.emp_id;})||{nombre:ev.emp_nombre||'—',sucursal:'—'};
@@ -2331,7 +2436,7 @@ function eliminarEval(id){if(!confirm('¿Eliminar esta evaluación?'))return;eva
 function renderEvalsEmp(){
   var lista=evaluaciones.filter(function(ev){return ev.emp_id===rhEmpId;}).sort(function(a,b){return b.creado_en>a.creado_en?1:-1;});
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><strong style="font-size:13px">Evaluaciones</strong><button class="btn br" onclick="abrirEval(\'nuevo\','+rhEmpId+')">+ Nueva evaluación</button></div>';
-  if(!lista.length){html+='<div style="text-align:center;padding:40px;color:var(--dim);font-size:12px">Sin evaluaciones registradas.</div>';document.getElementById('rhp-evals_emp').innerHTML=html;return;}
+  if(!lista.length){html+='<div style="text-align:center;padding:40px;color:var(--dim);font-size:12px">⭐ Sin evaluaciones. Usa <strong>+ Nueva evaluación</strong> para comenzar.</div>';document.getElementById('rhp-evals_emp').innerHTML=html;return;}
   // Promedio
   var conCal=lista.filter(function(e){return e.calificacion>0;});
   var prom=conCal.length?conCal.reduce(function(a,e){return a+e.calificacion;},0)/conCal.length:0;
@@ -2383,7 +2488,7 @@ function renderOrganigrama(){
   var gerentes=act.filter(function(e){return e.puesto==='Gerente de sucursal';});
   var rh=act.filter(function(e){return e.puesto==='RH';});
   var sistemas=act.filter(function(e){return e.puesto==='Sistemas';});
-  var vendedores=act.filter(function(e){return['Vendedor','Cajero','Almacenista','Igualador','Aprendiz de igualador','Repartidor','Ayudante general','Mantenimiento','Limpieza','Auxiliar administrativo'].indexOf(e.puesto)!==-1;});
+  var vendedores=act.filter(function(e){return['Vendedor','Administradora de sucursal','Almacenista','Igualador','Aprendiz de igualador','Encargado de logística y reparto','Encargado de inventarios','Gerente de operaciones','Ayudante general','Mantenimiento','Limpieza','Auxiliar administrativo'].indexOf(e.puesto)!==-1;});
 
   function nodeHtml(e,cls){
     var estado=empEstadoHoy(e.id);
@@ -2636,10 +2741,70 @@ function cm(id){document.getElementById(id).classList.remove('on');}
   var el=document.getElementById(id);
   if(el)el.addEventListener('click',function(e){if(e.target.id===id)cm(id);});
 });
+function renderNotificaciones(){
+  var alertas=[];
+  var hoy=new Date();
+  emp.forEach(function(e){
+    if(!e.activo)return;
+    var dEmp=docs[e.id]||[];
+    var DOCS_REQ=docsRequeridos(e.puesto||'');
+    var faltan=DOCS_REQ.filter(function(t){return !dEmp.some(function(d){return d.tipo===t;});});
+    if(faltan.length>0){
+      alertas.push({tipo:'docs',icono:'📄',titulo:'Documentación incompleta',desc:e.nombre+' — '+faltan.length+' doc(s) faltante(s)',empId:e.id,prioridad:2});
+    }
+  });
+  emp.forEach(function(e){
+    if(PUESTOS_LICENCIA.indexOf(e.puesto)===-1)return;
+    var dEmp=docs[e.id]||[];
+    var lic=dEmp.filter(function(d){return d.tipo==='Licencia de conducir';})[0];
+    if(!lic){alertas.push({tipo:'lic',icono:'🪪',titulo:'Sin licencia registrada',desc:e.nombre+' — '+e.puesto,empId:e.id,prioridad:1});return;}
+    if(lic.notas){
+      var venc=new Date(lic.notas);
+      var dif=Math.round((venc-hoy)/(1000*60*60*24));
+      if(dif<30)alertas.push({tipo:'lic',icono:'🪪',titulo:'Licencia por vencer',desc:e.nombre+' — vence en '+dif+' día(s)',empId:e.id,prioridad:1});
+    }
+  });
+  Object.keys(permisos||{}).forEach(function(eid){
+    (permisos[eid]||[]).forEach(function(p){
+      if(p.estado==='pendiente'){
+        var empObj=emp.find(function(x){return x.id===(p.emp_id||parseInt(eid));});
+        alertas.push({tipo:'perm',icono:'📅',titulo:'Permiso pendiente de aprobar',desc:(empObj?empObj.nombre:'Empleado #'+eid)+' — '+p.tipo+' desde '+p.fechaIni,empId:p.emp_id||parseInt(eid),prioridad:2});
+      }
+    });
+  });
+  var hace30=new Date(hoy.getTime()-30*24*60*60*1000).toISOString().split('T')[0];
+  Object.keys(docs||{}).forEach(function(eid){
+    (docs[eid]||[]).forEach(function(d){
+      if(d.tipo==='Acta administrativa'&&d.fecha&&d.fecha>=hace30){
+        var empObj=emp.find(function(x){return x.id===parseInt(eid);});
+        alertas.push({tipo:'acta',icono:'⚠️',titulo:'Acta administrativa reciente',desc:(empObj?empObj.nombre:'Empleado #'+eid)+' — '+d.nombre,empId:parseInt(eid),prioridad:1});
+      }
+    });
+  });
+  alertas.sort(function(a,b){return a.prioridad-b.prioridad;});
+  var badge=document.getElementById('notifBadge');
+  var bCard=document.getElementById('bNotif');
+  var hdrBtn=document.getElementById('notifBtn');
+  if(badge){if(alertas.length>0){badge.textContent=alertas.length;badge.style.display='inline-block';}else{badge.style.display='none';}}
+  if(bCard){bCard.style.display=alertas.length>0?'':'none';if(alertas.length>0)bCard.textContent=alertas.length;}
+  var container=document.getElementById('notifContainer');
+  if(!container)return;
+  var html=alertas.length===0?'<p style="color:var(--dim);padding:40px;text-align:center">Sin notificaciones pendientes ✓</p>':
+    '<div style="margin-bottom:12px;font-family:var(--mono);font-size:11px;color:var(--dim)">'+alertas.length+' alerta(s) activa(s)</div>'+
+    alertas.map(function(a){
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;background:#fff">'+
+        '<span style="font-size:22px">'+a.icono+'</span>'+
+        '<div style="flex:1"><strong style="font-size:12px">'+a.titulo+'</strong><br><span style="font-size:11px;color:var(--dim)">'+a.desc+'</span></div>'+
+        (a.empId?'<button class="btn bo btn-sm" onclick="irRH('+a.empId+')">Ver expediente</button>':'')+
+        '</div>';
+    }).join('');
+  container.innerHTML=html;
+}
+
 function go(mod){
   document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
-  var ids={home:'scr-home',asistencia:'scr-asistencia',empleados:'scr-empleados',rh:'scr-rh',reportes:'scr-reportes',sucursales:'scr-sucursales',contratos:'scr-contratos',evaluaciones:'scr-evaluaciones',organigrama:'scr-organigrama',cierre:'scr-cierre',auditoria:'scr-auditoria',pago:'scr-pago',vacaciones:'scr-vacaciones',checkin:'scr-checkin',semaforo:'scr-semaforo',dashboard:'scr-dashboard',bonos:'scr-bonos',usuarios:'scr-usuarios',finiquitos:'scr-finiquitos'};
-  var lbls={home:'Inicio',asistencia:'Asistencia',empleados:'Empleados',rh:'Recursos Humanos',reportes:'Reportes',sucursales:'Sucursales',contratos:'Contratos',evaluaciones:'Evaluaciones',organigrama:'Organigrama',cierre:'Cierre de período',auditoria:'Auditoría',pago:'Pago nómina',vacaciones:'Vacaciones',checkin:'Check-In',semaforo:'Semáforo',dashboard:'Dashboard',bonos:'Bonos',usuarios:'Usuarios',finiquitos:'Finiquitos'};
+  var ids={home:'scr-home',asistencia:'scr-asistencia',empleados:'scr-empleados',rh:'scr-rh',reportes:'scr-reportes',sucursales:'scr-sucursales',contratos:'scr-contratos',evaluaciones:'scr-evaluaciones',organigrama:'scr-organigrama',cierre:'scr-cierre',auditoria:'scr-auditoria',pago:'scr-pago',vacaciones:'scr-vacaciones',checkin:'scr-checkin',semaforo:'scr-semaforo',dashboard:'scr-dashboard',bonos:'scr-bonos',usuarios:'scr-usuarios',finiquitos:'scr-finiquitos',notif:'scr-notif'};
+  var lbls={home:'Inicio',asistencia:'Asistencia',empleados:'Empleados',rh:'Recursos Humanos',reportes:'Reportes',sucursales:'Sucursales',contratos:'Contratos',evaluaciones:'Evaluaciones',organigrama:'Organigrama',cierre:'Cierre de período',auditoria:'Auditoría',pago:'Pago nómina',vacaciones:'Vacaciones',checkin:'Check-In',semaforo:'Semáforo',dashboard:'Dashboard',bonos:'Bonos',usuarios:'Usuarios',finiquitos:'Finiquitos',notif:'Notificaciones'};
   if(!ids[mod])return;
   document.getElementById(ids[mod]).classList.add('on');
   if(mod==='home'){document.getElementById('bc').innerHTML='<span class="bcc">Inicio</span>';}
@@ -2657,7 +2822,8 @@ function go(mod){
     contratos:renderContratos,
     evaluaciones:renderEvaluaciones,
     organigrama:renderOrganigrama,
-    sucursales:renderSucursales
+    sucursales:renderSucursales,
+    notif:renderNotificaciones
   };
   if(fns[mod])fns[mod]();
 }
@@ -2731,7 +2897,7 @@ function setCITab(tab,el){
   ciTab=tab;
   document.querySelectorAll('#checkinTabs .ptab').forEach(function(x){x.classList.remove('on');});
   el.classList.add('on');
-  ['qr','log','dispositivos','cobertura'].forEach(function(t){
+  ['qr','log','dispositivos','cobertura','reporte_mensual'].forEach(function(t){
     document.getElementById('ci-panel-'+t).style.display=t===tab?'block':'none';
   });
   if(tab==='qr')renderCIQR();
@@ -2816,8 +2982,11 @@ function abrirKiosk(sucId){
 // ── Log Panel ──
 function renderCILog(){
   var hoy=ciHoy();
-  var filtroFecha=hoy;
-  var logs=ciLogs.filter(function(l){return l.fecha===filtroFecha;}).sort(function(a,b){return b.hora>a.hora?1:-1;});
+  var inputFecha=document.getElementById('ciLogFecha');
+  var filtroFecha=inputFecha&&inputFecha.value?inputFecha.value:hoy;
+  var inputSuc=document.getElementById('ciLogSuc');
+  var filtroSuc=inputSuc?parseInt(inputSuc.value)||null:null;
+  var logs=ciLogs.filter(function(l){return l.fecha===filtroFecha&&(!filtroSuc||l.suc_id===filtroSuc);}).sort(function(a,b){return b.hora>a.hora?1:-1;});
   var html='<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">'+
     '<input class="fi" type="date" id="ciLogFecha" value="'+hoy+'" style="width:160px;padding:5px 9px" onchange="filtrarLogCI()">'+
     '<select class="fi" id="ciLogSuc" style="width:180px;padding:5px 9px" onchange="filtrarLogCI()">'+
@@ -2871,7 +3040,8 @@ function renderCIReporteMensual(){
       '<option value="">Todas las sucursales</option>'+
       suc.filter(function(s){return s.activa;}).map(function(s){return '<option value="'+s.id+'">'+s.nombre+'</option>';}).join('')+
     '</select>'+
-    '<button class="btn br" onclick="descargarReporteMensual()">⬇ Descargar CSV</button>'+
+    '<button class="btn br" onclick="descargarReporteMensual()">⬇ CSV Asistencia</button>'+
+    '<button class="btn bn" onclick="descargarReporteCheckin()">📥 CSV Check-in Logs</button>'+
     '<button class="btn bo" onclick="imprimirReporteMensual()">🖨 Imprimir</button>'+
   '</div>'+
   '<div id="ciRepTabla"></div>';
@@ -2976,6 +3146,36 @@ function descargarReporteMensual(){
   msg('CSV descargado');
 }
 
+async function descargarReporteCheckin(){
+  var mesKey=document.getElementById('ciRepMes')?document.getElementById('ciRepMes').value:'';
+  var hoy=new Date();
+  var anio,mes;
+  if(mesKey){var parts=mesKey.split('-');anio=parseInt(parts[0]);mes=parseInt(parts[1])-1;}
+  else{anio=hoy.getFullYear();mes=hoy.getMonth();}
+  var desde=new Date(anio,mes,1).toISOString().split('T')[0];
+  var hasta=new Date(anio,mes+1,0).toISOString().split('T')[0];
+  // Usar logs locales ya sincronizados (ciLogs) filtrados por mes
+  var datos=ciLogs.filter(function(l){return l.fecha>=desde&&l.fecha<=hasta;});
+  if(datos.length===0&&sb){
+    msg('Buscando en servidor...',false);
+    var r=await sb.from('rh_checkin_logs').select('fecha,hora,emp_nombre,suc_id,estado,dist').gte('fecha',desde).lte('fecha',hasta).order('fecha',{ascending:true});
+    if(r.error){msg('Error: '+r.error.message,true);return;}
+    datos=r.data||[];
+  }
+  if(!datos.length){msg('Sin registros este mes',true);return;}
+  var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var csv='Fecha,Hora,Empleado,Sucursal_ID,Estado,Distancia_m\n'+
+    datos.map(function(x){
+      return [x.fecha,x.hora||'',x.emp_nombre||'',x.suc_id||'',x.estado||'',x.dist||''].join(',');
+    }).join('\n');
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='checkin_logs_'+MESES[mes]+'_'+anio+'.csv';
+  a.click();
+  msg('CSV check-in descargado ('+datos.length+' registros)');
+}
+
 function imprimirReporteMensual(){
   var cont=document.getElementById('ciRepImprimible');
   if(!cont){msg('Genera el reporte primero',true);return;}
@@ -3004,17 +3204,7 @@ function imprimirReporteMensual(){
   fr.contentDocument.open();fr.contentDocument.write(fullHTML);fr.contentDocument.close();
 }
 
-function filtrarLogCI(){
-  var fecha=document.getElementById('ciLogFecha').value;
-  var sucId=parseInt(document.getElementById('ciLogSuc').value)||null;
-  var logs=ciLogs.filter(function(l){
-    return l.fecha===fecha&&(!sucId||l.suc_id===sucId);
-  }).sort(function(a,b){return b.hora>a.hora?1:-1;});
-  // Re-render table only
-  var html='';
-  if(!logs.length){document.getElementById('ci-panel-log').querySelector('.tw')?document.getElementById('ci-panel-log').innerHTML+='':null;renderCILog();return;}
-  renderCILog();
-}
+function filtrarLogCI(){renderCILog();}
 
 // ── Dispositivos Panel ──
 function renderCIDispositivos(){
@@ -3031,8 +3221,10 @@ function renderCIDispositivos(){
     '<th style="padding:8px 12px;text-align:left;font-family:var(--mono);font-size:10px;border-bottom:1px solid var(--border)">ACCIONES</th></tr>';
   activos.forEach(function(e){
     var disp=ciDispositivos.find(function(d){return d.emp_id===e.id&&d.activo;});
-    var token=ciEnrolTokens.find(function(t){return t.emp_id===e.id&&!t.usado&&new Date(t.expira)>new Date();});
-    var estado=disp?'Enrolado':token?'Link pendiente':'Sin enrolar';
+    var ahora=new Date();
+    var token=ciEnrolTokens.find(function(t){return t.emp_id===e.id&&!t.usado&&new Date(t.expira)>ahora;});
+    var tokenVencido=!token&&ciEnrolTokens.find(function(t){return t.emp_id===e.id&&!t.usado&&new Date(t.expira)<=ahora;});
+    var estado=disp?'Enrolado':token?'Link pendiente':tokenVencido?'Link vencido':'Sin enrolar';
     var estadoColor=disp?'var(--green)':token?'var(--amber)':'var(--rojo)';
     html+='<tr style="border-bottom:1px solid var(--border)">'+
       '<td style="padding:8px 12px;font-size:12px">'+sane(e.nombre)+'</td>'+
@@ -3076,6 +3268,14 @@ function generarLinkEnrol(empId){
 function copiarEnrolLink(){
   var link=document.getElementById('enrolLink').value;
   navigator.clipboard.writeText(link).then(function(){msg('Link copiado al portapapeles ✓');}).catch(function(){msg('Copia manualmente el link',true);});
+}
+async function regenerarLinkEnrol(empId){
+  if(!empId){msg('Error: empleado no identificado',true);return;}
+  if(!confirm('Esto invalida el link anterior y genera uno nuevo. ¿Continuar?'))return;
+  if(!sb){msg('Sin conexión',true);return;}
+  await sb.from('rh_enrol_tokens').update({usado:true,usado_en:new Date().toISOString()}).eq('emp_id',empId).eq('usado',false);
+  generarLinkEnrol(empId);
+  msg('Link regenerado. El anterior ya no sirve.');
 }
 function revocarDispositivo(empId){
   if(!confirm('¿Revocar el dispositivo de este empleado? Tendrá que re-enrolarse.'))return;
@@ -3933,6 +4133,8 @@ function abrirModalUsuario(modo, u){
   document.getElementById('uRol').value=u?u.rol:'admin';
   document.getElementById('uActivo').value=u?(u.activo?'1':'0'):'1';
   document.getElementById('uPass').value='';
+  var passWrap=document.getElementById('uPassWrap');
+  if(passWrap)passWrap.style.display=modo==='nuevo'?'':'none';
   document.getElementById('uMsg').style.display='none';
   document.getElementById('uGuardarBtn').textContent='Guardar usuario';
   document.getElementById('uGuardarBtn').disabled=false;
@@ -3945,6 +4147,7 @@ async function guardarUsuario(){
   var nombre=document.getElementById('uNombre').value.trim();
   var rol=document.getElementById('uRol').value;
   var activo=document.getElementById('uActivo').value==='1';
+  var pass=document.getElementById('uPass').value;
   var btn=document.getElementById('uGuardarBtn');
   if(!email||!nombre){showUMsg('Email y nombre requeridos',true);return;}
   if(!sb){showUMsg('Sin conexión a Supabase',true);return;}
@@ -3954,30 +4157,30 @@ async function guardarUsuario(){
       var r=await sb.from('rh_usuarios').update({nombre:nombre,rol:rol,activo:activo}).eq('email',emailOrig);
       if(r.error)throw r.error;
     } else {
-      var chkAuth=await sb.auth.admin?.getUserByEmail?.(email).catch(function(){return null;});
-      if(!chkAuth||!chkAuth.data||!chkAuth.data.user){
-        var chkSignIn=await sb.auth.signInWithPassword({email:email,password:'__probe_invalid_password__'+Date.now()});
-        var existsInAuth=chkSignIn.error && (chkSignIn.error.message||'').toLowerCase().indexOf('invalid')>=0 && (chkSignIn.error.message||'').toLowerCase().indexOf('credentials')>=0;
-        if(!existsInAuth){
-          showUMsg('⚠ Este email NO existe en Supabase Auth. Créalo PRIMERO en Supabase → Authentication → Users, luego regresa aquí.',true);
-          btn.textContent='Guardar usuario';btn.disabled=false;
-          var linkDiv=document.getElementById('uMsg');
-          linkDiv.innerHTML+='<br><a href="https://supabase.com/dashboard/project/xqezbplfwubddwsbobhi/auth/users" target="_blank" style="color:var(--rojo);text-decoration:underline;font-weight:700">Abrir Supabase Auth →</a>';
-          return;
-        }
+      if(!pass||pass.length<8){
+        showUMsg('Contraseña requerida (mínimo 8 caracteres)',true);
+        btn.textContent='Guardar usuario';btn.disabled=false;return;
       }
-      var r2=await sb.from('rh_usuarios').insert({email:email,nombre:nombre,rol:rol,activo:activo});
+      var signUp=await sb.auth.signUp({email:email,password:pass});
+      if(signUp.error && !/already registered|exists/i.test(signUp.error.message||'')){
+        throw signUp.error;
+      }
+      var r2=await sb.from('rh_usuarios').upsert({email:email,nombre:nombre,rol:rol,activo:activo},{onConflict:'email'});
       if(r2.error)throw r2.error;
     }
-    showUMsg('Usuario guardado correctamente ✓',false);
-    setTimeout(function(){cm('modalUsuario');renderUsuarios();},1200);
-  }catch(e){showUMsg('Error: '+e.message,true);btn.textContent='Guardar usuario';btn.disabled=false;}
+    showUMsg('Usuario guardado. Ya puede iniciar sesión ✓',false);
+    setTimeout(function(){cm('modalUsuario');renderUsuarios();},1500);
+  }catch(e){
+    showUMsg('Error: '+e.message,true);
+    btn.textContent='Guardar usuario';btn.disabled=false;
+  }
 }
 
 async function toggleUsuario(email,activo){
   if(!sb)return;
   if(!confirm((activo?'¿Desactivar':'¿Activar')+' a este usuario?'))return;
-  await sb.from('rh_usuarios').update({activo:!activo}).eq('email',email);
+  var r=await sb.from('rh_usuarios').update({activo:!activo}).eq('email',email);
+  if(r.error){msg('Error al actualizar: '+r.error.message,true);return;}
   renderUsuarios();
   msg('Usuario '+(activo?'desactivado':'activado'));
 }
@@ -4032,10 +4235,10 @@ function diagnosticoIDs(){
 // ═══════════════════════════════════════════════════════════
 var PLANTILLAS_CONTRATO={
   'Vendedor':{tipo:'Tiempo determinado',nombreTecnico:'Asesor de Ventas',clausulas:'El trabajador desempeñará funciones de asesoría y venta de productos de pintura, ferretería y materiales de construcción. Deberá mantener orden en el área de ventas, atender al público con amabilidad y dominar el catálogo de productos. Se obliga a cumplir metas semanales de venta establecidas por su gerente inmediato.',caracterEspecializado:'Atención directa a clientes con capacidad de afectar relaciones comerciales. Acceso a información de precios, márgenes y catálogo de productos.'},
-  'Cajero':{tipo:'Tiempo determinado',nombreTecnico:'Cajero(a) Operativo(a)',clausulas:'El trabajador será responsable del manejo de efectivo, cobros con terminal bancaria y pagos SPEI, apertura y cierre de caja según procedimientos internos. Queda expresamente prohibido prestar dinero de caja, realizar cobros sin emitir ticket, o manipular el sistema POS sin autorización. Cualquier faltante en caja será responsabilidad del cajero asignado conforme a la LFT.',caracterEspecializado:'Manejo, custodia y rendición de cuentas de efectivo y fondos. Operación de sistemas informáticos propietarios (FerreOS POS).'},
+  'Administradora de sucursal':{tipo:'Tiempo determinado',nombreTecnico:'Administradora de Sucursal',clausulas:'El trabajador será responsable del manejo de efectivo, cobros con terminal bancaria y pagos SPEI, apertura y cierre de caja según procedimientos internos. Queda expresamente prohibido prestar dinero de caja, realizar cobros sin emitir ticket, o manipular el sistema POS sin autorización. Cualquier faltante en caja será responsabilidad del cajero asignado conforme a la LFT.',caracterEspecializado:'Manejo, custodia y rendición de cuentas de efectivo y fondos. Operación de sistemas informáticos propietarios (FerreOS POS).'},
   'Almacenista':{tipo:'Tiempo determinado',nombreTecnico:'Auxiliar de Almacén',clausulas:'El trabajador será responsable de la recepción, almacenamiento y despacho de mercancía, control de inventario físico, y organización del almacén conforme a los estándares de la empresa. Se obliga a reportar inmediatamente cualquier diferencia de inventario, producto dañado o sospecha de robo.',caracterEspecializado:'Custodia y control de bienes e inventario de la empresa. Acceso a información logística y de existencias.'},
-  'Gerente de sucursal':{tipo:'Tiempo determinado',nombreTecnico:'Gerente de Sucursal',clausulas:'El trabajador asumirá la responsabilidad operativa total de la sucursal asignada, incluyendo supervisión de personal, control de inventario, cumplimiento de metas de venta, manejo de caja y relación con clientes. Queda autorizado para tomar decisiones operativas de hasta $5,000 MXN sin autorización previa de Dirección. Deberá enviar corte de turno diario mediante el sistema FerreOS antes de las 20:00 horas.',caracterEspecializado:'Funciones de supervisión, coordinación y control sobre recursos, personas y procesos. Acceso a información comercial confidencial: precios, márgenes, rutas y estrategia. Manejo de efectivo y fondos de sucursal.'},
-  'Repartidor':{tipo:'Tiempo determinado',nombreTecnico:'Operador de Reparto y Distribución',clausulas:'El trabajador realizará entregas de mercancía a domicilio en la zona asignada, cuidando la integridad del producto y la imagen de la empresa. Es responsable del vehículo asignado durante su jornada; cualquier daño por negligencia será su responsabilidad. Deberá portar uniforme y licencia de conducir vigente en todo momento. Se le prohíbe expresamente transportar personas ajenas a la empresa en el vehículo de trabajo.',caracterEspecializado:'Operación de vehículos o motocicletas de la empresa. Custodia de mercancía en tránsito y contacto directo con clientes.'},
+  'Gerente de sucursal':{tipo:'Tiempo determinado',nombreTecnico:'Gerente de Sucursal',clausulas:'El trabajador asumirá la responsabilidad operativa total de la sucursal asignada, incluyendo supervisión de personal, control de inventario, cumplimiento de metas de venta, manejo de caja y relación con clientes. Deberá enviar corte de turno diario mediante el sistema FerreOS antes de las 20:00 horas.',caracterEspecializado:'Funciones de supervisión, coordinación y control sobre recursos, personas y procesos. Acceso a información comercial confidencial: precios, márgenes, rutas y estrategia. Manejo de efectivo y fondos de sucursal.'},
+  'Encargado de logística y reparto':{tipo:'Tiempo determinado',nombreTecnico:'Encargado de Logística y Reparto',clausulas:'El trabajador realizará entregas de mercancía a domicilio en la zona asignada, cuidando la integridad del producto y la imagen de la empresa. Es responsable del vehículo asignado durante su jornada; cualquier daño por negligencia será su responsabilidad. Deberá portar uniforme y licencia de conducir vigente en todo momento. Se le prohíbe expresamente transportar personas ajenas a la empresa en el vehículo de trabajo.',caracterEspecializado:'Operación de vehículos o motocicletas de la empresa. Custodia de mercancía en tránsito y contacto directo con clientes.'},
   'Igualador':{tipo:'Tiempo determinado',nombreTecnico:'Técnico en Colorimetría e Igualación',clausulas:'El trabajador realizará mezcla y formulación de pinturas conforme a los códigos de color solicitados por clientes, utilizando los equipos de colorimetría y mezcla de la empresa. Se obliga a mantener registros de fórmulas, cuidar los equipos asignados y reportar desperdicio de producto. El margen de error aceptable en igualación es de ΔE < 1.5.',caracterEspecializado:'Operación de equipos especializados de colorimetría y mezcla. Acceso a fórmulas y recetas propietarias. Atención directa a clientes con capacidad técnica especializada.'},
   'Aprendiz de igualador':{tipo:'Capacitación inicial (180 días)',nombreTecnico:'Aprendiz de Técnico en Colorimetría',clausulas:'El trabajador se encuentra en período de capacitación inicial de 180 días naturales, al término del cual se evaluará su desempeño para conversión a contrato por tiempo determinado. Durante este período recibirá entrenamiento en colorimetría, manejo de equipos de mezcla, y atención al cliente. Su trabajo estará supervisado por el Igualador titular de la sucursal.',caracterEspecializado:'Puesto en formación técnica especializada. Acceso supervisado a equipos y fórmulas de colorimetría propietarias.'},
   'Auxiliar administrativo':{tipo:'Tiempo determinado',nombreTecnico:'Auxiliar Administrativo',clausulas:'El trabajador apoyará en labores administrativas incluyendo archivo, captura de datos, atención telefónica, elaboración de reportes y apoyo al área de RH o Dirección. Mantendrá absoluta confidencialidad sobre la información comercial, financiera y de personal a la que tenga acceso.',caracterEspecializado:'Acceso a información comercial y financiera confidencial. Manejo de datos de personal y clientes.'},
@@ -4044,6 +4247,8 @@ var PLANTILLAS_CONTRATO={
   'Ayudante general':{tipo:'Tiempo determinado',nombreTecnico:'Ayudante General',clausulas:'El trabajador realizará las tareas de apoyo general que le sean encomendadas por su supervisor inmediato, incluyendo carga y descarga de mercancía, limpieza de instalaciones, y apoyo en almacén. El contrato tendrá una duración inicial de 3 meses, renovable según desempeño.',caracterEspecializado:'Atención directa en sucursal. Manejo de bienes e inventario bajo supervisión.'},
   'Mantenimiento':{tipo:'Tiempo determinado',nombreTecnico:'Técnico en Mantenimiento',clausulas:'El trabajador será responsable del mantenimiento preventivo y correctivo de las instalaciones, equipos y vehículos asignados. Reportará cualquier falla o riesgo de seguridad al Gerente de Sucursal. Deberá llevar bitácora de trabajos realizados.',caracterEspecializado:'Operación de equipos y vehículos especializados de la empresa. Acceso a instalaciones y activos de múltiples sucursales.'},
   'Limpieza':{tipo:'Tiempo determinado',nombreTecnico:'Auxiliar de Limpieza e Higiene',clausulas:'El trabajador mantendrá las instalaciones de la sucursal en condiciones de higiene y presentación conforme a los estándares de la empresa. Seguirá las indicaciones del Gerente de Sucursal respecto a horarios, productos de limpieza autorizados y áreas prioritarias.',caracterEspecializado:'Acceso a instalaciones y áreas internas de la empresa durante la jornada.'},
+  'Encargado de inventarios':{tipo:'Tiempo determinado',nombreTecnico:'Encargado de Inventarios',clausulas:'El trabajador será responsable del control, registro y conciliación de inventarios físicos y en sistema. Realizará conteos periódicos, reportará diferencias y coordinará con almacén y proveedores. Se obliga a registrar toda entrada y salida de mercancía en el sistema FerreOS en el mismo día de la operación.',caracterEspecializado:'Custodia y control de bienes e inventario. Acceso a sistemas de inventario y bases de datos de existencias.'},
+  'Gerente de operaciones':{tipo:'Tiempo indeterminado',nombreTecnico:'Gerente de Operaciones',clausulas:'El trabajador será responsable de la coordinación operativa de todas las sucursales, supervisando logística, inventarios, personal y cumplimiento de procedimientos. Reportará directamente a Dirección General. Tiene autoridad para emitir instrucciones a gerentes de sucursal y encargados de área. Deberá presentar reporte semanal de indicadores operativos.',caracterEspecializado:'Acceso a información estratégica, financiera y de personal de toda la red. Funciones de alta dirección con impacto en toda la operación.'},
 };
 var TIPO_DEFAULT='Tiempo determinado';
 
@@ -4070,15 +4275,15 @@ function getReglamento(puesto){
     '<p>Las infracciones al presente reglamento serán sancionadas progresivamente: amonestación verbal, amonestación escrita, suspensión sin goce de sueldo hasta 8 días (art. 423 LFT), y rescisión de contrato. Las faltas graves son sancionables directamente con rescisión.</p>';
 
   var especifico='';
-  if(puesto==='Cajero'){
-    especifico='<h4>VII. Normas específicas — Cajero</h4>'+
-      '<p>El cajero es el único responsable del dinero bajo su resguardo durante su turno. El fondo de caja no puede ser prestado ni utilizado para gastos propios. Todo cobro debe ir acompañado de ticket impreso o digital. El arqueo de cierre de turno es obligatorio y debe coincidir con el corte del sistema FerreOS. Faltantes de caja recurrentes son causa de rescisión.</p>';
+  if(puesto==='Administradora de sucursal'){
+    especifico='<h4>VII. Normas específicas — Administradora de sucursal</h4>'+
+      '<p>La administradora de sucursal es la única responsable del dinero bajo su resguardo durante su turno. El fondo de caja no puede ser prestado ni utilizado para gastos propios. Todo cobro debe ir acompañado de ticket impreso o digital. El arqueo de cierre de turno es obligatorio y debe coincidir con el corte del sistema FerreOS. Faltantes de caja recurrentes son causa de rescisión.</p>';
   } else if(puesto==='Gerente de sucursal'){
     especifico='<h4>VII. Normas específicas — Gerente de sucursal</h4>'+
       '<p>El gerente es responsable de todos los activos de la sucursal incluyendo inventario, efectivo, equipos y mobiliario. Deberá enviar el corte de turno diario sin excepción. Tiene la facultad y obligación de reportar a Dirección cualquier irregularidad detectada, incluyendo sospechas de robo o fraude interno. El gerente no puede ausentarse de su sucursal durante jornada sin designar a un responsable.</p>';
-  } else if(puesto==='Repartidor'){
-    especifico='<h4>VII. Normas específicas — Repartidor</h4>'+
-      '<p>El repartidor es responsable del vehículo asignado y de la mercancía en tránsito. Debe verificar el estado de la unidad antes de cada recorrido y reportar cualquier anomalía. Queda prohibido el uso del vehículo fuera de horario de trabajo o para fines personales. Accidentes causados por negligencia o imprudencia son responsabilidad del conductor.</p>';
+  } else if(puesto==='Encargado de logística y reparto'){
+    especifico='<h4>VII. Normas específicas — Encargado de logística y reparto</h4>'+
+      '<p>El encargado de logística y reparto es responsable del vehículo asignado y de la mercancía en tránsito. Debe verificar el estado de la unidad antes de cada recorrido y reportar cualquier anomalía. Queda prohibido el uso del vehículo fuera de horario de trabajo o para fines personales. Accidentes causados por negligencia o imprudencia son responsabilidad del conductor.</p>';
   } else if(puesto==='Igualador'||puesto==='Aprendiz de igualador'){
     especifico='<h4>VII. Normas específicas — Igualador</h4>'+
       '<p>El igualador debe registrar toda fórmula aplicada en el sistema. El desperdicio de colorante por negligencia será descontado de su salario. Los equipos de mezcla deben ser limpiados al terminar cada jornada. Está prohibido modificar fórmulas sin autorización del cliente y del supervisor.</p>';
@@ -4285,6 +4490,24 @@ guardarContrato=function(){
   // (se abre automáticamente si hay empleado seleccionado)
 };
 
+function firmarTestigoContrato(id,num){
+  var c=contratos.find(function(x){return x.id===id;});if(!c)return;
+  abrirFirma('Firma Testigo '+num+' — Contrato',async function(dataURL){
+    var url=null;
+    if(sb){
+      var path='firmas/empresa/contrato_'+id+'_testigo'+num+'_'+Date.now()+'.png';
+      url=await subirArchivoRH(dataURL,path,'image/png');
+    }
+    if(num===1){c.firma_testigo1=url||dataURL;}
+    else{c.firma_testigo2=url||dataURL;}
+    var idx=contratos.findIndex(function(x){return x.id===id;});
+    if(idx!==-1)contratos[idx]=c;
+    S.set('contratos',contratos);
+    pushContrato(c);
+    renderContratos();renderContratosEmp();
+    msg('✓ Firma de testigo '+num+' registrada');
+  });
+}
 // Botón firma en contrato guardado
 function firmarContrato(id){
   var c=contratos.find(function(x){return x.id===id;});if(!c)return;
@@ -4327,7 +4550,7 @@ function firmarContratoEmpresa(id){
     }
     c.firma_patron=url||dataURL;
     c.firma_patron_url=url;
-    c.firma_patron_nombre=nombre||'Karina Isabel';
+    c.firma_patron_nombre='Karina Isabel';
     c.firma_patron_fecha=hoyFecha();
     var idx=contratos.findIndex(function(x){return x.id===id;});
     if(idx!==-1)contratos[idx]=c;
@@ -4353,7 +4576,7 @@ function agregarBotonesDocumentosRH(empId){
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
     '<button class="btn bn" onclick="verDocumento(\'contrato\','+empId+')">📄 Contrato</button>'+
     '<button class="btn bn" onclick="verDocumento(\'reglamento\','+empId+')">📋 Reglamento</button>'+
-    '<button class="btn bn" onclick="verDocumento(\'responsiva\','+empId+')">🔑 Carta Responsiva</button>'+
+    '<button class="btn bn" onclick="abrirResponsiva('+empId+')">🔑 Carta Responsiva</button>'+
     '<button class="btn bn" style="background:var(--amber);color:#fff" onclick="verDocumento(\'acta\','+empId+')">⚠ Acta Administrativa</button>'+
     '<button class="btn bn" style="background:var(--rojo)" onclick="verDocumento(\'finiquito\','+empId+')">✂ Finiquito</button>'+
     '</div>'+
@@ -4407,16 +4630,8 @@ function verDocumento(tipo,empId){
   else if(tipo==='finiquito')html=generarHTMLFiniquito(e);
   var titulos={contrato:'Contrato',reglamento:'Reglamento',responsiva:'Carta Responsiva',acta:'Acta Administrativa',finiquito:'Finiquito'};
   var fullHTML=htmlDocBase(html,titulos[tipo],e.nombre);
-  // Intentar window.open primero; si el popup blocker lo bloquea, usar iframe modal
-  var win=null;
-  try{ win=window.open('','_blank'); }catch(ex){ win=null; }
-  if(win&&win.document){
-    win.document.write(fullHTML);
-    win.document.close();
-  } else {
-    // Fallback: modal con iframe
-    abrirDocModal(fullHTML, titulos[tipo]+' — '+e.nombre);
-  }
+  // Siempre usar modal iframe para no salir del programa
+  abrirDocModal(fullHTML, titulos[tipo]+' — '+e.nombre);
 }
 
 function abrirDocModal(htmlContent, titulo){
@@ -4484,7 +4699,11 @@ function generarHTMLContrato(e,_c){
   var hoy=new Date();
   var fl=hoy.getDate()+' de '+MESES[hoy.getMonth()]+' de '+hoy.getFullYear();
   var firmas=S.get('firmas_empleados',{});
-  var firmaImg=firmas[e.id]?'<div style="margin-top:8px"><img src="'+firmas[e.id].data+'" style="max-height:60px;border:1px solid #ddd"></div>':'';
+  var _firmaEmpData=(_c&&_c.firma_data)||(_c&&_c.firma_url)||(firmas[e.id]&&firmas[e.id].data)||'';
+  var firmaImg=_firmaEmpData?'<div style="margin-top:8px"><img src="'+_firmaEmpData+'" style="max-height:60px;border:1px solid #ddd"></div>':'';
+  var _firmaPatronData=_c&&_c.firma_patron?'<div style="margin-top:8px"><img src="'+_c.firma_patron+'" style="max-height:60px;border:1px solid #ddd"></div>':'';
+  var _firmaTest1Data=_c&&_c.firma_testigo1?'<div style="margin-top:8px"><img src="'+_c.firma_testigo1+'" style="max-height:45px;border:1px solid #ddd"></div>':'';
+  var _firmaTest2Data=_c&&_c.firma_testigo2?'<div style="margin-top:8px"><img src="'+_c.firma_testigo2+'" style="max-height:45px;border:1px solid #ddd"></div>':'';
   // ── Datos del contrato (_c tiene prioridad sobre defaults) ──
   var _salSem=(_c&&_c.salario_contrato)||e.salario||0;
   var _modalidadPago=(_c&&_c.modalidad_pago)||(e.modalidad||'semanal');
@@ -4515,7 +4734,7 @@ function generarHTMLContrato(e,_c){
   var artReferencia=esCapacitacion?'Arts. 153-A y 153-J LFT':'Arts. 20, 25, 35, 36, 37, 38, 39-A y 47 — Ley Federal del Trabajo';
   var nombreTecnico=_nombreTecnicoContrato;
   var caracter=p.caracterEspecializado||_pReal.caracterEspecializado||'Acceso a información y operaciones de la empresa.';
-  var esRepartidor=(e.puesto==='Repartidor');
+  var esRepartidor=(e.puesto==='Encargado de logística y reparto');
   // ── Helper: número a letra (simplificado) ───────────────
   function numLetra(n){
     var u=['','UN','DOS','TRES','CUATRO','CINCO','SEIS','SIETE','OCHO','NUEVE','DIEZ','ONCE','DOCE','TRECE','CATORCE','QUINCE','DIECISÉIS','DIECISIETE','DIECIOCHO','DIECINUEVE'];
@@ -4629,7 +4848,7 @@ function generarHTMLContrato(e,_c){
     '<p><b>8.2 Responsabilidad por daño.</b> Responde de daños por dolo, negligencia grave o uso indebido comprobados (Arts. 135 Fr. IX y 536 LFT). La recuperación del daño solo procede por la vía legal o con autorización escrita del trabajador.</p>'+
     '<p><b>8.3 Exclusión de responsabilidad patronal en accidentes.</b> La responsabilidad es exclusiva del trabajador cuando el accidente ocurra: (i) bajo efectos de alcohol o sustancias; (ii) sin licencia vigente; (iii) fuera del horario o en trayecto no autorizado; (iv) por maniobras prohibidas.</p>';
   if(esRepartidor){
-    html+='<p><b>8.4 Condiciones especiales — Repartidor.</b> Por la naturaleza del puesto, EL TRABAJADOR:</p>'+
+    html+='<p><b>8.4 Condiciones especiales — Encargado de logística y reparto.</b> Por la naturaleza del puesto, EL TRABAJADOR:</p>'+
       '<ol style="font-size:11px;line-height:1.9;padding-left:18px">'+
       '<li>Deberá portar en todo momento <b>licencia de conducir vigente</b>. La pérdida o vencimiento de la licencia suspende el derecho a operar el vehículo sin suspensión salarial solo si EL PATRÓN asigna tarea alternativa.</li>'+
       '<li>Realizará <b>verificación diaria del vehículo</b> antes de iniciar: aceite, frenos, llantas, estado general — reporte por canal oficial. La omisión crea presunción de buen estado al inicio del turno.</li>'+
@@ -4688,12 +4907,12 @@ function generarHTMLContrato(e,_c){
   // Cierre y firmas
   html+='<p style="text-align:justify;margin-top:14px">Leído y encontrado conforme, las partes lo ratifican y firman en Tuxtla Gutiérrez, Chiapas, en la fecha de los Datos Generales.</p>';
   html+=fgrid([
-    'EL PATRÓN<br><b>FERREPINTURAS DE TUXTLA S.A.P.I. DE C.V.</b><br>Karina Isabel ______________________<br>Directora General',
+    'EL PATRÓN<br><b>FERREPINTURAS DE TUXTLA S.A.P.I. DE C.V.</b><br>Karina Isabel<br>Directora General'+_firmaPatronData,
     'EL TRABAJADOR<br><b>'+sane(e.nombre)+'</b><br>CURP: '+(e.curp||'_________________')+firmaImg
   ]);
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-top:30px">'+
-    '<div class="fbox">TESTIGO 1<br>______________________________</div>'+
-    '<div class="fbox">TESTIGO 2 / RECURSOS HUMANOS<br>______________________________</div>'+
+    '<div class="fbox">TESTIGO 1<br>'+(_firmaTest1Data||'______________________________')+'</div>'+
+    '<div class="fbox">TESTIGO 2 / RECURSOS HUMANOS<br>'+(_firmaTest2Data||'______________________________')+'</div>'+
     '</div>';
   // Acuses al final
   html+='<div style="border-top:2px solid #1A2B4A;margin-top:40px;padding-top:20px">';
@@ -4824,45 +5043,113 @@ function generarHTMLReglamentoDoc(e){
     '</div>';
 }
 
-function generarHTMLResponsiva(e){
-  var hoy=new Date();
-  var BIENES_POR_PUESTO={
-    'Repartidor':[
-      {bien:'Motocicleta de reparto',marca:'Marca/Modelo',serie:'Placa/Serie',color:'Color',obs:'Año'},
-      {bien:'Casco de seguridad',marca:'Marca/Modelo',serie:'—',color:'Color',obs:'Financiamiento — ver nota'},
-      {bien:'Impermeable de trabajo',marca:'—',serie:'—',color:'Color',obs:'Financiamiento — ver nota'},
-      {bien:'Licencia de conducir vigente',marca:'—',serie:'No. licencia',color:'—',obs:'Copia. Venc: ____________'},
-      {bien:'Caja de herramientas',marca:'—',serie:'—',color:'—',obs:'—'},
-      {bien:'Teléfono celular de trabajo',marca:'Marca/Modelo',serie:'IMEI',color:'Color',obs:'—'},
-      {bien:'Uniforme (2 piezas)',marca:'—',serie:'—',color:'Talla',obs:'—'},
-      {bien:'Cargador / accesorios',marca:'—',serie:'—',color:'—',obs:'—'}
+function abrirResponsiva(empId){
+  var e=emp.find(function(x){return x.id===empId;});
+  if(!e){msg('Empleado no encontrado',true);return;}
+  document.getElementById('respEmpId').value=empId;
+  document.getElementById('respEmpInfo').innerHTML='<b>'+sane(e.nombre)+'</b> — '+sane(e.puesto)+' · '+sane(e.sucursal||'—');
+  var guardados=S.get('respBienes',{})[empId];
+  var bienes=guardados&&guardados.length?guardados:_plantillaBienesPorPuesto(e.puesto);
+  _respRenderBienes(bienes);
+  om('modalResponsiva');
+}
+function _plantillaBienesPorPuesto(puesto){
+  var P={
+    'Encargado de logística y reparto':[
+      {bien:'Motocicleta de reparto',marca:'',serie:'',color:'',obs:''},
+      {bien:'Casco de seguridad',marca:'',serie:'',color:'',obs:'Financiamiento'},
+      {bien:'Impermeable de trabajo',marca:'',serie:'',color:'',obs:'Financiamiento'},
+      {bien:'Licencia de conducir vigente',marca:'',serie:'',color:'',obs:'Venc: __________'},
+      {bien:'Caja de herramientas',marca:'',serie:'',color:'',obs:''},
+      {bien:'Teléfono celular de trabajo',marca:'',serie:'',color:'',obs:''},
+      {bien:'Uniforme (2 piezas)',marca:'',serie:'',color:'',obs:''}
     ],
     'Gerente de sucursal':[
-      {bien:'Llave de sucursal',marca:'—',serie:'Identificador',color:'—',obs:'—'},
-      {bien:'Caja fuerte (combinación)',marca:'—',serie:'—',color:'—',obs:'No compartir combinación'},
-      {bien:'Teléfono celular de trabajo',marca:'Marca/Modelo',serie:'IMEI',color:'—',obs:'—'},
-      {bien:'Uniforme (2 piezas)',marca:'—',serie:'—',color:'Talla',obs:'—'},
-      {bien:'Tarjeta de acceso / gafete',marca:'—',serie:'No.',color:'—',obs:'—'}
+      {bien:'Llave de sucursal',marca:'',serie:'',color:'',obs:''},
+      {bien:'Caja fuerte (combinación)',marca:'',serie:'',color:'',obs:'No compartir'},
+      {bien:'Teléfono celular de trabajo',marca:'',serie:'',color:'',obs:''},
+      {bien:'Uniforme (2 piezas)',marca:'',serie:'',color:'',obs:''},
+      {bien:'Gafete',marca:'',serie:'',color:'',obs:''}
     ],
-    'Cajero':[
-      {bien:'Fondo de caja',marca:'—',serie:'—',color:'—',obs:'Monto: $____________'},
-      {bien:'Terminal POS',marca:'Marca/Modelo',serie:'No. terminal',color:'—',obs:'—'},
-      {bien:'Uniforme (2 piezas)',marca:'—',serie:'—',color:'Talla',obs:'—'}
+    'Administradora de sucursal':[
+      {bien:'Fondo de caja',marca:'',serie:'',color:'',obs:'Monto: $__________'},
+      {bien:'Terminal POS',marca:'',serie:'',color:'',obs:''},
+      {bien:'Uniforme (2 piezas)',marca:'',serie:'',color:'',obs:''}
     ],
     'Sistemas':[
-      {bien:'Laptop / equipo de cómputo',marca:'Marca/Modelo',serie:'No. serie',color:'—',obs:'—'},
-      {bien:'Teléfono celular de trabajo',marca:'Marca/Modelo',serie:'IMEI',color:'—',obs:'—'},
-      {bien:'Credenciales de sistemas',marca:'—',serie:'—',color:'—',obs:'Uso exclusivo laboral'},
-      {bien:'Uniforme (2 piezas)',marca:'—',serie:'—',color:'Talla',obs:'—'}
+      {bien:'Laptop / equipo de cómputo',marca:'',serie:'',color:'',obs:''},
+      {bien:'Teléfono celular de trabajo',marca:'',serie:'',color:'',obs:''},
+      {bien:'Credenciales de sistemas',marca:'',serie:'',color:'',obs:'Uso exclusivo laboral'},
+      {bien:'Uniforme (2 piezas)',marca:'',serie:'',color:'',obs:''}
+    ],
+    'Encargado de inventarios':[
+      {bien:'Lector de código de barras',marca:'',serie:'',color:'',obs:''},
+      {bien:'Tablet de inventario',marca:'',serie:'',color:'',obs:''},
+      {bien:'Uniforme (2 piezas)',marca:'',serie:'',color:'',obs:''},
+      {bien:'Gafete',marca:'',serie:'',color:'',obs:''}
+    ],
+    'Gerente de operaciones':[
+      {bien:'Laptop',marca:'',serie:'',color:'',obs:''},
+      {bien:'Teléfono celular de trabajo',marca:'',serie:'',color:'',obs:''},
+      {bien:'Gafete',marca:'',serie:'',color:'',obs:''},
+      {bien:'Acceso a sistemas (credenciales)',marca:'',serie:'',color:'',obs:'Uso exclusivo laboral'}
     ]
   };
-  var bienes=BIENES_POR_PUESTO[e.puesto]||[
-    {bien:'Uniforme (2 piezas)',marca:'—',serie:'—',color:'Talla',obs:'—'},
-    {bien:'Gafete / identificación',marca:'—',serie:'No.',color:'—',obs:'—'},
-    {bien:'Equipo asignado al puesto',marca:'—',serie:'—',color:'—',obs:'Especificar al momento'}
+  return P[puesto]||[
+    {bien:'Uniforme (2 piezas)',marca:'',serie:'',color:'',obs:''},
+    {bien:'Gafete',marca:'',serie:'',color:'',obs:''}
   ];
-  var rows=bienes.map(function(b,i){
-    return '<tr><td>'+(i+1)+'</td><td>'+b.bien+'</td><td>'+b.marca+'</td><td>'+b.serie+'</td><td>'+b.color+'</td><td>'+b.obs+'</td></tr>';
+}
+function _respRenderBienes(bienes){
+  var cont=document.getElementById('respBienesContainer');
+  var html=bienes.map(function(b,i){
+    return '<div class="resp-row" data-idx="'+i+'" style="display:grid;grid-template-columns:2fr 1.2fr 1.2fr 0.8fr 1.2fr auto;gap:6px;padding:6px;border-bottom:1px solid #f0f0ee;align-items:center">'+
+      '<input class="fi resp-campo" data-campo="bien" value="'+sane(b.bien||'')+'" placeholder="Descripción" style="font-size:11px">'+
+      '<input class="fi resp-campo" data-campo="marca" value="'+sane(b.marca||'')+'" placeholder="Marca/Modelo" style="font-size:11px">'+
+      '<input class="fi resp-campo" data-campo="serie" value="'+sane(b.serie||'')+'" placeholder="Serie/IMEI/Placa" style="font-size:11px">'+
+      '<input class="fi resp-campo" data-campo="color" value="'+sane(b.color||'')+'" placeholder="Color/Talla" style="font-size:11px">'+
+      '<input class="fi resp-campo" data-campo="obs" value="'+sane(b.obs||'')+'" placeholder="Observaciones" style="font-size:11px">'+
+      '<button class="btn bd2 btn-sm" type="button" onclick="respEliminarBien('+i+')" title="Eliminar">✕</button>'+
+    '</div>';
+  }).join('');
+  cont.innerHTML=html||'<div style="padding:20px;text-align:center;color:var(--dim);font-size:11px">Sin bienes. Agrega con el botón de arriba.</div>';
+}
+function _respLeerBienes(){
+  var rows=document.querySelectorAll('#respBienesContainer .resp-row');
+  var bienes=[];
+  rows.forEach(function(r){
+    var b={};
+    r.querySelectorAll('.resp-campo').forEach(function(i){b[i.dataset.campo]=i.value.trim();});
+    if(b.bien) bienes.push(b);
+  });
+  return bienes;
+}
+function respAgregarBien(){var b=_respLeerBienes();b.push({bien:'',marca:'',serie:'',color:'',obs:''});_respRenderBienes(b);}
+function respEliminarBien(idx){var b=_respLeerBienes();b.splice(idx,1);_respRenderBienes(b);}
+function respGuardarYGenerar(){
+  var empId=parseInt(document.getElementById('respEmpId').value);
+  var bienes=_respLeerBienes();
+  if(bienes.length===0){msg('Agrega al menos un bien',true);return;}
+  var store=S.get('respBienes',{});
+  store[empId]=bienes;
+  S.set('respBienes',store);
+  cm('modalResponsiva');
+  msg('Carta responsiva guardada');
+  verDocumento('responsiva',empId);
+}
+
+function generarHTMLResponsiva(e){
+  var hoy=new Date();
+  var firmas=S.get('firmas',{});
+  var firmaImg=firmas[e.id]?'<div style="margin-top:8px"><img src="'+firmas[e.id].data+'" style="max-height:60px;border:1px solid #ddd"></div>':'';
+  var guardados=S.get('respBienes',{})[e.id];
+  var bienes=guardados&&guardados.length?guardados:[
+    {bien:'Uniforme (2 piezas)',marca:'—',serie:'—',color:'—',obs:'—'},
+    {bien:'Gafete',marca:'—',serie:'—',color:'—',obs:'—'}
+  ];
+  var rowsBien=bienes.map(function(b,i){
+    var v=function(x){return x&&String(x).trim()?sane(x):'—';};
+    return '<tr><td>'+(i+1)+'</td><td>'+v(b.bien)+'</td><td>'+v(b.marca)+'</td><td>'+v(b.serie)+'</td><td>'+v(b.color)+'</td><td>'+v(b.obs)+'</td></tr>';
   }).join('');
   return hdrDoc('CARTA RESPONSIVA DE BIENES ASIGNADOS')+
     '<div class="folio">Folio: RH-RESP-'+String(e.id).padStart(4,'0')+'-'+hoy.getFullYear()+'</div>'+
@@ -4877,9 +5164,9 @@ function generarHTMLResponsiva(e){
     '</div>'+
     '<h3>II. INVENTARIO DE BIENES ASIGNADOS</h3>'+
     '<p style="font-size:10px">El colaborador declara recibir en perfectas condiciones los siguientes bienes propiedad de la empresa:</p>'+
-    '<table><thead><tr><th>#</th><th>Bien / Descripción</th><th>Marca / Modelo</th><th>Serie / Placa / IMEI</th><th>Color / Talla</th><th>Año / Obs.</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<table><thead><tr><th>#</th><th>Bien / Descripción</th><th>Marca / Modelo</th><th>Serie / Placa / IMEI</th><th>Color / Talla</th><th>Año / Obs.</th></tr></thead><tbody>'+rowsBien+'</tbody></table>'+
     '<h3>III. CONDICIONES POR TIPO DE BIEN</h3>'+
-    (e.puesto==='Repartidor'?
+    (e.puesto==='Encargado de logística y reparto'?
       '<div style="background:#fefce8;border-left:3px solid #f59e0b;padding:8px 12px;font-size:11px;margin-bottom:10px"><b>⚠ Nota — Financiamiento:</b> El casco de seguridad e impermeable se asignan en modalidad de financiamiento. El trabajador se compromete a liquidarlos mediante descuentos quincenales pactados o al término de la relación laboral, lo que ocurra primero. El valor de mercado de cada artículo se especifica en la carta de entrega correspondiente.</div>'+
       '<p><b>Motocicleta de reparto:</b> (a) El colaborador es responsable del uso correcto y resguardo del vehículo. (b) Queda prohibido usar la motocicleta para fines personales fuera del horario laboral. (c) Cualquier siniestro o daño deberá reportarse al supervisor en un plazo máximo de 2 horas. (d) El colaborador asume responsabilidad por infracciones de tránsito generadas en su turno.</p>':'<p>El colaborador usará exclusivamente los bienes asignados para sus funciones laborales y los mantendrá en las condiciones en que los recibió.</p>')+
     '<p><b>Caja de herramientas y equipo de trabajo:</b> Mantener limpio, ordenado y dentro de las instalaciones al término del turno. Reportar inmediatamente cualquier falla, pérdida o daño. Queda prohibido prestar, vender o modificar el equipo asignado.</p>'+
@@ -4897,7 +5184,7 @@ function generarHTMLResponsiva(e){
     '<h3>V. CONSENTIMIENTO</h3>'+
     '<p>Declaro haber leído y entendido las condiciones de este documento, y acepto la responsabilidad sobre los bienes asignados.</p>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px">'+
-    '<div class="fbox">COLABORADOR — Nombre y firma<br><b>'+sane(e.nombre)+'</b></div>'+
+    '<div class="fbox">COLABORADOR — Nombre y firma<br><b>'+sane(e.nombre)+'</b>'+firmaImg+'</div>'+
     '<div class="fbox">ENTREGÓ — RECURSOS HUMANOS<br>Ferrepinturas de Tuxtla S.A.P.I. de C.V.</div>'+
     '</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:24px">'+
@@ -4952,14 +5239,14 @@ function generarHTMLActa(e){
     '<p><b>Política / Procedimiento:</b> _______________________________</p>'+
     '<h3>IV. DESCRIPCIÓN DE LOS HECHOS</h3>'+
     '<p style="font-size:10px;color:#888">(Narrar con precisión los hechos, indicando fecha, hora, lugar, testigos y evidencias)</p>'+
-    '<div style="border:1px solid #ddd;min-height:100px;padding:10px;font-size:11px;color:#bbb;border-radius:2px">Descripción de hechos...</div>'+
+    '<div contenteditable="true" style="border:1px solid #1A2B4A;min-height:100px;padding:10px;font-size:11px;color:#333;border-radius:2px;outline:none;background:#fffef9" placeholder="Escribe aquí la descripción...">Escribe aquí la descripción de los hechos, indicando fecha, hora, lugar, testigos y evidencias.</div>'+
     '<h3>V. HISTORIAL DE ACTAS PREVIAS</h3>'+
     '<table><thead><tr><th>No.</th><th>Fecha</th><th>Tipo de Falta</th><th>Resultado / Sanción</th><th>Firma</th></tr></thead><tbody>'+rowsPrev+'<tr><td>___</td><td>___________</td><td>___________________________</td><td>___________________________</td><td>____________</td></tr></tbody></table>'+
     '<h3>VI. DICHO DEL TRABAJADOR</h3>'+
     '<div style="display:flex;gap:24px;flex-wrap:wrap">'+
     ['Acepta los hechos descritos','Niega los hechos descritos','Acepta parcialmente — especifica:'].map(cb).join('')+
     '</div>'+
-    '<div style="border:1px solid #ddd;min-height:50px;padding:10px;margin-top:8px;font-size:11px;color:#bbb;border-radius:2px">Manifestación del trabajador...</div>'+
+    '<div contenteditable="true" style="border:1px solid #1A2B4A;min-height:50px;padding:10px;margin-top:8px;font-size:11px;color:#333;border-radius:2px;outline:none;background:#fffef9">Escribe aquí la manifestación del trabajador.</div>'+
     '<h3>VII. RESOLUCIÓN Y SANCIÓN</h3>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px">'+sanciones.map(cb).join('')+'</div>'+
     '<h3>VIII. RESULTADO DE NOTIFICACIÓN</h3>'+
@@ -5645,6 +5932,12 @@ var realtimeChannel=null;
 
 function iniciarRealtime(){
   if(!sb)return;
+  // Limpiar canal previo para evitar "cannot add callbacks after subscribe"
+  if(realtimeChannel){
+    try{sb.removeChannel(realtimeChannel);}catch(ex){}
+    realtimeChannel=null;
+  }
+  console.log('[Realtime] Iniciando canal ferreh_changes...');
   try{
     realtimeChannel=sb.channel('ferreh_changes')
       // Empleados: solo actualiza el registro que cambió
@@ -5678,7 +5971,6 @@ function iniciarRealtime(){
           if(!inc[row.fecha])inc[row.fecha]={};
           inc[row.fecha][row.emp_id]=row.datos;
           S.set('inc',inc);
-          // Update semaforo if visible
           if(document.getElementById('scr-semaforo')&&
              document.getElementById('scr-semaforo').style.display!=='none'){
             renderSemaforo();
@@ -5700,7 +5992,6 @@ function iniciarRealtime(){
         var mapped={emp_id:row.emp_id,token:row.token,ua:row.ua||'',enrolledAt:row.enrolled_at||new Date().toISOString(),activo:row.activo!==false};
         var idx=ciDispositivos.findIndex(function(d){return d.emp_id===row.emp_id;});
         if(idx>=0) ciDispositivos[idx]=mapped; else ciDispositivos.push(mapped);
-        // Marcar token como usado
         var t=ciEnrolTokens.find(function(x){return x.token===row.enrol_token;});
         if(t){t.usado=true;}
         ciSave();
@@ -5710,7 +6001,7 @@ function iniciarRealtime(){
       })
       // ── CI Realtime: check-ins desde celular (INSERT + UPDATE + DELETE) ──
       .on('postgres_changes',{event:'*',schema:'public',table:'rh_checkin_logs'},function(payload){
-        var evType=payload.eventType; // 'INSERT' | 'UPDATE' | 'DELETE'
+        var evType=payload.eventType;
         if(evType==='DELETE'){
           var oldId=payload.old&&payload.old.id;
           if(oldId){ciLogs=ciLogs.filter(function(l){return l.id!==oldId;});ciSave();}
@@ -5720,7 +6011,6 @@ function iniciarRealtime(){
         if(!payload.new)return;
         var row=payload.new;
         if(evType==='UPDATE'){
-          // RH editó un check-in existente — actualizar en memoria
           var idx=ciLogs.findIndex(function(l){return l.id===row.id;});
           var updated={id:row.id,emp_id:row.emp_id,emp_nombre:row.emp_nombre||'',suc_id:row.suc_id,fecha:row.fecha,hora:row.hora,lat:row.lat,lng:row.lng,dist:row.dist,estado:row.estado,ua:row.ua||'',selfie_url:row.selfie_url||null};
           if(idx>=0){ciLogs[idx]=updated;}else{ciLogs.push(updated);}
@@ -5729,13 +6019,11 @@ function iniciarRealtime(){
           if(ciTab==='qr')renderCIQR();
           return;
         }
-        // INSERT — viene de celular remoto
         var exists=ciLogs.find(function(l){return l.id===row.id;});
-        if(exists)return; // ya lo procesamos nosotros mismos
+        if(exists)return;
         ciLogs.push({id:row.id,emp_id:row.emp_id,emp_nombre:row.emp_nombre||'',suc_id:row.suc_id,fecha:row.fecha,hora:row.hora,lat:row.lat,lng:row.lng,dist:row.dist,estado:row.estado,ua:row.ua||'',selfie_url:row.selfie_url||null});
         nCiLog=Math.max(nCiLog,(row.id||0)+1);
         ciSave();
-        // Puente → nómina si estado ok
         if(row.estado==='ok'||row.estado==='cobertura'){
           var empId=row.emp_id;var hoy=row.fecha;var hora=row.hora;
           if(!inc[hoy])inc[hoy]={};
@@ -5746,23 +6034,47 @@ function iniciarRealtime(){
             pushInc(hoy,empId);S.set('inc',inc);
           }
         }
-        // Update UI
         if(ciTab==='log')renderCILog();
         if(ciTab==='qr')renderCIQR();
         var eCI=emp.find(function(x){return x.id===row.emp_id;});
         if(row.estado==='ok')msg('\u2713 Check-in registrado: '+(eCI?eCI.nombre:'emp #'+row.emp_id)+' \u2014 '+row.hora);
       })
+      // ── Evaluaciones: sincroniza evaluaciones guardadas por cualquier usuario ──
+      .on('postgres_changes',{event:'*',schema:'public',table:'rh_evaluaciones'},function(payload){
+        if(payload.eventType==='DELETE'&&payload.old&&payload.old.id){
+          evaluaciones=evaluaciones.filter(function(x){return x.id!==payload.old.id;});
+          S.set('evaluaciones',evaluaciones);
+          if(document.getElementById('scr-evaluaciones')&&document.getElementById('scr-evaluaciones').classList.contains('on'))renderEvaluaciones();
+          return;
+        }
+        if(payload.new&&payload.new.id){
+          var idx=evaluaciones.findIndex(function(x){return x.id===payload.new.id;});
+          if(idx>=0){evaluaciones[idx]=payload.new;}else{evaluaciones.push(payload.new);}
+          S.set('evaluaciones',evaluaciones);
+          if(document.getElementById('scr-evaluaciones')&&document.getElementById('scr-evaluaciones').classList.contains('on'))renderEvaluaciones();
+        }
+      })
       .subscribe(function(status){
+        console.log('[Realtime] Status:', status);
         var btn=document.getElementById('syncBtn');
         if(status==='SUBSCRIBED'){
+          console.log('[Realtime] \u2713 Suscrito correctamente a ferreh_changes (6 tablas)');
           if(btn){btn.textContent='● Live';btn.className='hdr-sync syncing';}
-          // Expose Supabase config for ferrecheckin kiosk (same PC)
           try{var cfg2=getSBConfig();if(cfg2.url&&cfg2.key){localStorage.setItem('ferre_sb_url',cfg2.url);localStorage.setItem('ferre_sb_key',cfg2.key);}}catch(ex){}
+        } else if(status==='CHANNEL_ERROR'){
+          console.error('[Realtime] Error de canal \u2014 verifica: 1) RLS policies para authenticated, 2) ALTER PUBLICATION supabase_realtime ADD TABLE rh_*');
+          if(btn){btn.textContent='\u27B3 Sync';btn.className='hdr-sync err';}
+        } else if(status==='TIMED_OUT'){
+          console.warn('[Realtime] Timeout \u2014 reconectando...');
+          if(btn){btn.textContent='\u27B3 Sync';btn.className='hdr-sync';}
         } else {
-          if(btn){btn.textContent='⟳ Sync';btn.className='hdr-sync';}
+          if(btn){btn.textContent='\u27B3 Sync';btn.className='hdr-sync';}
         }
       });
-  }catch(e){console.log('Realtime no disponible:',e);}
+    console.log('[Realtime] Canal creado, esperando SUBSCRIBED...');
+  }catch(e){
+    console.error('[Realtime] Error al iniciar:', e&&e.message, e&&e.stack, e);
+  }
 }
 
 // Arrancar realtime después del login
@@ -5777,5 +6089,14 @@ doLogin=function(nombre,rol,sbUser){
   var badge=document.getElementById('badgePago');
   if(badge)badge.style.display=new Date().getDay()===6?'':'none';
 })();
+
+// Auto-sincronización cada 5 minutos
+if(sb){
+  setInterval(function(){
+    if(typeof syncFromCloud === 'function'){
+      syncFromCloud().catch(function(e){console.warn('Auto-sync falló:',e);});
+    }
+  }, 5*60*1000);
+}
 
 </script></body></html>
