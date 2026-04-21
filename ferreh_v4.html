@@ -15,6 +15,12 @@ function qrDataUrl(text,size){var tmp=document.createElement('div');tmp.style.cs
   --amber:#9a6200;--abg:#fdf6e3;--purple:#6b3fa0;--pbg:#f3eeff;
   --blue:#1a3a8a;--bbg:#e8f0ff;
   --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
+  /* ── Industrial Táctico Dark Theme ── */
+  --bg-primary:#0F1419;--bg-panel:#111827;--bg-card:#1F2937;--bg-header:#000000;
+  --border-default:#374151;--border-accent:#D91B1B;
+  --text-primary:#ffffff;--text-secondary:#9CA3AF;--text-muted:#6B7280;
+  --accent-red:#D91B1B;--accent-green:#4ade80;
+  --font-mono:'DM Mono','SF Mono',Menlo,Monaco,Consolas,monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;}
@@ -277,6 +283,216 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
   .modal-recibo-active .mhd .mclose,
   .modal-recibo-active .mfoot { display: none !important; }
 }
+
+/* ════════════════════════════════════════════════
+   INDUSTRIAL TÁCTICO · DARK MODE v4.2
+   CSS-only overrides — IDs y JS intactos
+   ════════════════════════════════════════════════ */
+
+/* ── Body & layout ── */
+body{background:var(--bg-primary);color:var(--text-primary);}
+
+/* ── Header ── */
+header{background:var(--bg-header)!important;border-bottom:1px solid var(--border-accent);padding:10px 28px;}
+.hdr-badge-prod{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);background:var(--bg-card);border:1px solid var(--border-default);padding:2px 7px;letter-spacing:1px;white-space:nowrap;}
+.hdr-live{font-family:var(--font-mono);font-size:9px;color:var(--accent-green);display:flex;align-items:center;gap:4px;letter-spacing:1px;text-transform:uppercase;}
+.hdr-live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-green);animation:pulse 1.2s ease-in-out infinite;flex-shrink:0;}
+.hdr-r{color:var(--text-muted);font-family:var(--font-mono);}
+.hdr-r strong{color:var(--text-primary);letter-spacing:1px;}
+.hdr-sync{background:transparent;color:var(--text-muted);border:1px solid var(--border-default);font-family:var(--font-mono);}
+.hdr-sync:hover{color:var(--text-primary);border-color:var(--text-secondary);}
+.hdr-sync.syncing{color:var(--accent-green);border-color:var(--accent-green);}
+.hdr-sync.err{color:#ff6b6b;border-color:#ff6b6b;}
+
+/* ── Breadcrumb / nav bar ── */
+.bc{background:var(--bg-panel);border-bottom:1px solid var(--border-default);color:var(--text-muted);}
+.bcl:hover{color:var(--text-secondary);}
+.bcc{color:var(--text-primary);font-weight:500;}
+.bcs{color:var(--border-default);}
+
+/* ── Sync banner ── */
+.sync-banner{background:var(--bg-panel);border-bottom-color:var(--border-default);color:var(--text-secondary);}
+.sync-dot{background:var(--accent-green);}
+
+/* ── Screen areas ── */
+.scr{background:var(--bg-primary);}
+
+/* ── Section labels ── */
+.slbl{color:var(--text-muted);letter-spacing:1.5px;font-size:9px;display:flex;align-items:center;gap:8px;padding-left:0;}
+.slbl::before{content:'';display:inline-block;width:3px;height:14px;background:var(--border-accent);flex-shrink:0;}
+
+/* ── Alertas banner (redundante con campana — oculto) ── */
+#alertasBanner{display:none!important;}
+
+/* ── KPI Stats ── */
+.stat{background:var(--bg-card);border:0.5px solid var(--border-default);border-left:3px solid var(--border-default);}
+.stat.r{border-left-color:var(--border-accent);}
+.stat.g{border-left-color:var(--accent-green);}
+.stat.a{border-left-color:#f59e0b;}
+.stat.n{border-left-color:#60a5fa;}
+.stat.p{border-left-color:#c084fc;}
+.stat.b{border-left-color:#818cf8;}
+.s-l{color:var(--text-muted);letter-spacing:1.5px;font-size:9px;}
+.s-v{font-family:var(--font-mono);font-size:28px;font-weight:500;color:var(--text-primary);}
+.s-v.red{color:var(--accent-red);}
+.s-v.green{color:var(--accent-green);}
+.s-v.amber{color:#f59e0b;}
+.s-s{font-size:10px;color:var(--text-secondary);}
+
+/* ── Module cards ── */
+.hcard{background:var(--bg-card);border:0.5px solid var(--border-default);}
+.hcard:hover{border-color:var(--border-accent);box-shadow:0 4px 20px rgba(217,27,27,.12);transform:translateY(-1px);}
+.hcard:hover .hcard-bar{background:var(--border-accent);}
+.hcard-bar{background:var(--border-default);}
+.hcard-title{color:var(--text-primary);font-size:12px;text-transform:uppercase;letter-spacing:.3px;}
+.hcard-sub{color:var(--text-secondary);font-size:10px;}
+.hcard-alert{background:var(--border-accent);color:#fff;}
+.hcard-new{background:var(--accent-green);color:#052e16;font-weight:600;}
+
+/* ── Tables ── */
+thead{background:var(--bg-panel);}
+th{color:var(--text-muted);border-bottom:1px solid var(--border-default);}
+td{border-bottom:1px solid var(--border-default);color:var(--text-primary);}
+tr:hover td{background:#1a2535!important;}
+tr.prob td{background:#1a0808!important;}
+tfoot td{background:var(--bg-panel)!important;border-top:2px solid var(--border-default);color:var(--text-primary);}
+.tw{background:var(--bg-card);border:0.5px solid var(--border-default);}
+.twh{border-bottom:1px solid var(--border-default);}
+.twt{color:var(--text-primary);}
+
+/* ── Buttons ── */
+.bn{background:var(--bg-panel);color:var(--text-primary);border:1px solid var(--border-default);}
+.bn:hover{background:var(--border-default);}
+.br{background:var(--accent-red);color:#fff;}
+.br:hover{background:#b81717;}
+.bg_{background:#166534;color:#fff;}
+.bg_:hover{background:#14532d;}
+.bo{background:transparent;border:1px solid var(--border-default);color:var(--text-secondary);}
+.bo:hover{border-color:var(--text-secondary);color:var(--text-primary);}
+.bd2{border-color:#b91c1c;color:var(--accent-red);}
+.bd2:hover{background:#1a0808;}
+
+/* ── Forms & inputs ── */
+.fi{background:var(--bg-panel);border:1px solid var(--border-default);color:var(--text-primary);}
+.fi:focus{border-color:var(--border-accent);}
+.fl{color:var(--text-muted);}
+.fhint{color:var(--text-muted);}
+
+/* ── Page headers ── */
+.ph-title{color:var(--text-primary);}
+.ph-sub{color:var(--text-secondary);}
+
+/* ── Sub nav ── */
+.snbtn{background:var(--bg-card);border:1px solid var(--border-default);color:var(--text-secondary);}
+.snbtn:hover{border-color:var(--text-secondary);color:var(--text-primary);}
+.snlbl{background:var(--border-accent);color:#fff;}
+
+/* ── Day tabs ── */
+.dia-tab{background:var(--bg-card);border:1px solid var(--border-default);color:var(--text-muted);}
+.dia-tab:hover{border-color:var(--border-accent);color:var(--text-primary);}
+.dia-tab.on{background:var(--border-accent);color:#fff;border-color:var(--border-accent);}
+.dia-tab.con-inc{border-color:#f59e0b;color:#f59e0b;}
+.dia-tab.con-inc.on{background:#92400e;color:#fde68a;}
+
+/* ── Profile tabs ── */
+.ptabs{background:var(--bg-panel);border:1px solid var(--border-default);}
+.ptab{color:var(--text-muted);}
+.ptab:hover{color:var(--text-primary);}
+.ptab.on{background:var(--border-accent);color:#fff;}
+
+/* ── RH tabs ── */
+.rhtabs{border-bottom:2px solid var(--border-default);}
+.rhtab{color:var(--text-muted);}
+.rhtab:hover{color:var(--text-secondary);}
+.rhtab.on{color:var(--text-primary);border-bottom-color:var(--border-accent);}
+
+/* ── Modals ── */
+.modal{background:var(--bg-card);border:1px solid var(--border-default);}
+.mhd{border-bottom:1px solid var(--border-default);}
+.mtitle{color:var(--text-primary);}
+.mclose{color:var(--text-secondary);}
+.mfoot{border-top:1px solid var(--border-default);background:var(--bg-panel);}
+
+/* ── Alert colors in dark ── */
+.alerta{background:#1a0808;border-left-color:var(--border-accent);color:#f87171;}
+.alerta-green{background:#052e16;border-left-color:var(--accent-green);color:var(--accent-green);}
+.alerta-banner{background:#1a1000;border-left-color:#f59e0b;color:#fbbf24;}
+
+/* ── Toast ── */
+.toast{background:var(--bg-panel);}
+.toast.err{border-left-color:var(--accent-red);}
+
+/* ── Rep global ── */
+.rep-global{background:var(--bg-panel);}
+.rgi .rgl{color:rgba(255,255,255,.4);}
+
+/* ── Badges ── */
+.b-ok{background:#1f2937;color:var(--text-muted);}
+.b-falt{background:#1a0808;color:#f87171;}
+.b-ret{background:#1a1000;color:#fbbf24;}
+.b-retiro{background:#120820;color:#c084fc;}
+.b-bono{background:#052e16;color:var(--accent-green);}
+.b-pend{background:#1a1000;color:#fbbf24;}
+.b-apro{background:#052e16;color:var(--accent-green);}
+.b-rech{background:#1a0808;color:#f87171;}
+.b-vac{background:#0c1a40;color:#93c5fd;}
+.b-vig{background:#052e16;color:var(--accent-green);}
+.b-prox{background:#1a1000;color:#fbbf24;}
+.b-venc{background:#1a0808;color:#f87171;}
+
+/* ── Login ── */
+.login-wrap{background:var(--bg-header);}
+.login-box{background:var(--bg-card);border:1px solid var(--border-default);}
+.login-hd{background:var(--bg-panel);border-bottom:3px solid var(--border-accent);}
+
+/* ── Contrato card ── */
+.contrato-card{background:var(--bg-card);border:0.5px solid var(--border-default);}
+.contrato-hd{background:var(--bg-panel);border-bottom:1px solid var(--border-default);}
+.contrato-hd-nm{color:var(--text-primary);}
+.cc-lbl{color:var(--text-muted);}
+.cc-val{color:var(--text-primary);}
+
+/* ── Eval card ── */
+.eval-card{background:var(--bg-card);border:0.5px solid var(--border-default);}
+
+/* ── Organigrama ── */
+.org-node{background:var(--bg-card);border:1px solid var(--border-default);}
+.org-node:hover{border-color:var(--border-accent);}
+.org-node.root{background:var(--border-accent);border-color:var(--border-accent);}
+.org-node.dir{border-color:var(--border-accent);border-width:2px;}
+.org-nm{color:var(--text-primary);}
+.org-puesto,.org-suc{color:var(--text-muted);}
+.org-line-v,.org-children::before{background:var(--border-default);}
+
+/* ── Préstamos ── */
+.pr-card{background:var(--bg-card);border:0.5px solid var(--border-default);}
+.pr-card-hdr{background:var(--bg-panel);border-bottom:1px solid var(--border-default);}
+.pr-card-nm{color:var(--text-primary);}
+.pr-progress{background:var(--border-default);}
+.pr-cal-row{border-bottom-color:var(--border-default);}
+.pr-cal-fecha,.pr-cal-sem{color:var(--text-muted);}
+
+/* ── Reglamento ── */
+.reglamento-wrap{background:var(--bg-panel);border:1px solid var(--border-default);color:var(--text-secondary);}
+.reglamento-wrap h4{color:var(--text-primary);border-bottom-color:var(--border-default);}
+
+/* ── Firma digital ── */
+.firma-canvas-wrap{border-color:var(--border-default);background:var(--bg-panel);}
+.firma-preview{border-color:var(--border-default);background:var(--bg-panel);}
+.firma-ok{background:#052e16;border-color:var(--accent-green);color:var(--accent-green);}
+
+/* ── Rec modal ── */
+.rec-row{color:var(--text-primary);border-bottom-color:var(--border-default);}
+.rec-firma-box{color:var(--text-muted);border-top-color:var(--border-default);}
+
+/* ── Print: restaurar colores light ── */
+@media print{
+  body{background:#fff!important;color:#000!important;}
+  .stat{background:#fff!important;border:1px solid #ccc!important;}
+  .hcard{background:#fff!important;border:1px solid #ccc!important;}
+  th,td{color:#000!important;border-color:#ccc!important;}
+  tfoot td{background:#f5f5f5!important;}
+}
 </style>
 </head>
 <body>
@@ -311,7 +527,11 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
 <!-- APP -->
 <div id="appRoot" style="display:none">
 <header>
-  <img class="logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCA1MjAgMzYiPjx0ZXh0IHk9IjI4IiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2ssc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmZmZiI+RkVSUkVQSU5UVVJBUzx0c3BhbiBmaWxsPSIjRDkxQjFCIj5SSDwvdHNwYW4+PC90ZXh0Pjwvc3ZnPg==" alt="FerrepinturasRH">
+  <div style="display:flex;align-items:center;gap:10px">
+    <img class="logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCA1MjAgMzYiPjx0ZXh0IHk9IjI4IiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2ssc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmZmZiI+RkVSUkVQSU5UVVJBUzx0c3BhbiBmaWxsPSIjRDkxQjFCIj5SSDwvdHNwYW4+PC90ZXh0Pjwvc3ZnPg==" alt="FerrepinturasRH">
+    <span class="hdr-badge-prod">v4.2 · PROD</span>
+    <span class="hdr-live"><span class="hdr-live-dot"></span>LIVE</span>
+  </div>
   <div style="display:flex;align-items:center;gap:12px">
     <button class="hdr-sync" id="syncBtn" onclick="syncAll()">⟳ Sync</button>
     <button class="hdr-sync" id="notifBtn" onclick="go('notif')" title="Notificaciones" style="position:relative">🔔 <span id="notifBadge" style="display:none;position:absolute;top:2px;right:2px;background:var(--rojo);color:#fff;font-size:7px;padding:1px 4px;border-radius:8px;line-height:1.4;min-width:14px;text-align:center"></span></button>
