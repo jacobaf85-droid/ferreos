@@ -3063,7 +3063,7 @@ function renderCILog(){
       var estadoLabel={ok:'✓ OK',fuera_rango:'⚠ Fuera de rango',token_invalido:'✗ Token inválido',dispositivo_no_enrolado:'✗ Sin enrolar'}[l.estado]||l.estado;
       html+='<tr style="border-bottom:1px solid var(--border)">'+
         '<td style="padding:8px 12px;font-family:var(--mono);font-size:11px">'+l.hora+'</td>'+
-        '<td style="padding:8px 12px;font-size:12px">'+sane(e.nombre)+'</td>'+
+        '<td style="padding:8px 12px;font-size:12px">'+sane(e.nombre)+(l.fuera_asignacion?' <span title="Marcó fuera de su sucursal asignada" style="color:#d97706;font-size:10px;margin-left:4px">⚠</span>':'')+'</td>'+
         '<td style="padding:8px 12px;font-size:12px">'+s.nombre+'</td>'+
         '<td style="padding:8px 12px;font-family:var(--mono);font-size:10px;color:var(--dim)">'+(l.dist!=null?Math.round(l.dist)+'m':'—')+'</td>'+
         '<td style="padding:8px 12px;font-family:var(--mono);font-size:10px;color:'+estadoColor+'">'+estadoLabel+'</td>'+
@@ -6081,7 +6081,7 @@ function iniciarRealtime(){
         var row=payload.new;
         if(evType==='UPDATE'){
           var idx=ciLogs.findIndex(function(l){return l.id===row.id;});
-          var updated={id:row.id,emp_id:row.emp_id,emp_nombre:row.emp_nombre||'',suc_id:row.suc_id,fecha:row.fecha,hora:row.hora,lat:row.lat,lng:row.lng,dist:row.dist,estado:row.estado,ua:row.ua||'',selfie_url:row.selfie_url||null};
+          var updated={id:row.id,emp_id:row.emp_id,emp_nombre:row.emp_nombre||'',suc_id:row.suc_id,fecha:row.fecha,hora:row.hora,lat:row.lat,lng:row.lng,dist:row.dist,estado:row.estado,ua:row.ua||'',selfie_url:row.selfie_url||null,fuera_asignacion:row.fuera_asignacion||false};
           if(idx>=0){ciLogs[idx]=updated;}else{ciLogs.push(updated);}
           ciSave();
           if(ciTab==='log')renderCILog();
@@ -6090,7 +6090,7 @@ function iniciarRealtime(){
         }
         var exists=ciLogs.find(function(l){return l.id===row.id;});
         if(exists)return;
-        ciLogs.push({id:row.id,emp_id:row.emp_id,emp_nombre:row.emp_nombre||'',suc_id:row.suc_id,fecha:row.fecha,hora:row.hora,lat:row.lat,lng:row.lng,dist:row.dist,estado:row.estado,ua:row.ua||'',selfie_url:row.selfie_url||null});
+        ciLogs.push({id:row.id,emp_id:row.emp_id,emp_nombre:row.emp_nombre||'',suc_id:row.suc_id,fecha:row.fecha,hora:row.hora,lat:row.lat,lng:row.lng,dist:row.dist,estado:row.estado,ua:row.ua||'',selfie_url:row.selfie_url||null,fuera_asignacion:row.fuera_asignacion||false});
         nCiLog=Math.max(nCiLog,(row.id||0)+1);
         ciSave();
         if(row.estado==='ok'||row.estado==='cobertura'){
