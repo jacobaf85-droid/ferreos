@@ -6062,8 +6062,7 @@ function iniciarRealtime(){
         var mapped={emp_id:row.emp_id,token:row.token,ua:row.ua||'',enrolledAt:row.enrolled_at||new Date().toISOString(),activo:row.activo!==false};
         var idx=ciDispositivos.findIndex(function(d){return d.emp_id===row.emp_id;});
         if(idx>=0) ciDispositivos[idx]=mapped; else ciDispositivos.push(mapped);
-        var t=ciEnrolTokens.find(function(x){return x.token===row.enrol_token;});
-        if(t){t.usado=true;}
+        ciEnrolTokens.forEach(function(x){if(x.emp_id===row.emp_id)x.usado=true;});
         ciSave();
         var e=emp.find(function(x){return x.id===row.emp_id;});
         msg('📱 Dispositivo enrolado: '+(e?e.nombre:'emp #'+row.emp_id));
