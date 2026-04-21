@@ -3450,8 +3450,8 @@ function procesarCheckin(payload){
   }
   // BUG #5 FIX: Eliminado puente duplicado Check-In → Nómina de aquí.
   // registrarLogCI es el único punto que actualiza inc[hoy][empId].
-  var horaCI=ciHora();
-  return {ok:true,msg:'Asistencia registrada',nombre:e.nombre,hora:horaCI,estado:estadoGPS,selfie_url:selfieUrl};
+  var horaReal=(payload.hora_servidor)||ciHora();
+  return {ok:true,msg:'Asistencia registrada',nombre:e.nombre,hora:horaReal,estado:estadoGPS,selfie_url:selfieUrl};
 }
 
 function registrarLogCI(payload,estado,dist,empNombre){

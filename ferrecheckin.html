@@ -605,7 +605,7 @@ async function enviarCheckin(lat,lng){
       var pb4=document.getElementById("pb");if(pb4)pb4.style.width="90%";
       // Insertar log con emp_nombre para kiosk realtime
       // hora y fecha NO se envían — Supabase las asigna con el trigger server_timestamp
-      var {error:logErr}=await _sb.from('rh_checkin_logs').insert({emp_id:empId,emp_nombre:nombre,suc_id:sucId,lat:lat,lng:lng,dist:dist,estado:estadoGPS,ua:ua,selfie_url:selfieUrl});
+      var {data:logData,error:logErr}=await _sb.from('rh_checkin_logs').insert({emp_id:empId,emp_nombre:nombre,suc_id:sucId,lat:lat,lng:lng,dist:dist,estado:estadoGPS,ua:ua,selfie_url:selfieUrl}).select('hora').single();
       if(logErr){
         // Manejar violación de constraint único (doble check-in por race condition)
         if(logErr.code==='23505'){
@@ -616,7 +616,8 @@ async function enviarCheckin(lat,lng){
       }
       var pb5=document.getElementById("pb");if(pb5)pb5.style.width="100%";
       var fotoHtml=selfieUrl?"<img src='"+selfieUrl+"' style='width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;border:2px solid #86efac'>": "";
-      mostrarResultado("ok","","Llegada registrada",fotoHtml+"Buen dia, <strong>"+nombre+"</strong>!<br>"+hora,false);
+      var horaFinal=(logData&&logData.hora)||hora;
+      mostrarResultado("ok","","Llegada registrada",fotoHtml+"Buen dia, <strong>"+nombre+"</strong>!<br>"+horaFinal,false);
       return;
     }catch(ex){
       // Supabase failed — try postMessage fallback
@@ -625,7 +626,7 @@ async function enviarCheckin(lat,lng){
   }
 
   // ── FLUJO 2: postMessage (kiosk — misma PC) ──
-  var payload={type:"ferrecheckin",payload:{token_disp:token_disp,suc_id:sucId,seed:seed,lat:lat,lng:lng,ua:ua,selfie_b64:_selfieB64}};
+  var payload={type:"ferrecheckin",payload:{token_disp:token_disp,suc_id:sucId,seed:seed,lat:lat,lng:lng,ua:ua,selfie_b64:_selfieB64,hora_servidor:(typeof logData!=='undefined'&&logData?logData.hora:null)}};
   var sent=false;
   var _pOrigin=getParentOrigin();
   if(window.opener){window.opener.postMessage(payload,_pOrigin);sent=true;}
