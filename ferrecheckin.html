@@ -311,16 +311,16 @@ async function confirmarEnrol(){
       if(tkErr||!tkRow){setEnrolErr("Token inv\xe1lido, expirado o ya usado. Pide un nuevo enlace a RH.");return;}
       console.log('[Enrol] Paso 1 OK \u2014 token v\xe1lido, emp_id:'+tkRow.emp_id);
 
-      // Paso 2 — Registrar dispositivo (si falla, NO se marca el token)
-      var {error:dispErr}=await _sb.from('rh_dispositivos').upsert(
+      // Paso 2 — Registrar dispositivo y leer token que quedó en DB (si falla, NO se marca el token)
+      var {data:dispData,error:dispErr}=await _sb.from('rh_dispositivos').upsert(
         {emp_id:tkRow.emp_id,token:t,ua:ua,activo:true,enrol_token:enrol},
         {onConflict:'emp_id'}
-      );
-      if(dispErr){setEnrolErr("Error al registrar el celular: "+dispErr.message+(dispErr.code?" ["+dispErr.code+"]":""));return;}
-      console.log('[Enrol] Paso 2 OK \u2014 dispositivo registrado');
+      ).select('token').single();
+      if(dispErr||!dispData){setEnrolErr("Error al registrar el celular: "+((dispErr&&dispErr.message)||'sin datos')+(dispErr&&dispErr.code?" ["+dispErr.code+"]":""));return;}
+      console.log('[Enrol] Paso 2 OK \u2014 dispositivo registrado, token DB:'+dispData.token);
 
-      // Paso 3 — Guardar token localmente y marcar token de enrolamiento como usado
-      setToken(t);
+      // Paso 3 — Guardar token del dispositivo retornado por DB (no el generado localmente)
+      setToken(dispData.token);
       var {error:markErr}=await _sb.from('rh_enrol_tokens').update({usado:true}).eq('token',enrol);
       if(markErr){console.error("No se pudo marcar token como usado:",markErr);}
       console.log('[Enrol] Paso 3 OK \u2014 token marcado como usado');
