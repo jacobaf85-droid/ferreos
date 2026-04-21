@@ -5135,15 +5135,19 @@ function generarHTMLReglamentoDoc(e){
       'canvas.addEventListener("touchmove",move,{passive:false});'+
       'canvas.addEventListener("touchend",end);}'+
     'function limpiarFirma(canvasId){var c=document.getElementById(canvasId);if(!c)return;c.getContext("2d").clearRect(0,0,c.width,c.height);}'+
-    'function guardarFirmaReglamento(){'+
+    'async function guardarFirmaReglamento(){'+
       'var c=document.getElementById("firmaCanvasReglamento");if(!c){alert("Canvas no disponible");return;}'+
       'var dataUrl=c.toDataURL("image/png");'+
       'try{'+
+        'var res=await fetch(dataUrl);var blob=await res.blob();'+
+        'var fname="firmas/reglamento_emp'+e.id+'_"+Date.now()+".png";'+
+        'var upRes=await window.parent.sb.storage.from("rh-documentos").upload(fname,blob,{contentType:"image/png",upsert:true});'+
+        'if(upRes.error){throw upRes.error;}'+
         'var regs=window.parent.S.get("reglamentos",{});'+
-        'regs['+e.id+']=Object.assign(regs['+e.id+']||{},{firma:dataUrl,fecha:new Date().toISOString().split("T")[0]});'+
+        'regs['+e.id+']=Object.assign(regs['+e.id+']||{},{firma_path:fname,fecha:new Date().toISOString()});'+
         'window.parent.S.set("reglamentos",regs);'+
-        'alert("Firma guardada correctamente");}'+
-      'catch(err){alert("Error al guardar: "+err.message);}}'+
+        'alert("Firma guardada correctamente");'+
+      '}catch(err){alert("Error al guardar: "+err.message);}}'+
     'initFirmaCanvas("firmaCanvasReglamento");'+
     '<\/script>';
 }
@@ -5288,6 +5292,13 @@ function generarHTMLResponsiva(e){
     '<p style="font-size:11px">La no devolución oportuna faculta a la empresa para iniciar las acciones legales correspondientes.</p>'+
     '<h3>V. CONSENTIMIENTO</h3>'+
     '<p>Declaro haber leído y entendido las condiciones de este documento, y acepto la responsabilidad sobre los bienes asignados.</p>'+
+    '<div style="margin:20px 0;border:1px solid #ddd;padding:12px">'+
+    '<div style="font-size:11px;color:#666;margin-bottom:6px">Firma digital del trabajador:</div>'+
+    '<canvas id="firmaCanvasCarta" width="600" height="150" style="border:1px dashed #aaa;background:#fafafa;display:block;touch-action:none"></canvas>'+
+    '<div style="margin-top:6px;display:flex;gap:8px">'+
+    '<button type="button" onclick="limpiarFirma(\'firmaCanvasCarta\')" style="padding:5px 14px;cursor:pointer;border:1px solid #aaa;background:#fff">Limpiar</button>'+
+    '<button type="button" onclick="guardarFirmaCarta()" style="padding:5px 14px;cursor:pointer;background:#1A2B4A;color:#fff;border:none">Guardar firma</button>'+
+    '</div></div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px">'+
     '<div class="fbox">COLABORADOR — Nombre y firma<br><b>'+sane(e.nombre)+'</b>'+firmaImg+'</div>'+
     '<div class="fbox">ENTREGÓ — RECURSOS HUMANOS<br>Ferrepinturas de Tuxtla S.A.P.I. de C.V.</div>'+
@@ -5295,7 +5306,40 @@ function generarHTMLResponsiva(e){
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:24px">'+
     '<div class="fbox">Testigo 1: ____________________________</div>'+
     '<div class="fbox">Testigo 2: ____________________________</div>'+
-    '</div>';
+    '</div>'+
+    '<'+'script>'+
+    'function initFirmaCanvas(canvasId){'+
+      'var canvas=document.getElementById(canvasId);if(!canvas)return;'+
+      'var ctx=canvas.getContext("2d");var drawing=false;'+
+      'ctx.strokeStyle="#000";ctx.lineWidth=2;ctx.lineCap="round";'+
+      'function getPos(e){var rect=canvas.getBoundingClientRect();'+
+        'var x=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;'+
+        'var y=(e.touches?e.touches[0].clientY:e.clientY)-rect.top;'+
+        'return{x:x*(canvas.width/rect.width),y:y*(canvas.height/rect.height)};}'+
+      'function start(e){e.preventDefault();drawing=true;var p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);}'+
+      'function move(e){if(!drawing)return;e.preventDefault();var p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();}'+
+      'function end(){drawing=false;}'+
+      'canvas.addEventListener("mousedown",start);canvas.addEventListener("mousemove",move);'+
+      'canvas.addEventListener("mouseup",end);canvas.addEventListener("mouseout",end);'+
+      'canvas.addEventListener("touchstart",start,{passive:false});'+
+      'canvas.addEventListener("touchmove",move,{passive:false});'+
+      'canvas.addEventListener("touchend",end);}'+
+    'function limpiarFirma(canvasId){var c=document.getElementById(canvasId);if(!c)return;c.getContext("2d").clearRect(0,0,c.width,c.height);}'+
+    'async function guardarFirmaCarta(){'+
+      'var c=document.getElementById("firmaCanvasCarta");if(!c){alert("Canvas no disponible");return;}'+
+      'var dataUrl=c.toDataURL("image/png");'+
+      'try{'+
+        'var res=await fetch(dataUrl);var blob=await res.blob();'+
+        'var fname="firmas/carta_emp'+e.id+'_"+Date.now()+".png";'+
+        'var upRes=await window.parent.sb.storage.from("rh-documentos").upload(fname,blob,{contentType:"image/png",upsert:true});'+
+        'if(upRes.error){throw upRes.error;}'+
+        'var cartas=window.parent.S.get("cartas_responsivas",{});'+
+        'cartas['+e.id+']=Object.assign(cartas['+e.id+']||{},{firma_path:fname,fecha:new Date().toISOString()});'+
+        'window.parent.S.set("cartas_responsivas",cartas);'+
+        'alert("Firma guardada correctamente");'+
+      '}catch(err){alert("Error al guardar: "+err.message);}}'+
+    'initFirmaCanvas("firmaCanvasCarta");'+
+    '<\/script>';
 }
 
 function generarHTMLActa(e){
@@ -5338,7 +5382,18 @@ function generarHTMLActa(e){
     d('Antigüedad',anos>0?anos+' año(s)':'Nuevo ingreso')+
     d('No. de empleado',String(e.id).padStart(4,'0'))+
     '<h3>II. TIPO DE INFRACCIÓN</h3>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px">'+infracciones.map(cb).join('')+'</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">'+
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaInf1" name="infraccion" value="retardo"> Retardo reincidente (3 o más en 30 días)</label>'+
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaInf2" name="infraccion" value="ausencia"> Ausencia sin justificar</label>'+
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaInf3" name="infraccion" value="desobediencia"> Desobediencia a instrucciones del supervisor</label>'+
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaInf4" name="infraccion" value="equipo"> Uso inadecuado de equipo o bienes de la empresa</label>'+
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaInf5" name="infraccion" value="trato"> Trato inadecuado a clientes o compañeros</label>'+
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaInf6" name="infraccion" value="efectivo"> Manipulación incorrecta del efectivo o cobros</label>'+
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaInf7" name="infraccion" value="acceso"> Acceso no autorizado a sistemas o información</label>'+
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaInf8" name="infraccion" value="dano"> Daño intencional a bienes de la empresa</label>'+
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaInf9" name="infraccion" value="divulgacion"> Divulgación de información confidencial</label>'+
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaInf10" name="infraccion" value="otra"> Otra: ________________________</label>'+
+    '</div>'+
     '<h3>III. NORMA O POLÍTICA INFRINGIDA</h3>'+
     '<p><b>Reglamento Interno — Artículo(s):</b> _______________________________</p>'+
     '<p><b>Política / Procedimiento:</b> _______________________________</p>'+
