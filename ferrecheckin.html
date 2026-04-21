@@ -580,12 +580,9 @@ async function enviarCheckin(lat,lng){
       if(lat&&lng){
         var {data:sucRow}=await _sb.from('rh_sucursales').select('lat,lng,radio,nombre').eq('id',sucId).single();
         var empSuc=dispRow.rh_empleados&&dispRow.rh_empleados.sucursal;
+        var fueraAsignacion=false;
         if(empSuc && sucRow && empSuc!==sucRow.nombre){
-          var {data:cobHoy}=await _sb.from('rh_coberturas').select('id').eq('sustituto_id',empId).eq('fecha',hoyStr).eq('suc_id',sucId).maybeSingle();
-          if(!cobHoy){
-            mostrarResultado("err","&#x26D4;","Sucursal incorrecta","Estás asignado a "+empSuc+". Este QR es de otra sucursal. Avisa a tu gerente si hay cobertura autorizada.",false);
-            return;
-          }
+          fueraAsignacion=true;
         }
         if(sucRow&&sucRow.lat&&sucRow.lng){
           var R=6371000,r=Math.PI/180;
@@ -605,7 +602,7 @@ async function enviarCheckin(lat,lng){
       var pb4=document.getElementById("pb");if(pb4)pb4.style.width="90%";
       // Insertar log con emp_nombre para kiosk realtime
       // hora y fecha NO se envían — Supabase las asigna con el trigger server_timestamp
-      var {data:logData,error:logErr}=await _sb.from('rh_checkin_logs').insert({emp_id:empId,emp_nombre:nombre,suc_id:sucId,lat:lat,lng:lng,dist:dist,estado:estadoGPS,ua:ua,selfie_url:selfieUrl}).select('hora').single();
+      var {data:logData,error:logErr}=await _sb.from('rh_checkin_logs').insert({emp_id:empId,emp_nombre:nombre,suc_id:sucId,lat:lat,lng:lng,dist:dist,estado:estadoGPS,ua:ua,selfie_url:selfieUrl,fuera_asignacion:fueraAsignacion}).select('hora').single();
       if(logErr){
         // Manejar violación de constraint único (doble check-in por race condition)
         if(logErr.code==='23505'){
