@@ -271,6 +271,12 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
 .star.off{color:#d1d5db;}
 /* Contrato preview */
 .contrato-preview{background:#fafaf8;border:1px solid var(--border);padding:20px;font-size:12px;line-height:1.8;font-family:Georgia,serif;white-space:pre-line;}
+@media print {
+  body > *:not(.modal-recibo-active) { display: none !important; }
+  .modal-recibo-active { position: static !important; background: white !important; box-shadow: none !important; }
+  .modal-recibo-active .mhd .mclose,
+  .modal-recibo-active .mfoot { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -2628,7 +2634,7 @@ function abrirRecibo(empId){
     '<div class="rec-firma"><div class="rec-firma-box">Firma del empleado<br>'+sane(e.nombre)+'</div><div class="rec-firma-box">Autorizado por<br>Ferrepinturas de Tuxtla</div></div>'+
     '<div style="text-align:center;padding:10px;font-size:9px;color:#aaa">Este recibo es un comprobante de pago.</div>'+
     '<div class="rec-footer"><button class="btn bo" onclick="cerrarRecibo()">Cerrar</button><button class="btn bn" onclick="window.print()">🖨 Imprimir</button></div></div></div>';
-  var wrap=document.createElement('div');wrap.innerHTML=html;document.body.appendChild(wrap.firstChild);
+  var wrap=document.createElement('div');wrap.innerHTML=html;var _rEl=document.body.appendChild(wrap.firstChild);_rEl.classList.add('modal-recibo-active');
 }
 function cerrarRecibo(){var w=document.getElementById('reciboWrap');if(w)w.remove();}
 
@@ -5102,8 +5108,44 @@ function generarHTMLReglamentoDoc(e){
     '<h3>CONSTANCIA DE ENTREGA Y ACEPTACIÓN</h3>'+
     '<p>Yo, <b>'+sane(e.nombre)+'</b>, puesto: <b>'+sane(e.puesto)+'</b>, sucursal: <b>'+sane(e.sucursal||'___')+'</b>, CURP: <b>'+(e.curp||'________________')+'</b>, fecha de ingreso: <b>'+(e.fechaIngreso?fFechaCorta(e.fechaIngreso):'_______________')+'</b>, declaro que:</p>'+
     '<ol style="font-size:11px;line-height:1.9"><li>Recibí en esta fecha un ejemplar del Reglamento Interior de Trabajo de FERREPINTURAS DE TUXTLA S.A.P.I. DE C.V.</li><li>Leí y comprendí íntegramente su contenido.</li><li>Tuve oportunidad de preguntar y mis dudas fueron atendidas.</li><li>Me obligo a cumplirlo desde esta fecha.</li><li>Reconozco que su desconocimiento no me exime de su cumplimiento.</li></ol>'+
+    '<div class="firma-digital-wrap noprint" style="margin:20px 0;border:1px solid #ddd;padding:12px">'+
+    '<div style="font-size:11px;color:#666;margin-bottom:6px">Firma digital del trabajador (firma con tu dedo o mouse):</div>'+
+    '<canvas id="firmaCanvasReglamento" width="600" height="150" style="border:1px dashed #aaa;background:#fafafa;display:block;touch-action:none"></canvas>'+
+    '<div style="margin-top:6px;display:flex;gap:8px">'+
+    '<button type="button" onclick="limpiarFirma(\'firmaCanvasReglamento\')" style="padding:5px 14px;cursor:pointer;border:1px solid #aaa;background:#fff">Limpiar</button>'+
+    '<button type="button" onclick="guardarFirmaReglamento()" style="padding:5px 14px;cursor:pointer;background:#1A2B4A;color:#fff;border:none">Guardar firma</button>'+
+    '</div></div>'+
     fgrid(['FIRMA DEL TRABAJADOR<br><b>'+sane(e.nombre)+'</b>'+firmaImg,'TESTIGO — RH / SUPERVISOR<br>Ferrepinturas de Tuxtla S.A.P.I. de C.V.'])+
-    '</div>';
+    '</div>'+
+    '<'+'script>'+
+    'function initFirmaCanvas(canvasId){'+
+      'var canvas=document.getElementById(canvasId);if(!canvas)return;'+
+      'var ctx=canvas.getContext("2d");var drawing=false;'+
+      'ctx.strokeStyle="#000";ctx.lineWidth=2;ctx.lineCap="round";'+
+      'function getPos(e){var rect=canvas.getBoundingClientRect();'+
+        'var x=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;'+
+        'var y=(e.touches?e.touches[0].clientY:e.clientY)-rect.top;'+
+        'return{x:x*(canvas.width/rect.width),y:y*(canvas.height/rect.height)};}'+
+      'function start(e){e.preventDefault();drawing=true;var p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);}'+
+      'function move(e){if(!drawing)return;e.preventDefault();var p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();}'+
+      'function end(){drawing=false;}'+
+      'canvas.addEventListener("mousedown",start);canvas.addEventListener("mousemove",move);'+
+      'canvas.addEventListener("mouseup",end);canvas.addEventListener("mouseout",end);'+
+      'canvas.addEventListener("touchstart",start,{passive:false});'+
+      'canvas.addEventListener("touchmove",move,{passive:false});'+
+      'canvas.addEventListener("touchend",end);}'+
+    'function limpiarFirma(canvasId){var c=document.getElementById(canvasId);if(!c)return;c.getContext("2d").clearRect(0,0,c.width,c.height);}'+
+    'function guardarFirmaReglamento(){'+
+      'var c=document.getElementById("firmaCanvasReglamento");if(!c){alert("Canvas no disponible");return;}'+
+      'var dataUrl=c.toDataURL("image/png");'+
+      'try{'+
+        'var regs=window.parent.S.get("reglamentos",{});'+
+        'regs['+e.id+']=Object.assign(regs['+e.id+']||{},{firma:dataUrl,fecha:new Date().toISOString().split("T")[0]});'+
+        'window.parent.S.set("reglamentos",regs);'+
+        'alert("Firma guardada correctamente");}'+
+      'catch(err){alert("Error al guardar: "+err.message);}}'+
+    'initFirmaCanvas("firmaCanvasReglamento");'+
+    '<\/script>';
 }
 
 function abrirResponsiva(empId){
