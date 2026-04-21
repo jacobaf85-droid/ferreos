@@ -311,19 +311,27 @@ async function confirmarEnrol(){
       if(tkErr||!tkRow){setEnrolErr("Token inv\xe1lido, expirado o ya usado. Pide un nuevo enlace a RH.");return;}
       console.log('[Enrol] Paso 1 OK \u2014 token v\xe1lido, emp_id:'+tkRow.emp_id);
 
-      // Paso 2 — Registrar dispositivo y leer token que quedó en DB (si falla, NO se marca el token)
-      var {data:dispData,error:dispErr}=await _sb.from('rh_dispositivos').upsert(
-        {emp_id:tkRow.emp_id,token:t,ua:ua,activo:true,enrol_token:enrol},
-        {onConflict:'emp_id'}
-      ).select('token').single();
-      if(dispErr||!dispData){setEnrolErr("Error al registrar el celular: "+((dispErr&&dispErr.message)||'sin datos')+(dispErr&&dispErr.code?" ["+dispErr.code+"]":""));return;}
-      console.log('[Enrol] Paso 2 OK \u2014 dispositivo registrado, token DB:'+dispData.token);
+      // Paso 2 — INSERT puro (no upsert — policy anon_insert_disp_con_token solo cubre INSERT)
+      console.log("[Enrol] Paso 2 — registrando dispositivo...");
+      var {data:dispData,error:dispErr}=await _sb.from("rh_dispositivos").insert(
+        {emp_id:tkRow.emp_id,token:t,ua:ua,activo:true,enrol_token:enrol}
+      ).select("token").single();
+      if(dispErr||!dispData){
+        console.error("[Enrol] Paso 2 FAIL",dispErr);
+        setEnrolErr("Error al registrar el celular: "+((dispErr&&dispErr.message)||"sin datos")+(dispErr&&dispErr.code?" ["+dispErr.code+"]":""));
+        return;
+      }
+      console.log("[Enrol] Paso 2 OK — dispositivo registrado, token DB:"+dispData.token);
 
-      // Paso 3 — Guardar token del dispositivo retornado por DB (no el generado localmente)
+      // Paso 3 — Marcar token como usado (después del INSERT exitoso)
+      console.log("[Enrol] Paso 3 — marcando token como usado...");
+      var {error:markErr}=await _sb.from("rh_enrol_tokens").update({usado:true}).eq("token",enrol);
+      if(markErr){console.error("[Enrol] Paso 3 FAIL",markErr);}
+      else{console.log("[Enrol] Paso 3 OK — token marcado como usado");}
+
+      // Paso 4 — Guardar token dispositivo localmente
       setToken(dispData.token);
-      var {error:markErr}=await _sb.from('rh_enrol_tokens').update({usado:true}).eq('token',enrol);
-      if(markErr){console.error("No se pudo marcar token como usado:",markErr);}
-      console.log('[Enrol] Paso 3 OK \u2014 token marcado como usado');
+      console.log("[Enrol] Paso 4 OK — token guardado localmente:"+dispData.token);
 
       // \xc9xito confirmado
       document.getElementById("app").innerHTML=

@@ -4135,8 +4135,7 @@ function fqCalcular(){
   var diasAnio=Math.floor((baja-inicioAnio)/86400000);
   var aguinaldo=Math.round(salDiario*15*(diasAnio/365)*100)/100;
   // Vacaciones proporcionales LFT tabla
-  var tablaVac=[0,6,8,10,12,14,14,14,14,14,16,16,16,16,16,18,18,18,18,18,20];
-  var diasVacAnual=tablaVac[Math.min(Math.floor(anos),tablaVac.length-1)]||6;
+  var diasVacAnual=diasVacacionesLFT(Math.floor(anos));
   var vacProp=Math.round(salDiario*(diasVacAnual*(diasAnio/365)-vacGoz)*100)/100;
   vacProp=Math.max(0,vacProp);
   var primaVac=Math.round(vacProp*0.25*100)/100;
@@ -5512,13 +5511,6 @@ function generarHTMLResponsiva(e){
     '<p style="font-size:11px">La no devolución oportuna faculta a la empresa para iniciar las acciones legales correspondientes.</p>'+
     '<h3>V. CONSENTIMIENTO</h3>'+
     '<p>Declaro haber leído y entendido las condiciones de este documento, y acepto la responsabilidad sobre los bienes asignados.</p>'+
-    '<div style="margin:20px 0;border:1px solid #ddd;padding:12px">'+
-    '<div style="font-size:11px;color:#666;margin-bottom:6px">Firma digital del trabajador:</div>'+
-    '<canvas id="firmaCanvasCarta" width="600" height="150" style="border:1px dashed #aaa;background:#fafafa;display:block;touch-action:none"></canvas>'+
-    '<div style="margin-top:6px;display:flex;gap:8px">'+
-    '<button type="button" onclick="limpiarFirma(\'firmaCanvasCarta\')" style="padding:5px 14px;cursor:pointer;border:1px solid #aaa;background:#fff">Limpiar</button>'+
-    '<button type="button" onclick="guardarFirmaCarta()" style="padding:5px 14px;cursor:pointer;background:#1A2B4A;color:#fff;border:none">Guardar firma</button>'+
-    '</div></div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:40px">'+
     '<div style="text-align:center;padding:8px;border:1px solid #ddd;border-radius:4px">'+'<div style="font-size:10px;font-weight:700;color:#1A2B4A;margin-bottom:6px">COLABORADOR — Nombre y firma<br><b>'+sane(e.nombre)+'</b></div>'+'<canvas id="canv_cartaTrab" width="340" height="110" style="border:1px dashed #aaa;background:#fafafa;display:block;width:100%;touch-action:none"></canvas>'+'<div id="st_canv_cartaTrab" style="font-size:10px;height:14px;margin-top:2px"></div>'+'<div style="margin-top:4px;display:flex;gap:4px;justify-content:center">'+'<button type="button" onclick="limpiarFirma(&quot;canv_cartaTrab&quot;)" style="padding:3px 8px;cursor:pointer;border:1px solid #aaa;background:#fff;font-size:10px">Limpiar</button>'+'<button type="button" onclick="guardar_canv_cartaTrab()" style="padding:3px 8px;cursor:pointer;background:#1A2B4A;color:#fff;border:none;font-size:10px">Guardar &#x2713;</button>'+'</div></div>'+
     '<div style="text-align:center;padding:8px;border:1px solid #ddd;border-radius:4px">'+'<div style="font-size:10px;font-weight:700;color:#1A2B4A;margin-bottom:6px">ENTREGÓ — REPRESENTANTE LEGAL<br>Ferrepinturas de Tuxtla S.A.P.I. de C.V.</div>'+'<canvas id="canv_cartaRepLegal" width="340" height="110" style="border:1px dashed #aaa;background:#fafafa;display:block;width:100%;touch-action:none"></canvas>'+'<div id="st_canv_cartaRepLegal" style="font-size:10px;height:14px;margin-top:2px"></div>'+'<div style="margin-top:4px;display:flex;gap:4px;justify-content:center">'+'<button type="button" onclick="limpiarFirma(&quot;canv_cartaRepLegal&quot;)" style="padding:3px 8px;cursor:pointer;border:1px solid #aaa;background:#fff;font-size:10px">Limpiar</button>'+'<button type="button" onclick="guardar_canv_cartaRepLegal()" style="padding:3px 8px;cursor:pointer;background:#1A2B4A;color:#fff;border:none;font-size:10px">Guardar &#x2713;</button>'+'</div></div>'+
@@ -6056,6 +6048,16 @@ renderExpediente=function(){
 var pagoSemOff=0;
 
 function chgPagoSem(d){pagoSemOff+=d;renderPago();}
+function togglePagoNomina(empId,semKey){
+  var k='ferreos_pago_'+semKey;
+  var estado=JSON.parse(localStorage.getItem(k)||'{}');
+  estado[empId]=!estado[empId];
+  localStorage.setItem(k,JSON.stringify(estado));
+  console.log('[PagoNomina] emp:'+empId+' semana:'+semKey+' pagado:'+estado[empId]);
+  var cbId='chk_pago_'+empId+'_'+semKey;
+  var lbl=document.getElementById('lbl_'+cbId);
+  if(lbl){lbl.style.color=estado[empId]?'#16a34a':'var(--dim)';}
+}
 
 function esQuincenaHoy(){
   var hoy=new Date().getDate();
@@ -6125,12 +6127,16 @@ function renderPago(){
     sucs.forEach(function(s){
       var emps=lista.filter(function(e){return e.sucursal===s;});
       var totalSuc=0;
+      var semKey=fechas[0]||'sem';
+      var estadoPagoSem=JSON.parse(localStorage.getItem('ferreos_pago_'+semKey)||'{}');
       var rows=emps.map(function(e){
         var calc=calcNetoConIncidencias(e,fechas);
         totalSuc+=calc.neto;
         totalGeneral+=calc.neto;
         var alerta=calc.incidencias>0?'<span style="font-family:var(--mono);font-size:8px;background:var(--rbg);color:var(--rojo);padding:1px 5px;margin-left:4px">'+calc.incidencias+' inc</span>':'';
         var bonoBadge=calc.bono>0?'<span style="font-family:var(--mono);font-size:8px;background:var(--gbg);color:var(--green);padding:1px 5px;margin-left:4px">+$'+fmt(calc.bono)+'</span>':'';
+        var isPagado=!!estadoPagoSem[e.id];
+        var cbId='chk_pago_'+e.id+'_'+semKey;
         return '<tr>'+
           '<td><strong>'+sane(e.nombre)+'</strong>'+alerta+'<br><span style="font-size:10px;color:var(--dim)">'+sane(e.puesto)+'</span></td>'+
           '<td style="font-family:var(--mono);font-size:11px">$'+fmt(e.salario)+'</td>'+
@@ -6139,8 +6145,8 @@ function renderPago(){
           '<td style="font-family:var(--mono);font-size:11px;color:var(--rojo)">'+(calc.abono>0?'-$'+fmt(calc.abono):'-')+'</td>'+
           '<td style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green)">$'+fmt(calc.neto)+bonoBadge+'</td>'+
           '<td style="text-align:center">'+
-            '<div style="width:20px;height:20px;border:2px solid var(--border);display:inline-block;vertical-align:middle"></div>'+
-            ' <span style="font-size:10px;color:var(--dim)">pagado</span>'+
+            '<input type="checkbox" id="'+cbId+'" '+(isPagado?'checked':'')+' onclick="togglePagoNomina('+e.id+',\''+semKey+'\')" style="width:16px;height:16px;cursor:pointer;accent-color:#16a34a;pointer-events:auto">'+
+            ' <span id="lbl_'+cbId+'" style="font-size:10px;color:'+(isPagado?'#16a34a':'var(--dim)')+'">pagado</span>'+
           '</td>'+
           '</tr>';
       }).join('');
@@ -6227,17 +6233,9 @@ function imprimirListaPago(){
 // ██████████ BALANCE DE VACACIONES ██████████
 // ═══════════════════════════════════════════════════════════
 function diasVacacionesLFT(anos){
-  // Reforma LFT 2023 — Vacaciones Dignas (Art. 76, vigente 2023-01-01)
-  if(anos>=25)return 28;
-  if(anos>=20)return 26;
-  if(anos>=15)return 24;
-  if(anos>=10)return 22;
-  if(anos>=5)return 20;
-  if(anos>=4)return 18;
-  if(anos>=3)return 16;
-  if(anos>=2)return 14;
-  if(anos>=1)return 12;
-  return 12;
+  if(anos<1)return 0;
+  if(anos<=5)return 10+(anos*2);
+  return 20+(Math.floor((anos-1)/5)*2);
 }
 
 function calcVacaciones(empId){
