@@ -511,13 +511,20 @@ function iniciarEnvio(){
     return;
   }
   navigator.geolocation.getCurrentPosition(
-    function(p){enviarCheckin(p.coords.latitude,p.coords.longitude);},
+    function(p){
+      if(p.coords.accuracy>50){
+        _ciEnviando=false;
+        mostrarResultado("err","📍","Señal GPS imprecisa","Tu GPS tiene precisión de "+Math.round(p.coords.accuracy)+"m. Sal al exterior, aléjate de paredes y espera 10 segundos.",true);
+        return;
+      }
+      enviarCheckin(p.coords.latitude,p.coords.longitude);
+    },
     function(err){
       _ciEnviando=false;
       var msgs={1:"Bloqueaste el acceso a tu ubicacion. Ve a Configuracion del navegador y permite el GPS para este sitio.",2:"Tu GPS no pudo obtener una ubicacion. Sal al exterior o desactiva el WiFi e intenta de nuevo.",3:"El GPS tardó demasiado. Intenta de nuevo en un lugar con mejor señal."};
-      mostrarResultado("err","&#x1F4CD;","Ubicacion no disponible",msgs[err.code]||"No se pudo obtener tu ubicacion. Activa el GPS e intenta de nuevo.",true);
+      mostrarResultado("err","📍","Ubicacion no disponible",msgs[err.code]||"No se pudo obtener tu ubicacion. Activa el GPS e intenta de nuevo.",true);
     },
-    {timeout:12000,maximumAge:30000,enableHighAccuracy:true}
+    {timeout:15000,maximumAge:0,enableHighAccuracy:true}
   );
 }
 
@@ -538,7 +545,7 @@ async function enviarCheckin(lat,lng){
     try{
       var pb2=document.getElementById("pb");if(pb2)pb2.style.width="55%";
       // Validar dispositivo
-      var {data:dispRow,error:dispErr}=await _sb.from('rh_dispositivos').select('emp_id,activo').eq('token',token_disp).single();
+      var {data:dispRow,error:dispErr}=await _sb.from('rh_dispositivos').select('emp_id,activo,rh_empleados(sucursal)').eq('token',token_disp).single();
       if(dispErr||!dispRow||!dispRow.activo){
         mostrarResultado("err","&#x26D4;","No registrado","Este celular no esta activado. Avisa a tu gerente para que te mande un nuevo link de activacion.",false);return;
       }
@@ -571,7 +578,15 @@ async function enviarCheckin(lat,lng){
       // Calcular estado GPS
       var estadoGPS='ok';var dist=null;
       if(lat&&lng){
-        var {data:sucRow}=await _sb.from('rh_sucursales').select('lat,lng,radio').eq('id',sucId).single();
+        var {data:sucRow}=await _sb.from('rh_sucursales').select('lat,lng,radio,nombre').eq('id',sucId).single();
+        var empSuc=dispRow.rh_empleados&&dispRow.rh_empleados.sucursal;
+        if(empSuc && sucRow && empSuc!==sucRow.nombre){
+          var {data:cobHoy}=await _sb.from('rh_coberturas').select('id').eq('sustituto_id',empId).eq('fecha',hoyStr).eq('suc_id',sucId).maybeSingle();
+          if(!cobHoy){
+            mostrarResultado("err","&#x26D4;","Sucursal incorrecta","Estás asignado a "+empSuc+". Este QR es de otra sucursal. Avisa a tu gerente si hay cobertura autorizada.",false);
+            return;
+          }
+        }
         if(sucRow&&sucRow.lat&&sucRow.lng){
           var R=6371000,r=Math.PI/180;
           var dLat=(lat-sucRow.lat)*r,dLng=(lng-sucRow.lng)*r;
