@@ -1379,12 +1379,12 @@ async function syncAll(){
   syncing=false;
 }
 
-function mapEmpToDB(e){return{id:e.id,nombre:e.nombre,puesto:e.puesto,sucursal:e.sucursal,salario:e.salario,modalidad:e.modalidad||'semanal',bono:e.bono||0,comision:e.comision||0,abono:e.abono||0,vac_dias:e.vacDias||6,nss:e.nss||'',max_inc:e.maxInc||0,activo:e.activo,fecha_nac:e.fechaNac||null,fecha_ingreso:e.fechaIngreso||null,curp:e.curp||'',tel:e.tel||''};}
+function mapEmpToDB(e){return{nombre:e.nombre,puesto:e.puesto,sucursal:e.sucursal,salario:e.salario,modalidad:e.modalidad||'semanal',bono:e.bono||0,comision:e.comision||0,abono:e.abono||0,vac_dias:e.vacDias||6,nss:e.nss||'',max_inc:e.maxInc||0,activo:e.activo,fecha_nac:e.fechaNac||null,fecha_ingreso:e.fechaIngreso||null,curp:e.curp||'',tel:e.tel||''};}
 function mapEmpFromDB(r){return{id:r.id,nombre:r.nombre,puesto:r.puesto,sucursal:r.sucursal,salario:r.salario,modalidad:r.modalidad,bono:r.bono,comision:r.comision,abono:r.abono,vacDias:r.vac_dias,nss:r.nss,maxInc:r.max_inc,activo:r.activo,fechaNac:r.fecha_nac,fechaIngreso:r.fecha_ingreso,curp:r.curp,tel:r.tel};}
 function mapSucToDB(s){return{id:s.id,nombre:s.nombre,ciudad:s.ciudad||'',activa:s.activa,lat:s.lat||null,lng:s.lng||null,radio:s.radio||150};}
 function mapSucFromDB(r){return{id:r.id,nombre:r.nombre,ciudad:r.ciudad,activa:r.activa,lat:r.lat||null,lng:r.lng||null,radio:r.radio||150};}
 
-async function pushEmp(e){if(!sb)return;try{await sb.from('rh_empleados').upsert(mapEmpToDB(e));}catch(ex){}}
+async function pushEmp(e){if(!sb||!e.id)return;try{await sb.from('rh_empleados').update(mapEmpToDB(e)).eq('id',e.id);}catch(ex){}}
 async function pushSuc(s){if(!sb)return;try{await sb.from('rh_sucursales').upsert(mapSucToDB(s));}catch(ex){}}
 async function pushInc(fecha,empId){if(!sb)return;try{await sb.from('rh_asistencia').upsert({fecha:fecha,emp_id:empId,datos:inc[fecha][empId]},{onConflict:'fecha,emp_id'});}catch(ex){}}
 async function pushContrato(c){if(!sb)return;try{await sb.from('rh_contratos').upsert(c);}catch(ex){}}
@@ -2096,25 +2096,27 @@ function guardarEmp(){
   var puestoVal=document.getElementById('ePuesto').value;
   if(puestoVal==='Otro'){var pOtro=document.getElementById('ePuestoOtro').value.trim();if(pOtro)puestoVal=pOtro;}
   var data={nombre:nombre,puesto:puestoVal,modalidad:document.getElementById('eModalidad').value||'semanal',sucursal:document.getElementById('eSuc').value,salario:salario,bono:parseFloat(document.getElementById('eBono').value)||0,comision:parseFloat(document.getElementById('eComision').value)||0,abono:parseFloat(document.getElementById('eAbono').value)||0,vacDias:parseInt(document.getElementById('eVacDias').value)||6,nss:document.getElementById('eNSS').value.trim(),maxInc:parseInt(document.getElementById('eMaxInc').value)||0,activo:document.getElementById('eActivo').value==='1',fechaNac:document.getElementById('eFechaNac').value,fechaIngreso:document.getElementById('eFechaIng').value,curp:document.getElementById('eCurp').value,tel:document.getElementById('eTel').value};
-  if(id && !isNaN(id) && id > 0){
+  var esEdicion=id!==null&&!isNaN(id)&&id>0;
+  if(esEdicion){
     var existente=emp.find(function(x){return x.id===id;});
     if(!existente){msg('Error: empleado no encontrado. Guardado cancelado para evitar corrupción.',true);return;}
-    Object.assign(existente,data);
-    msg('Empleado actualizado');
-    S.set('emp',emp);pushEmp(data);cm('modalEmp');renderEmpleados();renderHome();
+    if(!sb){msg('Sin conexión a Supabase.',true);return;}
+    sb.from('rh_empleados').update(mapEmpToDB(data)).eq('id',id).then(function(res){
+      if(res.error){msg('Error al actualizar: '+res.error.message,true);return;}
+      Object.assign(existente,data);
+      S.set('emp',emp);cm('modalEmp');renderEmpleados();renderHome();msg('Empleado actualizado');
+    }).catch(function(ex){msg('Error al actualizar: '+ex.message,true);});
   } else {
     if(!sb){msg('Sin conexión a Supabase. No se puede agregar empleado.',true);return;}
-    var dbRow=mapEmpToDB(data);
-    delete dbRow.id;
     cm('modalEmp');
-    sb.from('rh_empleados').insert(dbRow).select().then(function(res){
+    sb.from('rh_empleados').insert(mapEmpToDB(data)).select('id').single().then(function(res){
       if(res.error){msg('Error al guardar: '+res.error.message,true);return;}
-      var nuevo=mapEmpFromDB(res.data[0]);
-      emp.push(nuevo);
-      nEmp=nuevo.id+1;
+      data.id=res.data.id;
+      emp.push(data);
+      nEmp=res.data.id+1;
       S.set('emp',emp);S.set('nEmp',nEmp);
       renderEmpleados();renderHome();
-      msg('Empleado agregado con ID '+nuevo.id);
+      msg('Empleado agregado con ID '+res.data.id);
     }).catch(function(ex){msg('Error al guardar: '+ex.message,true);});
   }
 }
