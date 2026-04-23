@@ -1211,7 +1211,7 @@ async function syncFromCloud(){
   try{
     var _f90=fechaLocalCST(new Date(Date.now()-90*864e5));
     var _f2=fechaLocalCST(new Date(Date.now()-2*864e5));
-    var[r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11]=await Promise.all([
+    var[r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13]=await Promise.all([
       Promise.resolve(sb.from('rh_empleados').select('*')).catch(function(e){console.error('syncFromCloud r1 error:',e);return {data:[]};}),
       Promise.resolve(sb.from('rh_sucursales').select('*')).catch(function(e){console.error('syncFromCloud r2 error:',e);return {data:[]};}),
       Promise.resolve(sb.from('rh_asistencia').select('*').gte('fecha',_f90)).catch(function(){return {data:[]};}),
@@ -1222,7 +1222,9 @@ async function syncFromCloud(){
       Promise.resolve(sb.from('rh_dispositivos').select('*')).catch(function(){return {data:[]};}),
       Promise.resolve(sb.from('rh_checkin_logs').select('*').gte('fecha',_f2)).catch(function(){return {data:[]};}),
       Promise.resolve(sb.from('rh_finiquitos').select('*')).catch(function(){return {data:[]};}),
-      Promise.resolve(sb.from('rh_auditoria').select('*').order('ts',{ascending:false}).limit(500)).catch(function(){return {data:[]};})
+      Promise.resolve(sb.from('rh_auditoria').select('*').order('ts',{ascending:false}).limit(500)).catch(function(){return {data:[]};}),
+      Promise.resolve(sb.from('rh_bonos_ajuste').select('*')).catch(function(){return {data:[]};}),
+      Promise.resolve(sb.from('rh_actas').select('*')).catch(function(){return {data:[];};})
     ]);
     if(r1.data&&r1.data.length){emp=r1.data.map(mapEmpFromDB);S.set('emp',emp);}
     if(r2.data&&r2.data.length){suc=r2.data.map(mapSucFromDB);S.set('suc',suc);try{localStorage.setItem('ferre_suc_cache',JSON.stringify(suc.map(function(s){return {id:s.id,nombre:s.nombre,lat:s.lat,lng:s.lng,radio:s.radio};})));}catch(ex){}}
@@ -1292,6 +1294,22 @@ async function syncFromCloud(){
       existingLog.sort(function(a,b){return b.ts>a.ts?1:-1;});
       if(existingLog.length>2000)existingLog=existingLog.slice(0,2000);
       S.set('audit_log',existingLog);
+    }
+    if(r12&&r12.data&&r12.data.length){
+      var ajustesDB={};
+      r12.data.forEach(function(row){
+        if(!ajustesDB[row.emp_id])ajustesDB[row.emp_id]={};
+        ajustesDB[row.emp_id][row.mes_key]={monto:row.monto,nota:row.nota||'',ajustadoPor:row.ajustado_por||'',fecha:row.fecha||''};
+      });
+      S.set('bonos_ajuste',ajustesDB);
+    }
+    if(r13&&r13.data&&r13.data.length){
+      var actasDB={};
+      r13.data.forEach(function(row){
+        if(!actasDB[row.emp_id])actasDB[row.emp_id]=[];
+        actasDB[row.emp_id].push({id:row.id,empId:row.emp_id,empNombre:row.emp_nombre,fecha:row.fecha,tipo:row.tipo,sancion:row.sancion,auto:row.auto,mesKey:row.mes_key,detalle:row.detalle});
+      });
+      S.set('actas',actasDB);
     }
     renderHome();
     actualizarBadgeNotif();
@@ -1371,6 +1389,10 @@ async function pushSuc(s){if(!sb)return;try{await sb.from('rh_sucursales').upser
 async function pushInc(fecha,empId){if(!sb)return;try{await sb.from('rh_asistencia').upsert({fecha:fecha,emp_id:empId,datos:inc[fecha][empId]},{onConflict:'fecha,emp_id'});}catch(ex){}}
 async function pushContrato(c){if(!sb)return;try{await sb.from('rh_contratos').upsert(c);}catch(ex){}}
 async function pushEval(e){if(!sb)return;try{await sb.from('rh_evaluaciones').upsert(e);}catch(ex){}}
+async function pushPerm(empId){if(!sb)return;try{var rows=(permisos[empId]||[]).map(function(p){return Object.assign({emp_id:parseInt(empId)},p);});if(rows.length)await sb.from('rh_permisos').upsert(rows);}catch(ex){}}
+async function pushPrestamo(empId){if(!sb)return;try{var rows=(prestamos[empId]||[]).map(function(p){return Object.assign({emp_id:parseInt(empId)},p);});if(rows.length)await sb.from('rh_prestamos').upsert(rows);}catch(ex){}}
+async function pushBonoAjuste(empId,key){if(!sb)return;try{var ajustes=S.get('bonos_ajuste',{});var a=ajustes[empId]&&ajustes[empId][key];if(a)await sb.from('rh_bonos_ajuste').upsert({emp_id:parseInt(empId),mes_key:key,monto:a.monto,nota:a.nota||'',ajustado_por:a.ajustadoPor||'',fecha:a.fecha||''});}catch(ex){}}
+async function pushActa(empId,acta){if(!sb)return;try{await sb.from('rh_actas').upsert({id:acta.id,emp_id:parseInt(empId),emp_nombre:acta.empNombre||'',fecha:acta.fecha||'',tipo:acta.tipo||'',sancion:acta.sancion||'',auto:acta.auto||false,mes_key:acta.mesKey||'',detalle:acta.detalle||''});}catch(ex){}}
 
 // ═══════════════════════════════════════════════════════════
 // UTILS NÓMINA
@@ -1660,7 +1682,7 @@ function ajustarBono(empId,key,monto,nota){
   var ajustes=S.get('bonos_ajuste',{});
   if(!ajustes[empId])ajustes[empId]={};
   ajustes[empId][key]={monto:parseFloat(monto)||0,nota:nota||'',ajustadoPor:currentUser.nombre,fecha:hoyFecha()};
-  S.set('bonos_ajuste',ajustes);
+  S.set('bonos_ajuste',ajustes);pushBonoAjuste(empId,key);
   msg('Bono ajustado — $'+fmt(monto));
   renderExpediente();
 }
@@ -1724,7 +1746,7 @@ function verificarActaAutomatica(empId,fecha,tipoInc){
   if(tipoInc==='retardo'&&retardosMes>=3&&!yaHayActaMes){
     var acta={id:Date.now(),empId:empId,empNombre:e.nombre,fecha:fecha,tipo:'Retardo reincidente ('+retardosMes+' en el mes)',sancion:'Amonestación escrita',auto:true,mesKey:mesKey,detalle:'Se registra el '+retardosMes+'° retardo del mes. Supera el límite de 2 retardos mensuales establecido en el Reglamento Interior, Art. II.'};
     actas[empId].push(acta);
-    S.set('actas',actas);
+    S.set('actas',actas);pushActa(empId,acta);
     // Alerta visual
     setTimeout(function(){
       if(confirm('⚠ ACTA GENERADA AUTOMÁTICAMENTE\n\n'+e.nombre+' acumula '+retardosMes+' retardos este mes.\nSe generó un Acta Administrativa de amonestación escrita.\n\n¿Deseas abrirla ahora para imprimir?')){
@@ -1737,7 +1759,7 @@ function verificarActaAutomatica(empId,fecha,tipoInc){
   if(tipoInc==='falta'&&!yaHayActaMes&&!(_incActual&&_incActual.justificada)){
     var actaFalta={id:Date.now()+1,empId:empId,empNombre:e.nombre,fecha:fecha,tipo:'Ausencia sin justificar',sancion:'Amonestación escrita',auto:true,mesKey:mesKey,detalle:'Falta injustificada registrada el '+fFechaCorta(fecha)+'. Total de faltas en el mes: '+faltasMes+'.'};
     actas[empId].push(actaFalta);
-    S.set('actas',actas);
+    S.set('actas',actas);pushActa(empId,actaFalta);
     setTimeout(function(){
       if(confirm('⚠ ACTA GENERADA AUTOMÁTICAMENTE\n\n'+e.nombre+' registra una falta injustificada.\nSe generó un Acta Administrativa.\n\n¿Deseas abrirla ahora para imprimir?')){
         verDocumento('acta',empId);
@@ -2079,15 +2101,22 @@ function guardarEmp(){
     if(!existente){msg('Error: empleado no encontrado. Guardado cancelado para evitar corrupción.',true);return;}
     Object.assign(existente,data);
     msg('Empleado actualizado');
+    S.set('emp',emp);pushEmp(data);cm('modalEmp');renderEmpleados();renderHome();
   } else {
-    var maxId=emp.reduce(function(m,e){return Math.max(m,e.id||0);},0);
-    data.id=Math.max(nEmp,maxId+1);
-    nEmp=data.id+1;
-    emp.push(data);
-    S.set('nEmp',nEmp);
-    msg('Empleado agregado con ID '+data.id);
+    if(!sb){msg('Sin conexión a Supabase. No se puede agregar empleado.',true);return;}
+    var dbRow=mapEmpToDB(data);
+    delete dbRow.id;
+    cm('modalEmp');
+    sb.from('rh_empleados').insert(dbRow).select().then(function(res){
+      if(res.error){msg('Error al guardar: '+res.error.message,true);return;}
+      var nuevo=mapEmpFromDB(res.data[0]);
+      emp.push(nuevo);
+      nEmp=nuevo.id+1;
+      S.set('emp',emp);S.set('nEmp',nEmp);
+      renderEmpleados();renderHome();
+      msg('Empleado agregado con ID '+nuevo.id);
+    }).catch(function(ex){msg('Error al guardar: '+ex.message,true);});
   }
-  S.set('emp',emp);pushEmp(data);cm('modalEmp');renderEmpleados();renderHome();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2169,7 +2198,7 @@ function renderExpediente(){
 // ═══════════════════════════════════════════════════════════
 // PRÉSTAMOS
 // ═══════════════════════════════════════════════════════════
-function savePrestamos(){S.set('prestamos',prestamos);S.set('nPrestamo',nPrestamo);}
+function savePrestamos(empId){S.set('prestamos',prestamos);S.set('nPrestamo',nPrestamo);if(empId)pushPrestamo(empId);}
 function calcCuotaPrestamo(){var monto=parseFloat(document.getElementById('prMonto').value)||0;var sems=parseInt(document.getElementById('prSemanas').value)||0;var hint=document.getElementById('prCuotaHint');if(monto>0&&sems>0){hint.textContent='Cuota semanal: $'+fmt(monto/sems);}else{hint.textContent='—';}}
 function abrirModalPrestamo(){document.getElementById('prEmpId').value=rhEmpId;['prDesc','prMonto','prSemanas','prNotas'].forEach(function(x){document.getElementById(x).value='';});document.getElementById('prFechaIni').value=hoyFecha();document.getElementById('prCuotaHint').textContent='—';om('modalPrestamo');setTimeout(function(){document.getElementById('prDesc').focus();},80);}
 function guardarPrestamo(){
@@ -2185,10 +2214,10 @@ function guardarPrestamo(){
   for(var i=0;i<semanas;i++){var d=new Date(lunesBase+'T12:00:00');d.setDate(d.getDate()+i*7);var montoAbono=(i===semanas-1)?Math.round((monto-(cuota*(semanas-1)))*100)/100:cuota;abonosCalendar.push({sem:i+1,fecha:d.toISOString().split('T')[0],monto:montoAbono,pagado:false});}
   if(!prestamos[empId])prestamos[empId]=[];
   prestamos[empId].push({id:nPrestamo++,desc:desc,monto:monto,semanas:semanas,cuota:cuota,fechaIni:lunesBase,notas:document.getElementById('prNotas').value.trim(),fechaAlta:hoyFecha(),abonos:abonosCalendar,liquidado:false,emp_id:empId});
-  savePrestamos();cm('modalPrestamo');renderPrestamos();msg('Préstamo registrado · $'+fmt(monto)+' en '+semanas+' semanas');
+  savePrestamos(empId);cm('modalPrestamo');renderPrestamos();msg('Préstamo registrado · $'+fmt(monto)+' en '+semanas+' semanas');
 }
-function marcarAbono(empId,prestId,semIdx){var pEmp=prestamos[empId]||[];var pr=pEmp.find(function(p){return p.id===prestId;});if(!pr)return;pr.abonos[semIdx].pagado=!pr.abonos[semIdx].pagado;pr.liquidado=pr.abonos.every(function(a){return a.pagado;});savePrestamos();renderPrestamos();}
-function eliminarPrestamo(empId,prestId){if(!confirm('¿Eliminar este préstamo?'))return;prestamos[empId]=(prestamos[empId]||[]).filter(function(p){return p.id!==prestId;});savePrestamos();renderPrestamos();msg('Préstamo eliminado');}
+function marcarAbono(empId,prestId,semIdx){var pEmp=prestamos[empId]||[];var pr=pEmp.find(function(p){return p.id===prestId;});if(!pr)return;pr.abonos[semIdx].pagado=!pr.abonos[semIdx].pagado;pr.liquidado=pr.abonos.every(function(a){return a.pagado;});savePrestamos(empId);renderPrestamos();}
+function eliminarPrestamo(empId,prestId){if(!confirm('¿Eliminar este préstamo?'))return;prestamos[empId]=(prestamos[empId]||[]).filter(function(p){return p.id!==prestId;});savePrestamos(empId);renderPrestamos();msg('Préstamo eliminado');}
 function renderPrestamos(){
   var el=document.getElementById('rhp-prestamos');if(!el)return;
   var pEmp=prestamos[rhEmpId]||[];
@@ -2231,7 +2260,7 @@ function renderPermisos(){
     }).join('');
   document.getElementById('rhp-permisos').innerHTML='<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn br" onclick="abrirPerm()">+ Solicitar permiso / vacación</button></div><div class="tw"><div class="twh"><div class="twt">PERMISOS Y VACACIONES</div></div><div class="tscroll"><table><thead><tr><th>Desde</th><th>Hasta</th><th>Días</th><th>Tipo</th><th>Motivo</th><th>Estado</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
-function cambiarEstPerm(empId,permId,estado){var p=(permisos[empId]||[]).find(function(x){return x.id===permId;});if(p){p.estado=estado;S.set('permisos',permisos);renderPermisos();renderHome();msg('Permiso '+estado);}}
+function cambiarEstPerm(empId,permId,estado){var p=(permisos[empId]||[]).find(function(x){return x.id===permId;});if(p){p.estado=estado;S.set('permisos',permisos);pushPerm(empId);renderPermisos();renderHome();msg('Permiso '+estado);}}
 async function desaprobarPermiso(pid){
   if(!confirm('¿Revertir aprobación? Regresa a pendiente.'))return;
   if(sb){
@@ -2253,7 +2282,7 @@ function guardarPerm(){
   if(!ini||!fin||!motivo){msg('Todos los campos son requeridos',true);return;}
   if(!permisos[empId])permisos[empId]=[];
   permisos[empId].push({id:nPerm++,tipo:document.getElementById('pTipo').value,fechaIni:ini,fechaFin:fin,dias:diasEntre(ini,fin),motivo:motivo,estado:'pendiente',nota:'',emp_id:empId});
-  S.set('permisos',permisos);S.set('nPerm',nPerm);cm('modalPerm');renderPermisos();renderHome();msg('Permiso registrado — pendiente de aprobación');
+  S.set('permisos',permisos);pushPerm(empId);S.set('nPerm',nPerm);cm('modalPerm');renderPermisos();renderHome();msg('Permiso registrado — pendiente de aprobación');
 }
 
 // ═══════════════════════════════════════════════════════════
