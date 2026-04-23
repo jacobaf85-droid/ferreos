@@ -1224,7 +1224,7 @@ async function syncFromCloud(){
       Promise.resolve(sb.from('rh_finiquitos').select('*')).catch(function(){return {data:[]};}),
       Promise.resolve(sb.from('rh_auditoria').select('*').order('ts',{ascending:false}).limit(500)).catch(function(){return {data:[]};}),
       Promise.resolve(sb.from('rh_bonos_ajuste').select('*')).catch(function(){return {data:[]};}),
-      Promise.resolve(sb.from('rh_actas').select('*')).catch(function(){return {data:[];};})
+      Promise.resolve(sb.from('rh_actas').select('*')).catch(function(){return {data:[]};})
     ]);
     if(r1.data&&r1.data.length){emp=r1.data.map(mapEmpFromDB);S.set('emp',emp);}
     if(r2.data&&r2.data.length){suc=r2.data.map(mapSucFromDB);S.set('suc',suc);try{localStorage.setItem('ferre_suc_cache',JSON.stringify(suc.map(function(s){return {id:s.id,nombre:s.nombre,lat:s.lat,lng:s.lng,radio:s.radio};})));}catch(ex){}}
