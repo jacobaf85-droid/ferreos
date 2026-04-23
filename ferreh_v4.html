@@ -3520,8 +3520,9 @@ function filtrarLogCI(){renderCILog();}
 
 // ── Dispositivos Panel ──
 function renderCIDispositivos(){
-  var html='<div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">'+
+  var html='<div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px">'+
     '<span style="font-family:var(--mono);font-size:11px;color:var(--dim)">'+ciDispositivos.filter(function(d){return d.activo;}).length+' dispositivos activos</span>'+
+    '<input id="dispSearch" type="search" placeholder="Buscar empleado..." style="padding:5px 10px;font-size:12px;border:1px solid var(--border);border-radius:3px;width:200px" oninput="filtrarDispositivos(this.value)">'+
   '</div>';
   var activos=emp.filter(function(e){return e.activo;});
   html+='<div class="tw"><table style="width:100%;border-collapse:collapse;font-size:12px">'+
@@ -3538,7 +3539,7 @@ function renderCIDispositivos(){
     var tokenVencido=!token&&ciEnrolTokens.find(function(t){return t.emp_id===e.id&&!t.usado&&new Date(t.expira)<=ahora;});
     var estado=disp?'Enrolado':token?'Link pendiente':tokenVencido?'Link vencido':'Sin enrolar';
     var estadoColor=disp?'var(--green)':token?'var(--amber)':'var(--rojo)';
-    html+='<tr style="border-bottom:1px solid var(--border)">'+
+    html+='<tr data-nombre="'+(e.nombre||'').replace(/"/g,'&quot;')+'" style="border-bottom:1px solid var(--border)">'+
       '<td style="padding:8px 12px;font-size:12px">'+sane(e.nombre)+'</td>'+
       '<td style="padding:8px 12px;font-size:11px;color:var(--dim)">'+e.sucursal+'</td>'+
       '<td style="padding:8px 12px;font-family:var(--mono);font-size:10px;color:var(--dim)">'+(disp?disp.ua.substring(0,30)+'...':'—')+'</td>'+
@@ -3550,6 +3551,13 @@ function renderCIDispositivos(){
   });
   html+='</table></div>';
   document.getElementById('ci-panel-dispositivos').innerHTML=html;
+}
+
+function filtrarDispositivos(q){
+  q=(q||'').toLowerCase();
+  document.querySelectorAll('#ci-panel-dispositivos tr[data-nombre]').forEach(function(tr){
+    tr.style.display=(tr.getAttribute('data-nombre')||'').toLowerCase().indexOf(q)!==-1?'':'none';
+  });
 }
 
 function generarLinkEnrol(empId){
@@ -5120,23 +5128,24 @@ function generarHTMLContrato(e,_c){
   }
   // TERCERA
   html+='<h3>CLÁUSULA TERCERA — JORNADA, ASISTENCIA Y HORAS EXTRAORDINARIAS</h3>';
-  html+='<p><b>3.1 Jornada ordinaria.</b> <b>Lunes a viernes 8:00–17:00</b> y <b>sábados 8:00–14:00</b>, con 30 minutos de descanso para alimentos incluidos en el cómputo de la jornada. Jornada semanal: <b>49 horas</b>. Las horas que excedan 45 semanales se retribuirán conforme al punto 3.3.</p>'+
+  html+='<p><b>3.1 Jornada ordinaria.</b> <b>Lunes a viernes 8:00–17:00</b> y <b>sábados 8:00–14:00</b>, con 30 minutos de descanso para alimentos incluidos en el cómputo de la jornada. Jornada semanal: <b>48 horas semanales</b>. Las horas que excedan 45 semanales se retribuirán conforme al punto 3.3.</p>'+
     '<p><b>3.2 Control de asistencia.</b> El trabajador registrará entrada y salida mediante el sistema implementado (biométrico, app u otro). El registro electrónico constituye prueba plena. Discrepancias deben reportarse por escrito el mismo día. La omisión de marcar imputable al trabajador se computará como ausencia injustificada.</p>'+
     '<p><b>3.3 Horas extraordinarias.</b> Solo proceden con autorización previa y escrita del responsable de área. Sin ella, el tiempo adicional no genera obligación de pago. EL TRABAJADOR no puede autorizarse tiempo extra a sí mismo.</p>'+
+    '<p><b>3.4 Sistema de control FerreRH.</b> EL TRABAJADOR autoriza expresamente el uso del sistema FerreRH (geolocalización y fotografía facial) para control de asistencia, conforme al Consentimiento LFPDPPP que forma parte integrante de este contrato como Anexo 1. Los registros generados tendrán valor probatorio pleno ante cualquier autoridad.</p>'+
     '<p><b>3.4 Ajuste de turno y movilidad.</b> EL PATRÓN podrá modificar el turno con 48 horas de anticipación sin reducción salarial. Cambios de emergencia pueden ser inmediatos; EL TRABAJADOR acepta expresamente esta condición inherente al puesto.</p>';
   // CUARTA
   html+='<h3>CLÁUSULA CUARTA — SALARIO, SDI, FORMA DE PAGO Y BONO</h3>';
   html+='<p><b>4.1 Salario ordinario.</b> Salario semanal de <b>$ '+fmt(salSem)+' ('+numLetra(Math.round(salSem))+' PESOS 00/100 M.N.)</b>, correspondiente a los días lunes–sábado efectivamente laborados. EL PATRÓN garantiza que el salario pactado es igual o superior al salario mínimo vigente.</p>'+
     '<p><b>4.2 Salario Diario Integrado (SDI).</b> Para efectos de IMSS, INFONAVIT e indemnizaciones, el SDI queda fijado en <b>$ '+sdi.toFixed(2)+'</b>, calculado conforme al Art. 84 LFT (salario diario + proporcionales de vacaciones, prima vacacional, aguinaldo + bono variable $500/30). Las partes aceptan expresamente este SDI como tope de cálculo.</p>'+
     '<p><b>4.3 Forma de pago.</b> Pago <b>'+pagoDia+'</b> en efectivo o transferencia electrónica. El comprobante firmado o la constancia de transferencia tendrán efectos liberatorios plenos respecto del período cubierto.</p>'+
-    ((_bonoContrato&&_bonoContrato>0)?'<p><b>4.4 Bono de puntualidad y permanencia.</b> Prestación extracontractual, discrecional, de naturaleza variable, no ordinaria y no regular de hasta <b>$'+fmt(_bonoContrato)+' mensuales</b>. Condicionado a: (i) asistencia perfecta; (ii) envío de evidencia al grupo oficial; (iii) jornada íntegra. <b>No integra el SDI</b> ni la base de cálculo de prestación, cuota, aguinaldo, vacaciones o indemnización alguna (Art. 84 LFT). Su pago en un período no crea obligación futura.</p>':'')+
+    ((_bonoContrato&&_bonoContrato>0)?'<p><b>4.4 Bono de puntualidad y permanencia.</b> Prestación extracontractual, discrecional, de naturaleza variable, no ordinaria y no regular de hasta <b>$'+fmt(_bonoContrato)+' mensuales</b>. Condicionado a: (i) asistencia perfecta; (ii) envío de evidencia al grupo oficial; (iii) jornada íntegra. <b>No integra el SDI</b> ni la base de cálculo de prestación, cuota, aguinaldo, vacaciones o indemnización alguna (Art. 84 LFT). Su pago en un período no crea obligación futura. El no pago del bono en cualquier período no genera derecho adquirido ni adeudo patronal.</p>':'')+
    
     '<p><b>4.5 Descuentos.</b> Solo los del Art. 110 LFT. Todo otro descuento requiere autorización escrita individual. Prohibido retener salario como garantía de bienes.</p>';
   // QUINTA
   html+='<h3>CLÁUSULA QUINTA — PRESTACIONES PROPORCIONALES DE LEY</h3>';
   html+='<p>Al ser contrato por tiempo determinado, todas las prestaciones son proporcionales al tiempo laborado:</p>'+
     '<table><tr><th>Prestación</th><th>Ley</th><th>Monto / Base</th></tr>'+
-    '<tr><td>Vacaciones</td><td>Art. 76 LFT</td><td>12 días mínimo por año proporcional</td></tr>'+
+    '<tr><td>Vacaciones</td><td>Art. 76 LFT</td><td>12 días el primer año, 14 el segundo, 16 el tercero, 18 el cuarto, y 20 días del quinto al noveno año, aumentando 2 días por cada 5 años subsecuentes, conforme al Art. 76 LFT vigente.</td></tr>'+
     '<tr><td>Prima vacacional</td><td>Art. 80 LFT</td><td>25% del salario de los días de vacaciones</td></tr>'+
     '<tr><td>Aguinaldo</td><td>Art. 87 LFT</td><td>15 días de salario proporcional (antes del 20 dic. o al término)</td></tr>'+
     '<tr><td>Seguridad social</td><td>Ley IMSS</td><td>Alta desde el primer día. Cuotas obreras autorizadas</td></tr>'+
@@ -5223,10 +5232,12 @@ function generarHTMLContrato(e,_c){
   html+='<p><b>14.1 Conceptos.</b> Al término: (i) salarios devengados no pagados; (ii) vacaciones proporcionales + prima; (iii) aguinaldo proporcional; (iv) prima de antigüedad cuando proceda.</p>'+
     '<p><b>14.2 Efectos liberatorios.</b> Finiquito con desglose por concepto. La firma de EL TRABAJADOR tiene efectos liberatorios plenos. Derecho a asistir con persona de confianza. Si no se presenta en 72 horas, se deposita ante la autoridad laboral.</p>'+
     '<p><b>14.3 Entrega-recepción.</b> Dentro de 24 horas del último día laborado.</p>'+
-    '<p><b>14.4 No indemnización constitucional.</b> Terminación por vencimiento de plazo no es despido injustificado y no genera indemnización constitucional (3 meses + 20 días/año) ni prima de antigüedad, salvo incumplimiento patronal en seguridad social.</p>';
+    '<p><b>14.4 No indemnización constitucional.</b> Terminación por vencimiento de plazo no es despido injustificado y no genera indemnización constitucional (3 meses + 20 días/año) ni prima de antigüedad, salvo incumplimiento patronal en seguridad social. Tampoco procede prima de antigüedad, salvo que el trabajador cuente con 15 o más años de servicios efectivos.</p>';
   // DÉCIMA QUINTA
   html+='<h3>CLÁUSULA DÉCIMA QUINTA — DISPOSICIONES GENERALES</h3>';
   html+='<p><b>15.1</b> La nulidad de una cláusula no afecta las restantes. <b>15.2</b> Modificaciones solo válidas por escrito, firmadas por ambas partes. <b>15.3</b> El domicilio registrado es válido para toda notificación legal. <b>15.4</b> Las partes se someten a las autoridades laborales de Tuxtla Gutiérrez, Chiapas, renunciando EL TRABAJADOR a cualquier otro fuero. <b>15.5</b> Dos originales en español, uno por parte, con idéntico valor probatorio. <b>15.6</b> Este contrato + carta responsiva de bienes + Reglamento Interior = acuerdo integral. <b>15.7</b> EL TRABAJADOR declara: (i) leyó íntegramente este contrato; (ii) comprendió su contenido; (iii) tuvo oportunidad de formular preguntas; (iv) lo suscribe libre de coacción, error o dolo.</p>';
+  html+='<h3>CLÁUSULA DÉCIMA SEXTA — SUMISIÓN Y ARBITRAJE</h3>';
+  html+='<p>Las partes se someten a la jurisdicción de los tribunales laborales de Tuxtla Gutiérrez, Chiapas, renunciando a cualquier otro fuero. Convienen en someter cualquier controversia al procedimiento de conciliación previa ante el Centro de Conciliación Laboral del Estado de Chiapas antes de acudir a autoridad jurisdiccional.</p>';
   // Cierre y firmas
   html+='<p style="text-align:justify;margin-top:14px">Leído y encontrado conforme, las partes lo ratifican y firman en Tuxtla Gutiérrez, Chiapas, en la fecha de los Datos Generales.</p>';
   html+=fgrid([
@@ -5508,6 +5519,7 @@ function generarHTMLResponsiva(e){
     '<h3>II. INVENTARIO DE BIENES ASIGNADOS</h3>'+
     '<p style="font-size:10px">El colaborador declara recibir en perfectas condiciones los siguientes bienes propiedad de la empresa:</p>'+
     '<table><thead><tr><th>#</th><th>Bien / Descripción</th><th>Marca / Modelo</th><th>Serie / Placa / IMEI</th><th>Color / Talla</th><th>Año / Obs.</th></tr></thead><tbody>'+rowsBien+'</tbody></table>'+
+    '<p style="color:#D91B1B;font-size:11px;font-weight:700;border:1px solid #D91B1B;padding:6px 10px;margin:6px 0">⚠ Campo Valor Reposición obligatorio. Sin valor registrado no procede descuento al finiquito.</p>'+
     '<h3>III. CONDICIONES POR TIPO DE BIEN</h3>'+
     (e.puesto==='Encargado de logística y reparto'?
       '<div style="background:#fefce8;border-left:3px solid #f59e0b;padding:8px 12px;font-size:11px;margin-bottom:10px"><b>⚠ Nota — Financiamiento:</b> El casco de seguridad e impermeable se asignan en modalidad de financiamiento. El trabajador se compromete a liquidarlos mediante descuentos quincenales pactados o al término de la relación laboral, lo que ocurra primero. El valor de mercado de cada artículo se especifica en la carta de entrega correspondiente.</div>'+
@@ -5526,6 +5538,7 @@ function generarHTMLResponsiva(e){
     '<p style="font-size:11px">La no devolución oportuna faculta a la empresa para iniciar las acciones legales correspondientes.</p>'+
     '<h3>V. CONSENTIMIENTO</h3>'+
     '<p>Declaro haber leído y entendido las condiciones de este documento, y acepto la responsabilidad sobre los bienes asignados.</p>'+
+    '<p style="font-size:11px;line-height:1.7">Los datos personales sensibles (fotografía facial y geolocalización) serán conservados durante la vigencia de la relación laboral y hasta cinco (5) años posteriores para efectos de defensa legal, auditoría y cumplimiento de obligaciones patronales. Se implementan medidas de seguridad técnicas y administrativas conforme a la LFPDPPP. Al término de la relación, los datos biométricos serán eliminados o anonimizados en máximo 90 días, salvo procedimiento judicial pendiente. EL TRABAJADOR acepta expresamente que los registros electrónicos (GPS + selfie) tendrán plena validez probatoria ante cualquier autoridad laboral.</p>'+
     '<div style="margin-top:40px">'+
     '<div style="font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#1A2B4A;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #1A2B4A;padding-bottom:4px;margin-bottom:16px">Firmas de conformidad</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">'+
@@ -5562,8 +5575,8 @@ function generarHTMLActa(e){
   var hoy=new Date();
   var actas_prev=S.get('actas',{})[e.id]||[];
   var rowsPrev=actas_prev.length?actas_prev.map(function(a,i){
-    return '<tr><td>'+(i+1)+'</td><td>'+fFechaCorta(a.fecha)+'</td><td>'+a.tipo+'</td><td>'+a.sancion+'</td><td>____________</td></tr>';
-  }).join(''):'<tr><td colspan="5" style="text-align:center;color:#999;font-size:11px">Sin actas previas registradas en el sistema</td></tr>';
+    return '<tr><td>'+(i+1)+'</td><td>RH-ACTA-'+String(e.id).padStart(4,'0')+'-'+(i+1)+'</td><td>'+fFechaCorta(a.fecha)+'</td><td>'+a.tipo+'</td><td>'+a.sancion+'</td><td>____________</td></tr>';
+  }).join(''):'<tr><td colspan="6" style="text-align:center;color:#999;font-size:11px">Sin actas previas registradas en el sistema</td></tr>';
   var infracciones=[
     'Retardo reincidente (3 o más en 30 días)',
     'Ausencia sin justificar',
@@ -5621,7 +5634,7 @@ function generarHTMLActa(e){
     '<p style="font-size:10px;color:#888">(Narrar con precisión los hechos, indicando fecha, hora, lugar, testigos y evidencias)</p>'+
     '<div contenteditable="true" style="border:1px solid #1A2B4A;min-height:100px;padding:10px;font-size:11px;color:#333;border-radius:2px;outline:none;background:#fffef9" placeholder="Escribe aquí la descripción...">Escribe aquí la descripción de los hechos, indicando fecha, hora, lugar, testigos y evidencias.</div>'+
     '<h3>V. HISTORIAL DE ACTAS PREVIAS</h3>'+
-    '<table><thead><tr><th>No.</th><th>Fecha</th><th>Tipo de Falta</th><th>Resultado / Sanción</th><th>Firma</th></tr></thead><tbody>'+rowsPrev+'<tr><td>___</td><td>___________</td><td>___________________________</td><td>___________________________</td><td>____________</td></tr></tbody></table>'+
+    '<table><thead><tr><th>No.</th><th>Folio</th><th>Fecha</th><th>Tipo de Falta</th><th>Resultado / Sanción</th><th>Firma</th></tr></thead><tbody>'+rowsPrev+'<tr><td>___</td><td>___________</td><td>___________________________</td><td>___________________________</td><td>____________</td></tr></tbody></table>'+
     '<h3>VI. DICHO DEL TRABAJADOR</h3>'+
     '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:8px">'+
     '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="radio" name="actaDicho" id="actaDicho1" value="acepta"> Acepta los hechos descritos</label>'+
@@ -5696,14 +5709,19 @@ function generarHTMLFiniquito(e){
     '<tr><td><b>B</b></td><td>Parte proporcional de vacaciones no disfrutadas</td><td>'+(e.vacDias||6)+' días × '+(diasAnio/365).toFixed(2)+' proporción</td><td>$'+fmt(propVac)+'</td></tr>'+
     '<tr><td><b>C</b></td><td>Prima vacacional proporcional (25% sobre B)</td><td>25% × $'+fmt(propVac)+'</td><td>$'+fmt(primaVac)+'</td></tr>'+
     '<tr><td><b>D</b></td><td>Parte proporcional de aguinaldo (15 días / año)</td><td>15 días × '+(diasAnio/365).toFixed(2)+' proporción</td><td>$'+fmt(propAg)+'</td></tr>'+
-    '<tr><td><b>E</b></td><td>Partes proporcionales de PTU (si aplica)</td><td>Según ejercicio fiscal</td><td>$____________</td></tr>'+
-    '<tr style="background:#fff3cd"><td><b>F</b></td><td>Liquidación 3 meses <i>(solo despido injustificado — Art. 50 LFT)</i></td><td>90 días × $'+fmt(salD)+'</td><td>$'+fmt(liq3m)+'</td></tr>'+
-    '<tr style="background:#fff3cd"><td><b>G</b></td><td>20 días por año trabajado <i>(solo despido injustificado)</i></td><td>20 × '+anos+' años × $'+fmt(salD)+'</td><td>$'+fmt(v20)+'</td></tr>'+
-    '<tr><td><b>H</b></td><td>Prima de antigüedad: 12 días por año <i>(≥15 años o renuncia voluntaria)</i></td><td>12 × '+anos+' × $'+fmt(salD)+'</td><td>$'+fmt(prAnt)+'</td></tr>'+
+    '<tr><td><b>E</b></td><td>Partes proporcionales de PTU (si aplica)<br><small style="color:#666;font-size:10px">Procede solo si la empresa generó utilidades en el ejercicio fiscal correspondiente conforme al Art. 117 LFT.</small></td><td>Según ejercicio fiscal</td><td>$____________</td></tr>'+
+    '<tr id="fin-fila-f" style="color:#aaa;background:#f9f9f9"><td><b>F</b></td><td>Liquidación 3 meses <i>(solo despido injustificado — Art. 50 LFT)</i></td><td>90 días × $'+fmt(salD)+'</td><td style="font-style:italic">No aplica para este motivo de baja.</td></tr>'+
+    '<tr id="fin-fila-g" style="color:#aaa;background:#f9f9f9"><td><b>G</b></td><td>20 días por año trabajado <i>(solo despido injustificado)</i></td><td>20 × '+anos+' años × $'+fmt(salD)+'</td><td style="font-style:italic">No aplica para este motivo de baja.</td></tr>'+
+    (anos>=15?
+      '<tr><td><b>H</b></td><td>Prima de antigüedad: 12 días por año <i>(≥15 años)</i></td><td>12 × '+anos+' × $'+fmt(salD)+'</td><td>$'+fmt(prAnt)+'</td></tr>':
+      '<tr style="color:#aaa;background:#f9f9f9"><td><b>H</b></td><td>Prima de antigüedad: 12 días por año <i>(≥15 años)</i></td><td>12 × '+anos+' × $'+fmt(salD)+'</td><td style="font-style:italic">No aplica para este motivo de baja.</td></tr>'
+    )+
     '<tr><td><b>I</b></td><td>Otras prestaciones o bonificaciones</td><td>—</td><td>$____________</td></tr>'+
     '<tr style="background:#1A2B4A;color:#fff"><td colspan="3"><b>TOTAL PERCEPCIONES</b></td><td><b>$____________</b></td></tr>'+
     '</tbody></table>'+
     '<p style="font-size:10px;color:#666">* Importes estimados. Verificar con contador. F y G aplican solo en despido injustificado. H aplica con ≥15 años de antigüedad.</p>'+
+    '<'+'script>(function(){function upd(){var cbs=Array.from(document.querySelectorAll("input[type=checkbox]"));var di=cbs.some(function(c){var lb=c.closest?c.closest("label"):c.parentElement;return c.checked&&lb&&lb.textContent.indexOf("Despido injustificado")>-1;});var ff=document.getElementById("fin-fila-f"),fg=document.getElementById("fin-fila-g");if(ff){ff.style.color=di?"":"#aaa";ff.style.background=di?"#fff3cd":"#f9f9f9";ff.querySelector("td:last-child").textContent=di?"$'+fmt(liq3m)+'":"No aplica para este motivo de baja.";}if(fg){fg.style.color=di?"":"#aaa";fg.style.background=di?"#fff3cd":"#f9f9f9";fg.querySelector("td:last-child").textContent=di?"$'+fmt(v20)+'":"No aplica para este motivo de baja.";}}document.addEventListener("change",upd);})()'+
+    "<\/script>"+
     '<h3>IV. DEDUCCIONES</h3>'+
     '<table><thead><tr><th>Concepto</th><th>Importe</th></tr></thead><tbody>'+
     '<tr><td>IMSS / ISSSTE cuota obrera</td><td>$____________</td></tr>'+
@@ -5725,14 +5743,13 @@ function generarHTMLFiniquito(e){
      'Caja de herramientas','Fondo de caja / efectivo bajo resguardo'].map(cb).join('')+
     '</div>'+
     '<p style="font-size:11px"><b>Observaciones:</b> ________________________________________</p>'+
-    '<h3>VII. EFECTOS LIBERATORIOS PLENOS</h3>'+
-    '<p>El trabajador declara que las cantidades consignadas corresponden al pago total e íntegro de las prestaciones derivadas de la relación laboral con FERREPINTURAS DE TUXTLA S.A.P.I. DE C.V. En consecuencia, otorga el más amplio finiquito y libera a la empresa de cualquier acción, reclamación o demanda, presente o futura.</p>'+
-    '<p>El trabajador reconoce haber recibido copia de este documento y manifiesta plena conformidad.</p>'+
+    '<h3>VII. EFECTOS LIBERATORIOS PLENOS Y RENUNCIA EXPRESA</h3>'+
+    '<p>El trabajador declara recibir las cantidades consignadas como pago total, íntegro y definitivo de todas las prestaciones derivadas de la relación laboral. Otorga a favor de FERREPINTURAS DE TUXTLA S.A.P.I. DE C.V. el más amplio y definitivo finiquito liberatorio, renunciando expresamente a cualquier acción, reclamación o derecho presente o futuro, incluyendo sin limitar: indemnización constitucional (Arts. 48, 50 y 51 LFT), reinstalación, diferencias salariales, primas, vacaciones, aguinaldo, PTU, prestaciones de seguridad social, y cualquier otra derivada de los Arts. 76, 80, 87, 162 y 163 LFT. La firma tiene efectos de renuncia expresa y detallada conforme al Art. 33 LFT.</p>'+
     fgrid(['Trabajador — Nombre y firma<br><b>'+sane(e.nombre)+'</b>','Representante de la empresa — Nombre y firma<br>Ferrepinturas de Tuxtla, S.A.P.I. de C.V.'])+
     '<div style="border:1px dashed #999;padding:12px 16px;margin-top:30px;font-size:10px">'+
     '<b>✂ TALÓN DE RECIBIDO — separar y conservar</b><br>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:10px">'+
-    '<div><b>Nombre:</b> '+sane(e.nombre)+'<br><b>Folio:</b> RH-FIN-'+String(e.id).padStart(4,'0')+'<br><b>Fecha de pago:</b> ____________</div>'+
+    '<div><b>Nombre:</b> '+sane(e.nombre)+'<br><b>Folio del sistema:</b> RH-FIN-'+String(e.id).padStart(4,'0')+'-'+String(hoy.getTime()).slice(-5)+' <span style="color:#D91B1B;font-weight:700">[OBLIGATORIO]</span><br><b>Fecha de pago:</b> <span style="display:inline-block;min-width:120px;border-bottom:1px solid #333">&nbsp;</span> <span style="color:#D91B1B;font-weight:700">[OBLIGATORIO]</span></div>'+
     '<div style="padding-top:28px;border-top:1px solid #333;text-align:center"><b>Importe recibido:</b> $________________________<br>Firma de conformidad</div>'+
     '</div></div>';
 }
