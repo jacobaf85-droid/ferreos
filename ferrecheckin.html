@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1A2B4A">
+<title>Ferrepinturas - Asistencia</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{--rojo:#D91B1B;--navy:#1A2B4A;--green:#16a34a;--amber:#d97706;--bg:#f0efe9;--white:#fff;--dim:#777;--border:#ddd;}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+body{background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px;}
+.logo{font-size:11px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;margin-bottom:20px;text-align:center;}
+.card{background:var(--white);width:100%;max-width:400px;border-radius:4px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,.08);}
+.card-top{background:var(--navy);padding:22px 24px 18px;}
+.card-top-title{color:#fff;font-size:19px;font-weight:700;line-height:1.2;}
+.card-top-sub{color:rgba(255,255,255,.55);font-size:13px;margin-top:4px;}
+.card-body{padding:24px;}
+.big-btn{width:100%;padding:18px 16px;background:var(--navy);color:#fff;border:none;border-radius:3px;font-size:17px;font-weight:700;cursor:pointer;letter-spacing:.02em;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:10px;}
+.big-btn:active{background:#0f1e35;transform:scale(.98);}
+.big-btn:disabled{background:#9ca3af;cursor:not-allowed;transform:none;}
+.big-btn.green{background:var(--green);}
+.big-btn.green:active{background:#15803d;}
+.status{padding:16px;border-radius:3px;font-size:15px;line-height:1.5;margin-top:16px;text-align:center;}
+.status.ok{background:#f0fdf4;border:1.5px solid #86efac;color:#14532d;}
+.status.err{background:#fff1f2;border:1.5px solid #fca5a5;color:#991b1b;}
+.status.warn{background:#fffbeb;border:1.5px solid #fcd34d;color:#78350f;}
+.status-icon{font-size:36px;display:block;margin-bottom:8px;}
+.status-title{font-size:18px;font-weight:700;display:block;margin-bottom:4px;}
+.status-msg{font-size:14px;color:inherit;opacity:.85;}
+.hora-big{font-size:48px;font-weight:700;color:#fff;letter-spacing:-.02em;line-height:1;text-align:center;}
+.hora-fecha{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px;text-transform:capitalize;text-align:center;}
+.prog-wrap{margin-top:12px;font-size:12px;color:var(--dim);text-align:center;}
+.prog-bar-bg{background:#e5e7eb;border-radius:4px;height:5px;margin-bottom:6px;overflow:hidden;}
+.prog-bar{background:var(--navy);height:100%;width:0%;transition:width .5s ease;}
+.kiosk-wrap{text-align:center;width:100%;max-width:500px;}
+.kiosk-header{background:var(--navy);color:#fff;padding:20px 24px;border-radius:4px 4px 0 0;}
+.kiosk-title{font-size:22px;font-weight:800;letter-spacing:.02em;}
+.kiosk-suc{font-size:14px;opacity:.6;margin-top:4px;}
+.kiosk-body{background:var(--white);padding:24px;border-radius:0 0 4px 4px;box-shadow:0 2px 20px rgba(0,0,0,.08);}
+.kiosk-qr-wrap{border:4px solid var(--navy);display:inline-block;padding:14px;margin:16px 0;border-radius:4px;}
+.kiosk-inst{font-size:16px;font-weight:600;color:var(--navy);margin-bottom:4px;}
+.kiosk-sub{font-size:13px;color:var(--dim);}
+.kiosk-log{margin-top:20px;text-align:left;max-height:240px;overflow-y:auto;}
+.kiosk-log-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+.kiosk-log-hora{font-size:12px;color:var(--dim);width:44px;flex-shrink:0;}
+.kiosk-log-nombre{flex:1;font-size:14px;font-weight:600;color:var(--navy);}
+.kiosk-log-foto{width:36px;height:36px;border-radius:3px;object-fit:cover;border:1px solid var(--border);}
+.kiosk-log-check{color:var(--green);font-size:16px;flex-shrink:0;}
+.kiosk-divider{height:1px;background:var(--border);margin:16px 0;}
+.kiosk-date{font-size:12px;color:var(--dim);margin-top:8px;}
+.spin{display:inline-block;width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.help{font-size:12px;color:var(--dim);text-align:center;margin-top:14px;line-height:1.5;}
+.help strong{color:var(--navy);}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="qrcode.min.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ══════════════════════════════════════════════════════
+// FERRECHECKIN v3 — Supabase directo + postMessage fallback
+// Flujo: celular → Supabase → FerreRH escucha realtime
+// ══════════════════════════════════════════════════════
+
+// ── Supabase init (keys en ferre_suc_cache o hardcoded) ──
+var _sb = null;
+(function initSB(){
+  try{
+    // Leer config guardada por FerreRH en localStorage (misma PC = kiosk)
+    // o fallback a URL params ?sb_url=...&sb_key=...
+    var params2=new URLSearchParams(window.location.search);
+    var sbUrl=params2.get('sb_url')||localStorage.getItem('ferre_sb_url')||'https://xqezbplfwubddwsbobhi.supabase.co';
+    // anon (public) key — safe to embed in client HTML
+    var sbKey=params2.get('sb_key')||localStorage.getItem('ferre_sb_key')||'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxZXpicGxmd3ViZGR3c2JvYmhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjE1MjUsImV4cCI6MjA5MTYzNzUyNX0.5lUXAPQsGMSsAGOw1UPfzmdLHmBTq-6KGNOg355e1Lc';
+    if(sbUrl&&sbKey&&typeof supabase!=='undefined'){
+      _sb=supabase.createClient(sbUrl,sbKey,{auth:{persistSession:false}});
+    }
+  }catch(e){}
+})();
+var params  = new URLSearchParams(window.location.search);
+var sucId   = parseInt(params.get("s"))||null;
+var seed    = params.get("d")||"";
+var enrol   = params.get("enrol")||"";
+var kiosk   = params.get("kiosk")==="1";
+var empN    = params.get("n") ? decodeURIComponent(params.get("n")) : "";
+var empS    = params.get("suc") ? decodeURIComponent(params.get("suc")) : "";
+
+var DISP_KEY = "ferrerh_device_token";
+
+// Fecha local Chiapas — America/Mexico_City, respeta reglas históricas de DST
+function fechaLocalCST(d){
+  d=d||new Date();
+  return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Mexico_City',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+}
+function getToken(){ return localStorage.getItem(DISP_KEY)||null; }
+function setToken(t){ localStorage.setItem(DISP_KEY,t); }
+
+function horaStr(){
+  var d=new Date();
+  return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);
+}
+function fechaStr(){
+  var d=new Date();
+  var dias=["Domingo","Lunes","Martes","Miercoles","Jueves","Viernes","Sabado"];
+  var meses=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  return dias[d.getDay()]+", "+d.getDate()+" de "+meses[d.getMonth()];
+}
+function genToken(){
+  var a=new Uint8Array(20);
+  (window.crypto||window.msCrypto).getRandomValues(a);
+  return Array.from(a).map(function(b){return b.toString(16).padStart(2,"0");}).join("");
+}
+function getParentOrigin(){
+  try{
+    if(window.opener&&window.opener.location) return window.opener.location.origin;
+    if(window.parent&&window.parent!==window&&window.parent.location) return window.parent.location.origin;
+  }catch(e){}
+  return '*'; // fallback for cross-origin (less ideal but needed for some browsers)
+}
+function postToParent(data){
+  var origin=getParentOrigin();
+  if(window.opener) window.opener.postMessage(data,origin);
+  if(window.parent&&window.parent!==window) window.parent.postMessage(data,origin);
+}
+function getSucNombre(){
+  try{
+    var c=JSON.parse(localStorage.getItem("ferre_suc_cache")||"[]");
+    var s=c.find(function(x){return x.id===sucId;});
+    return s?s.nombre:null;
+  }catch(e){return null;}
+}
+function flushPending(){
+  var p=localStorage.getItem("ferre_enrol_p");
+  if(p){try{postToParent(JSON.parse(p));localStorage.removeItem("ferre_enrol_p");}catch(e){}}
+}
+
+// ── Router ──
+if(kiosk&&sucId)       renderKiosk();
+else if(enrol)         renderEnrol();
+else if(sucId)         renderCheckin(); // seed ya no requerido — GPS valida
+else                   renderError("Link no valido","Escanea el codigo QR que esta en tu sucursal.");
+
+// ════════════════════════════════════════════
+// KIOSK
+// ════════════════════════════════════════════
+function getSeedHoy(){
+  var d=new Date();
+  var y=d.getFullYear();
+  var m=("0"+(d.getMonth()+1)).slice(-2);
+  var dd=("0"+d.getDate()).slice(-2);
+  return y+""+m+""+dd+"-"+sucId;
+}
+
+function renderKiosk(){
+  var sn=getSucNombre()||"Sucursal";
+
+  function buildQrUrl(){
+    var u=new URL(window.location.href);
+    u.searchParams.delete("kiosk");
+    // QR fijo — sin seed diario, GPS es la validacion
+    return u.toString();
+  }
+
+  document.getElementById("app").innerHTML=
+    "<div class='kiosk-wrap'>"+
+    "<div class='kiosk-header'>"+
+      "<div class='kiosk-title'>FERREPINTURAS</div>"+
+      "<div class='kiosk-suc'>"+sn+"</div>"+
+    "</div>"+
+    "<div class='kiosk-body'>"+
+      "<div class='kiosk-inst'>&#x1F4F1; Abre la camara y apunta aqui</div>"+
+      "<div class='kiosk-sub'>para registrar tu llegada</div>"+
+      "<div class='kiosk-qr-wrap'><img id='kQrImg' src='' width='260' height='260' alt='QR Check-In'></div>"+
+      "<div class='kiosk-divider'></div>"+
+      "<div style='font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px'>Marcaron hoy</div>"+
+      "<div id='kLog' class='kiosk-log'><div id='kPlaceholder' style='text-align:center;padding:16px;font-size:13px;color:var(--dim)'>Esperando registros...</div></div>"+
+      "<div class='kiosk-date' id='kFecha'>"+fechaStr()+"</div>"+
+    "</div>"+
+    "</div>";
+
+  // Render QR inicial — usa librería local qrcode.min.js, sin dependencia externa
+  function refreshQr(){
+    var img=document.getElementById("kQrImg");
+    if(!img)return;
+    var tmp=document.createElement('div');
+    new QRCode(tmp,{text:buildQrUrl(),width:260,height:260,correctLevel:QRCode.CorrectLevel.M});
+    var canvas=tmp.querySelector('canvas');
+    if(canvas)img.src=canvas.toDataURL('image/png');
+  }
+  refreshQr();
+
+  // Actualizar fecha en pantalla a medianoche (sin cambiar QR — es fijo)
+  function msHastaMedianoche(){
+    var n=new Date(); var m=new Date(n); m.setHours(24,0,5,0); return m-n;
+  }
+  setTimeout(function refrescarDia(){
+    var kf=document.getElementById("kFecha"); if(kf) kf.textContent=fechaStr();
+    setTimeout(refrescarDia, msHastaMedianoche());
+  }, msHastaMedianoche());
+
+  // Escuchar postMessage (fallback kiosk misma PC)
+  window.addEventListener("message",function(ev){
+    if(!ev.data||ev.data.type!=="ferrecheckin_result")return;
+    var _ko=ev.origin||'';
+    var _ciWhitelist=['https://rrhhftpops.netlify.app','http://localhost:8080','http://localhost:3000','http://127.0.0.1:8080'];
+    var _kok=(_ko==='null')||(_ko===window.location.origin)||(_ciWhitelist.indexOf(_ko)!==-1);
+    if(!_kok)return;
+    var r=ev.data.result;
+    if(r&&r.ok) addKioskEntry(r.nombre||"Empleado", r.selfie_url||null);
+  });
+
+  // ── Realtime Supabase: ver check-ins de celulares en vivo ──
+  if(_sb&&sucId){
+    var hoyStr=fechaLocalCST(); // fecha local Chiapas CST
+    _sb.channel('kiosk-checkin-'+sucId)
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'rh_checkin_logs',filter:'suc_id=eq.'+sucId},
+        function(payload){
+          var row=payload.new;
+          if(!row||row.estado!=='ok') return;
+          if(row.fecha!==hoyStr) return;
+          addKioskEntry(row.emp_nombre||"Empleado", row.selfie_url||null);
+        })
+      .subscribe();
+  }
+}
+
+function addKioskEntry(nombre, fotoUrl){
+  var log=document.getElementById("kLog");
+  var ph=document.getElementById("kPlaceholder");
+  if(ph) ph.remove();
+  var item=document.createElement("div");
+  item.className="kiosk-log-item";
+  // BUG #4 FIX: Usar DOM methods en lugar de innerHTML para evitar XSS con
+  // datos de Supabase (emp_nombre podría contener HTML malicioso)
+  var horaEl=document.createElement("span");
+  horaEl.className="kiosk-log-hora";
+  horaEl.textContent=horaStr();
+  item.appendChild(horaEl);
+  if(fotoUrl&&fotoUrl.startsWith("https://")){
+    var img=document.createElement("img");
+    img.className="kiosk-log-foto";
+    img.alt="";
+    img.onerror=function(){this.style.visibility="hidden";};
+    img.src=fotoUrl;
+    item.appendChild(img);
+  }
+  var nomEl=document.createElement("span");
+  nomEl.className="kiosk-log-nombre";
+  nomEl.textContent=nombre;
+  item.appendChild(nomEl);
+  var chkEl=document.createElement("span");
+  chkEl.className="kiosk-log-check";
+  chkEl.innerHTML="&#10003;";
+  item.appendChild(chkEl);
+  log.insertBefore(item,log.firstChild);
+}
+
+// ════════════════════════════════════════════
+// ENROLAMIENTO
+// ════════════════════════════════════════════
+function renderEnrol(){
+  var yaActivado=!!getToken();
+  var pn=empN?empN.split(" ")[0]:"";
+  document.getElementById("app").innerHTML=
+    "<div class='logo'>Ferrepinturas de Tuxtla</div>"+
+    "<div class='card'>"+
+    "<div class='card-top'>"+
+      "<div class='card-top-title'>"+(pn?"Hola, "+pn:"Bienvenido")+"</div>"+
+      "<div class='card-top-sub'>"+(empS||"Activacion de celular")+"</div>"+
+    "</div>"+
+    "<div class='card-body'>"+
+    (yaActivado?"<div class='status warn' style='margin-bottom:16px'><span class='status-icon'>&#x1F4F1;</span><span class='status-title'>Este celular ya esta activado</span><span class='status-msg'>Si cambiaste de celular, toca el boton y se actualizara.</span></div>":"")+
+    "<p style='font-size:15px;color:#374151;line-height:1.7;margin-bottom:20px'>Toca el boton para registrar <strong>este celular</strong> en el sistema de asistencia.</p>"+
+    "<button class='big-btn green' id='enrolBtn' onclick='confirmarEnrol()'>&#x2705; Activar mi celular</button>"+
+    "<div id='enrolStatus'></div>"+
+    "<p class='help'>Solo necesitas hacer esto <strong>una vez</strong>.<br>Despues escaneas el codigo QR de tu sucursal cada manana.</p>"+
+    "</div></div>";
+}
+
+async function confirmarEnrol(){
+  var btn=document.getElementById("enrolBtn");
+  var statusDiv=document.getElementById("enrolStatus");
+  function setEnrolErr(msg){
+    statusDiv.innerHTML="<div style='margin-top:14px;padding:12px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;font-size:14px;color:#991b1b;text-align:center'>"+msg+"</div>";
+    btn.disabled=false;
+    btn.innerHTML="&#x1F504; Intentar de nuevo";
+  }
+  btn.disabled=true;
+  btn.innerHTML="<span class='spin'></span> Activando...";
+  statusDiv.innerHTML="";
+  var t=genToken();
+  var ua=navigator.userAgent.substring(0,80);
+  var pn=empN?empN.split(" ")[0]:"";
+
+  // Flujo 1: Supabase directo (celular remoto)
+  if(_sb){
+    try{
+      // Paso 1 — Verificar token válido, no usado y no expirado en una sola query
+      var {data:tkRow,error:tkErr}=await _sb.from('rh_enrol_tokens')
+        .select('emp_id')
+        .eq('token',enrol)
+        .eq('usado',false)
+        .gt('expira',new Date().toISOString())
+        .single();
+      if(tkErr||!tkRow){setEnrolErr("Token inv\xe1lido, expirado o ya usado. Pide un nuevo enlace a RH.");return;}
+      console.log('[Enrol] Paso 1 OK \u2014 token v\xe1lido, emp_id:'+tkRow.emp_id);
+
+      // Paso 2 — INSERT puro (no upsert — policy anon_insert_disp_con_token solo cubre INSERT)
+      console.log("[Enrol] Paso 2 — registrando dispositivo...");
+      var {data:dispData,error:dispErr}=await _sb.from("rh_dispositivos").insert(
+        {emp_id:tkRow.emp_id,token:t,ua:ua,activo:true,enrol_token:enrol}
+      ).select("token").single();
+      if(dispErr && dispErr.code==='23505'){
+        console.log("[Enrol] Paso 2 — emp_id ya tiene dispositivo, actualizando...");
+        var {data:updData,error:updErr}=await _sb.from("rh_dispositivos").update(
+          {token:t,ua:ua,activo:true,enrol_token:enrol}
+        ).eq('emp_id',tkRow.emp_id).select("token").single();
+        if(updErr||!updData||!updData.token){
+          console.error("[Enrol] Paso 2 UPDATE FAIL",updErr,"updData:",updData);
+          setEnrolErr("Error al actualizar el celular: "+((updErr&&updErr.message)||"sin datos"));
+          return;
+        }
+        dispData=updData;
+        console.log("[Enrol] Paso 2 OK (UPDATE) — token local:"+t+" token DB:"+dispData.token+(t!==dispData.token?" *** DIFIEREN ***":""));
+      } else if(dispErr||!dispData||!dispData.token){
+        console.error("[Enrol] Paso 2 FAIL",dispErr,"dispData:",dispData);
+        setEnrolErr("Error al registrar el celular: "+((dispErr&&dispErr.message)||"sin datos")+(dispErr&&dispErr.code?" ["+dispErr.code+"]":""));
+        return;
+      } else {
+        console.log("[Enrol] Paso 2 OK (INSERT) — token local:"+t+" token DB:"+dispData.token+(t!==dispData.token?" *** DIFIEREN ***":""));
+      }
+
+      // Paso 3 — Marcar token como usado (después del INSERT exitoso)
+      console.log("[Enrol] Paso 3 — marcando token como usado...");
+      var {error:markErr}=await _sb.from("rh_enrol_tokens").update({usado:true}).eq("token",enrol);
+      if(markErr){console.error("[Enrol] Paso 3 FAIL",markErr);}
+      else{console.log("[Enrol] Paso 3 OK — token marcado como usado");}
+
+      // Paso 4 — Guardar el token real retornado por DB (no el generado localmente)
+      setToken(dispData.token);
+      console.log("[Enrol] Paso 4 OK — token guardado en localStorage:"+dispData.token);
+
+      // \xc9xito confirmado
+      document.getElementById("app").innerHTML=
+        "<div class='logo'>Ferrepinturas de Tuxtla</div>"+
+        "<div class='card'><div class='card-body' style='text-align:center;padding:32px 24px'>"+
+        "<div style='font-size:56px;margin-bottom:12px'>&#x1F389;</div>"+
+        "<div style='font-size:22px;font-weight:800;color:var(--green);margin-bottom:8px'>Listo"+(pn?", "+pn:"")+"!</div>"+
+        "<div style='font-size:15px;color:#374151;line-height:1.7;margin-bottom:24px'>Tu celular ya est\xe1 registrado.<br><strong>Ma\xf1ana y cada d\xeda:</strong><br>Llega a tu sucursal, abre la c\xe1mara<br>y escanea el c\xf3digo QR.</div>"+
+        "<div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:3px;padding:14px;font-size:13px;color:#14532d'>Ya puedes cerrar esta pantalla</div>"+
+        "</div></div>";
+      return;
+    }catch(ex){
+      setEnrolErr("Error: "+(ex.message||ex.toString())+" [EXC]");
+      return;
+    }
+  }
+
+  // Flujo 2: postMessage fallback (solo cuando está en kiosk — misma PC sin Supabase)
+  var payload={type:"ferrecheckin_enrol",enrol_token:enrol,disp_token:t,ua:ua};
+  setToken(t);
+  localStorage.setItem("ferre_enrol_p",JSON.stringify(payload));
+  postToParent(payload);
+  setTimeout(function(){
+    document.getElementById("app").innerHTML=
+      "<div class='logo'>Ferrepinturas de Tuxtla</div>"+
+      "<div class='card'><div class='card-body' style='text-align:center;padding:32px 24px'>"+
+      "<div style='font-size:56px;margin-bottom:12px'>&#x1F389;</div>"+
+      "<div style='font-size:22px;font-weight:800;color:var(--green);margin-bottom:8px'>Listo"+(pn?", "+pn:"")+"!</div>"+
+      "<div style='font-size:15px;color:#374151;line-height:1.7;margin-bottom:24px'>Tu celular ya est\xe1 registrado.<br><strong>Ma\xf1ana y cada d\xeda:</strong><br>Llega a tu sucursal, abre la c\xe1mara<br>y escanea el c\xf3digo QR.</div>"+
+      "<div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:3px;padding:14px;font-size:13px;color:#14532d'>Ya puedes cerrar esta pantalla</div>"+
+      "</div></div>";
+  },600);
+}
+
+// ════════════════════════════════════════════
+// CHECK-IN
+// ════════════════════════════════════════════
+var _camStream = null;
+var _selfieB64 = null;
+var _ciEnviando = false; // BUG #3 FIX: lock para prevenir envíos concurrentes
+
+function renderCheckin(){
+  flushPending();
+  var token=getToken();
+  var sn=getSucNombre()||"";
+  if(!token){
+    document.getElementById("app").innerHTML=
+      "<div class='logo'>Ferrepinturas de Tuxtla</div>"+
+      "<div class='card'>"+
+      "<div class='card-top'><div class='hora-big'>"+horaStr()+"</div><div class='hora-fecha'>"+fechaStr()+"</div></div>"+
+      "<div class='card-body'><div class='status err'>"+
+      "<span class='status-icon'>&#x26D4;</span>"+
+      "<span class='status-title'>Celular no registrado</span>"+
+      "<span class='status-msg'>Este celular no esta activado.<br><br><strong>Avisa a tu gerente</strong> para que te manden el enlace de activacion.</span>"+
+      "</div></div></div>"+
+      (sn?"<p class='help'>"+sn+"</p>":"");
+    return;
+  }
+  mostrarPantallaSelfie();
+}
+
+function mostrarPantallaSelfie(){
+  var sn=getSucNombre()||"tu sucursal";
+  _selfieB64=null;
+  document.getElementById("app").innerHTML=
+    "<div class='logo'>Ferrepinturas de Tuxtla</div>"+
+    "<div class='card'>"+
+    "<div class='card-top'>"+
+      "<div class='hora-big' id='horaLive'>"+horaStr()+"</div>"+
+      "<div class='hora-fecha'>"+fechaStr()+"</div>"+
+    "</div>"+
+    "<div class='card-body' id='cardBody'>"+
+      "<p style='font-size:14px;font-weight:600;color:#1f2937;margin-bottom:4px;text-align:center'>Toma tu foto para registrar la llegada</p><p style='font-size:12px;color:var(--dim);text-align:center;margin-bottom:10px'>Esto verifica que eres tu y evita fraudes</p>"+
+      "<div id='camWrap' style='position:relative;width:100%;background:#111;border-radius:4px;overflow:hidden;margin-bottom:10px;min-height:180px;display:flex;align-items:center;justify-content:center'>"+
+        "<video id='camVideo' autoplay playsinline muted style='width:100%;display:block;max-height:240px;object-fit:cover'></video>"+
+        "<div id='camLoader' style='position:absolute;color:#fff;font-size:13px'>Iniciando camara...</div>"+
+      "</div>"+
+      "<canvas id='camCanvas' style='display:none'></canvas>"+
+      "<div id='selfiePreview' style='display:none;margin-bottom:10px;text-align:center'>"+
+        "<img id='selfieImg' style='max-width:100%;border-radius:4px;max-height:180px;object-fit:cover'>"+
+        "<p style='font-size:12px;color:var(--green);margin-top:6px;font-weight:600'>&#x2714; Foto tomada</p>"+
+      "</div>"+
+      "<button class='big-btn green' id='snapBtn' onclick='tomarFoto()'>&#x1F4F7; Tomar foto</button>"+
+      "<button class='big-btn' id='sendBtn' style='display:none;margin-top:10px' onclick='iniciarEnvio()'>&#x1F4CD; Registrar llegada</button>"+
+      "<button style='width:100%;padding:12px;background:none;border:1px solid var(--border);color:var(--dim);font-size:13px;cursor:pointer;margin-top:8px;border-radius:3px' onclick='saltarFoto()'>Continuar sin foto</button>"+
+      "<div id='ciStatus'></div>"+
+    "</div></div>"+
+    (sn?"<p class='help'>"+sn+"</p>":"");
+
+  // Clock
+  setInterval(function(){var el=document.getElementById("horaLive");if(el)el.textContent=horaStr();},15000);
+  // Start camera
+  iniciarCamara();
+}
+
+function iniciarCamara(){
+  var video=document.getElementById("camVideo");
+  var loader=document.getElementById("camLoader");
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    if(loader) loader.textContent="Camara no disponible";
+    ocultarCamara(); return;
+  }
+  var camTimeout=setTimeout(function(){
+    if(loader) loader.textContent="Camara no disponible";
+    ocultarCamara();
+  },10000);
+  navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:640},height:{ideal:480}},audio:false})
+    .then(function(stream){
+      clearTimeout(camTimeout);
+      _camStream=stream;
+      video.srcObject=stream;
+      video.onloadedmetadata=function(){
+        if(loader) loader.style.display="none";
+      };
+    })
+    .catch(function(err){
+      clearTimeout(camTimeout);
+      var wrap=document.getElementById("camWrap");
+      var errMsg='No se pudo activar la camara. Puedes continuar sin foto.';
+      if(err&&err.name==='NotAllowedError') errMsg='Bloqueaste la camara. Ve a Configuracion del navegador → Permisos → permite la camara para este sitio. O toca "Registrar llegada" para marcar sin foto.';
+      else if(err&&err.name==='NotFoundError') errMsg='No se encontro camara. Puedes marcar sin foto.';
+      if(wrap){wrap.style.display="none";}
+      var loader=document.getElementById("camLoader");
+      if(loader){loader.style.display="block";loader.textContent=errMsg;loader.style.color="#d97706";loader.style.fontSize="13px";loader.style.padding="12px";}
+      var send=document.getElementById("sendBtn");
+      if(send){send.style.display="flex";send.textContent="Registrar llegada sin foto";}
+    });
+}
+
+function ocultarCamara(){
+  var wrap=document.getElementById("camWrap");
+  if(wrap) wrap.style.display="none";
+  var snap=document.getElementById("snapBtn");
+  if(snap) snap.style.display="none";
+  var send=document.getElementById("sendBtn");
+  if(send){send.style.display="flex";send.textContent="Registrar llegada";}
+}
+
+function pararCamara(){
+  if(_camStream){
+    _camStream.getTracks().forEach(function(t){t.stop();});
+    _camStream=null;
+  }
+}
+
+function tomarFoto(){
+  var video=document.getElementById("camVideo");
+  var canvas=document.getElementById("camCanvas");
+  if(!video||!canvas) return;
+  // Resize to max 640px wide
+  var maxW=480,w=video.videoWidth||480,h=video.videoHeight||360;
+  if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+  canvas.width=w; canvas.height=h;
+  canvas.getContext("2d").drawImage(video,0,0,w,h);
+  _selfieB64=canvas.toDataURL("image/jpeg",0.35);
+  pararCamara();
+  // Show preview
+  var wrap=document.getElementById("camWrap");
+  if(wrap) wrap.style.display="none";
+  var prev=document.getElementById("selfiePreview");
+  if(prev){prev.style.display="block";document.getElementById("selfieImg").src=_selfieB64;}
+  var snap=document.getElementById("snapBtn");
+  if(snap) snap.style.display="none";
+  var send=document.getElementById("sendBtn");
+  if(send) send.style.display="flex";
+}
+
+function saltarFoto(){
+  pararCamara();
+  _selfieB64=null;
+  iniciarEnvio();
+}
+
+function iniciarEnvio(){
+  // BUG #3 FIX: Lock para prevenir doble envío por tap rápido o reintento concurrente
+  if(_ciEnviando){return;}
+  _ciEnviando=true;
+  pararCamara();
+  var btn=document.getElementById("sendBtn");
+  if(btn){btn.disabled=true;btn.innerHTML="<span class='spin'></span> Obteniendo ubicacion...";}
+  // Get GPS — obligatorio para validar presencia en sucursal
+  if(!navigator.geolocation){
+    _ciEnviando=false;
+    mostrarResultado("err","&#x1F4CD;","GPS no disponible","Tu navegador no soporta GPS. Usa Chrome o Safari actualizados.",false);
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    function(p){
+      if(p.coords.accuracy>50){
+        _ciEnviando=false;
+        mostrarResultado("err","📍","Señal GPS imprecisa","Tu GPS tiene precisión de "+Math.round(p.coords.accuracy)+"m. Sal al exterior, aléjate de paredes y espera 10 segundos.",true);
+        return;
+      }
+      enviarCheckin(p.coords.latitude,p.coords.longitude);
+    },
+    function(err){
+      _ciEnviando=false;
+      var msgs={1:"Bloqueaste el acceso a tu ubicacion. Ve a Configuracion del navegador y permite el GPS para este sitio.",2:"Tu GPS no pudo obtener una ubicacion. Sal al exterior o desactiva el WiFi e intenta de nuevo.",3:"El GPS tardó demasiado. Intenta de nuevo en un lugar con mejor señal."};
+      mostrarResultado("err","📍","Ubicacion no disponible",msgs[err.code]||"No se pudo obtener tu ubicacion. Activa el GPS e intenta de nuevo.",true);
+    },
+    {timeout:15000,maximumAge:0,enableHighAccuracy:true}
+  );
+}
+
+async function enviarCheckin(lat,lng){
+  var btn=document.getElementById("sendBtn");
+  if(btn) btn.innerHTML="<span class='spin'></span> "+(_selfieB64?"Subiendo foto..":"Registrando...");
+  var st=document.getElementById("ciStatus");
+  if(st){
+    var progMsg=_selfieB64?"Subiendo foto... no cierres esta pantalla":"Procesando tu llegada...";
+    st.innerHTML="<div class='prog-wrap'><div class='prog-bar-bg'><div class='prog-bar' id='pb'></div></div>"+progMsg+"</div>";
+    setTimeout(function(){var pb=document.getElementById("pb");if(pb)pb.style.width="40%";},200);
+  }
+  var ua=navigator.userAgent.substring(0,80);
+  var token_disp=getToken();
+
+  if(!token_disp){
+    mostrarResultado("err","&#x26D4;","Sin token local","localStorage vac\xedo. El enrolamiento no guard\xf3 token. Recarga el enlace de activaci\xf3n y vuelve a activar.",false);return;
+  }
+
+  // ── FLUJO 1: Supabase directo (celular remoto) ──
+  if(_sb&&token_disp){
+    try{
+      var pb2=document.getElementById("pb");if(pb2)pb2.style.width="55%";
+      // Validar dispositivo
+      var {data:dispRow,error:dispErr}=await _sb.from('rh_dispositivos').select('emp_id,activo,rh_empleados(sucursal)').eq('token',token_disp).single();
+      if(dispErr||!dispRow||!dispRow.activo){
+        var dbg="tk_local="+((token_disp||"NULL").substring(0,12))+" | err="+(dispErr?dispErr.code||"err":"-")+" | row="+(dispRow?"si":"no")+" | act="+(dispRow?dispRow.activo:"-");
+        mostrarResultado("err","&#x26D4;","No registrado",dbg,false);return;
+      }
+      var empId=dispRow.emp_id;
+      var hoyStr=fechaLocalCST(); // fecha local Chiapas CST
+      // Seed eliminado — validacion 100% por GPS (radio 100m)
+      // Verificar duplicado
+      var {data:dupRow}=await _sb.from('rh_checkin_logs').select('id,hora').eq('emp_id',empId).eq('fecha',hoyStr).eq('estado','ok').maybeSingle();
+      if(dupRow){mostrarResultado("warn","&#x2714;","Ya marcaste","Ya registraste tu asistencia hoy a las "+dupRow.hora+". Buen dia!",false);return;}
+      // Subir selfie a Storage si hay foto
+      var selfieUrl=null;
+      if(_selfieB64){
+        var pb3=document.getElementById("pb");if(pb3)pb3.style.width="75%";
+        try{
+          var parts=_selfieB64.split(",");
+          var mime=parts[0].match(/:(.*?);/)[1];
+          var bin=atob(parts[1]);var arr=new Uint8Array(bin.length);
+          for(var ii=0;ii<bin.length;ii++) arr[ii]=bin.charCodeAt(ii);
+          var blob=new Blob([arr],{type:mime});
+          var fDate=hoyStr.replace(/-/g,'');
+          var fname="checkin/"+fDate+"/suc"+sucId+"/"+Date.now()+"_emp"+empId+".jpg";
+          var upRes=await _sb.storage.from('checkin-selfies').upload(fname,blob,{contentType:'image/jpeg',upsert:true});
+          if(!upRes.error){var {data:signedData,error:signErr}=await _sb.storage.from('checkin-selfies').createSignedUrl(fname,86400);selfieUrl=(!signErr&&signedData)?signedData.signedUrl:null;}
+        }catch(ex){}
+      }
+      // GPS obligatorio — sin ubicacion no se puede marcar
+      if(!lat||!lng){
+        mostrarResultado("err","&#x1F4CD;","Ubicacion requerida","Activa el GPS de tu celular y recarga la pagina. Sin ubicacion no se puede verificar que estas en la sucursal.",true);return;
+      }
+      // Calcular estado GPS
+      var estadoGPS='ok';var dist=null;
+      if(lat&&lng){
+        var {data:sucRow}=await _sb.from('rh_sucursales').select('lat,lng,radio,nombre').eq('id',sucId).single();
+        var empSuc=dispRow.rh_empleados&&dispRow.rh_empleados.sucursal;
+        var fueraAsignacion=false;
+        if(empSuc && sucRow && empSuc!==sucRow.nombre){
+          fueraAsignacion=true;
+        }
+        if(sucRow&&sucRow.lat&&sucRow.lng){
+          var R=6371000,r=Math.PI/180;
+          var dLat=(lat-sucRow.lat)*r,dLng=(lng-sucRow.lng)*r;
+          var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(sucRow.lat*r)*Math.cos(lat*r)*Math.sin(dLng/2)*Math.sin(dLng/2);
+          dist=Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
+          estadoGPS=dist<=(sucRow.radio||100)?'ok':'fuera_rango';
+        }
+      }
+      var hora=(function(){var d=new Date();return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);})();
+      // Obtener nombre ANTES del insert para incluirlo en el log (kiosk realtime lo necesita)
+      var {data:empRow}=await _sb.from('rh_empleados').select('nombre').eq('id',empId).single();
+      var nombre=empRow?empRow.nombre:"Empleado";
+      if(estadoGPS==='fuera_rango' && !fueraAsignacion){
+        mostrarResultado("err","&#x1F4CD;","Fuera de rango","Estas a "+dist+" metros de la sucursal. Debes estar a menos de "+(sucRow&&sucRow.radio||100)+" metros para registrar tu llegada.",true);return;
+      }
+      var pb4=document.getElementById("pb");if(pb4)pb4.style.width="90%";
+      // Insertar log con emp_nombre para kiosk realtime
+      // hora y fecha NO se envían — Supabase las asigna con el trigger server_timestamp
+      // REQUIERE: ALTER TABLE rh_checkin_logs ADD COLUMN fuera_asignacion boolean DEFAULT false;
+      var _insPayload={emp_id:empId,emp_nombre:nombre,suc_id:sucId,lat:lat,lng:lng,dist:dist,estado:estadoGPS,ua:ua,selfie_url:selfieUrl,fuera_asignacion:fueraAsignacion};
+      var _insRes=await _sb.from('rh_checkin_logs').insert(_insPayload).select('hora').single();
+      if(_insRes.error && _insRes.error.code==='42703'){
+        delete _insPayload.fuera_asignacion;
+        _insRes=await _sb.from('rh_checkin_logs').insert(_insPayload).select('hora').single();
+      }
+      var logData=_insRes.data,logErr=_insRes.error;
+      if(logErr){
+        // Manejar violación de constraint único (doble check-in por race condition)
+        if(logErr.code==='23505'){
+          var {data:dup2}=await _sb.from('rh_checkin_logs').select('hora').eq('emp_id',empId).eq('fecha',hoyStr).eq('estado','ok').maybeSingle();
+          mostrarResultado("warn","&#x2714;","Ya marcaste","Ya registraste tu asistencia hoy"+(dup2?' a las '+dup2.hora:'')+". ¡Buen dia!",false);return;
+        }
+        throw new Error(logErr.message);
+      }
+      var pb5=document.getElementById("pb");if(pb5)pb5.style.width="100%";
+      var fotoHtml=selfieUrl?"<img src='"+selfieUrl+"' style='width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;border:2px solid #86efac'>": "";
+      var horaFinal=(logData&&logData.hora)||hora;
+      var _crossMsg=fueraAsignacion?"<br><small style='color:#92400e'>&#x26A0; Marcaste en sucursal distinta a tu asignaci\xf3n. Registrado en auditor\xeda.</small>":"";
+      mostrarResultado("ok","","Llegada registrada",fotoHtml+"Buen dia, <strong>"+nombre+"</strong>!<br>"+horaFinal+_crossMsg,false);
+      return;
+    }catch(ex){
+      // Supabase failed — try postMessage fallback
+      console.warn('CI Supabase error:',ex);
+    }
+  }
+
+  // ── FLUJO 2: postMessage (kiosk — misma PC) ──
+  var payload={type:"ferrecheckin",payload:{token_disp:token_disp,suc_id:sucId,seed:seed,lat:lat,lng:lng,ua:ua,selfie_b64:_selfieB64,hora_servidor:(typeof logData!=='undefined'&&logData?logData.hora:null)}};
+  var sent=false;
+  var _pOrigin=getParentOrigin();
+  if(window.opener){window.opener.postMessage(payload,_pOrigin);sent=true;}
+  if(window.parent&&window.parent!==window){window.parent.postMessage(payload,_pOrigin);sent=true;}
+
+  if(!sent){
+    // Sin internet = sin check-in (evita fraude de hora y GPS offline)
+    mostrarResultado("err","&#x1F4F5;","Sin conexion a internet","Necesitas internet para registrar tu asistencia. Activa tus datos moviles o WiFi e intenta de nuevo.",true);
+    return;
+  }
+
+  // Wait for result — use {once:true} to prevent listener accumulation
+  var timer=setTimeout(function(){
+    mostrarResultado("warn","&#x23F1;","Sin respuesta","El sistema tardo en responder. Avisa a tu gerente que verifique tu asistencia.",true);
+  },15000);
+
+  function onResult(ev){
+    if(!ev.data||ev.data.type!=="ferrecheckin_result")return;
+    // Accept: same origin, netlify.app, localhost, or when parent is same origin
+    var _o=ev.origin||'';
+    var _myOrigin=window.location.origin;
+    var _ok=(_o==='null')||(_o===_myOrigin)||(_o.indexOf('netlify.app')!==-1)||(_o.indexOf('localhost')!==-1)||(_o.indexOf('127.0.0.1')!==-1)||(_o.indexOf('ferrepinturas')!==-1);
+    if(!_ok)return;
+    clearTimeout(timer);
+    window.removeEventListener("message",onResult);
+    var r=ev.data.result;
+    var pb=document.getElementById("pb");if(pb)pb.style.width="100%";
+    if(r.ok){
+      var fotoHtml=r.selfie_url?"<img src='"+r.selfie_url+"' style='width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;border:2px solid #86efac'>":"";
+      mostrarResultado("ok","",
+        "Llegada registrada",
+        fotoHtml+"Buen dia, <strong>"+(r.nombre||"")+"</strong>!<br>"+horaStr()+"",
+        false);
+    } else {
+      var msg=r.msg||"Algo salio mal.";
+      if(msg.indexOf("enrol")!==-1||msg.indexOf("dispositivo")!==-1) msg="Este celular no esta activado. Avisa a tu gerente.";
+      else if(msg.indexOf("QR")!==-1||msg.indexOf("expirado")!==-1) msg="El codigo QR no es de hoy. Escanea el que esta en tu sucursal ahora.";
+      else if(msg.indexOf("rango")!==-1) msg="Estas lejos de la sucursal. Asegurate de estar adentro del local.";
+      mostrarResultado("err","&#x26D4;","No se registro",msg,true);
+    }
+  }
+  window.addEventListener("message",onResult);
+}
+
+function mostrarResultado(tipo,icon,titulo,detalle,retry){
+  pararCamara();
+  var body=document.getElementById("cardBody");
+  if(!body) return;
+  body.innerHTML=
+    "<div class='status "+tipo+"'>"+
+    (icon?"<span class='status-icon'>"+icon+"</span>":"")+
+    "<span class='status-title'>"+titulo+"</span>"+
+    "<span class='status-msg'>"+detalle+"</span>"+
+    "</div>"+
+    (retry?"<button class='big-btn' style='margin-top:16px' onclick='location.reload()'>Intentar de nuevo</button>":"");
+}
+
+// ════════════════════════════════════════════
+// ERROR GENERICO
+// ════════════════════════════════════════════
+function renderError(titulo,msg){
+  document.getElementById("app").innerHTML=
+    "<div class='logo'>Ferrepinturas de Tuxtla</div>"+
+    "<div class='card'><div class='card-body' style='text-align:center;padding:32px 24px'>"+
+    "<div style='font-size:48px;margin-bottom:12px'>&#x1F50D;</div>"+
+    "<div style='font-size:18px;font-weight:700;color:#1f2937;margin-bottom:8px'>"+titulo+"</div>"+
+    "<div style='font-size:14px;color:var(--dim);line-height:1.7'>"+msg+"</div>"+
+    "</div></div>";
+}
+
+// Cleanup camera on page hide/unload
+document.addEventListener("visibilitychange",function(){if(document.hidden)pararCamara();});
+window.addEventListener("beforeunload",function(){pararCamara();});
+</script>
+</body>
+</html>
