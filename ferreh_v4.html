@@ -1331,6 +1331,7 @@ async function syncAll(){
     // Empleados
     for(var i=0;i<emp.length;i++){
       var e=emp[i];
+      if(!e.id) continue;
       await sb.from('rh_empleados').upsert(mapEmpToDB(e));
     }
     // Sucursales
@@ -3719,18 +3720,27 @@ function procesarCheckin(payload){
   var permHoy=null;
   (permisos[empId]||[]).forEach(function(p){if(!permHoy&&p.fecha===hoy&&p.aprobado)permHoy=p;});
   if(permHoy){return {ok:true,msg:'Asistencia registrada (permiso autorizado)',estado:'permiso'};}
-  // Validate GPS
+  // Validate GPS: allow check-in at ANY active sucursal within range
   var s=suc.find(function(x){return x.id===payload.suc_id;});
-  var dist=null,estadoGPS='sin_gps';
-  if(s&&s.lat&&s.lng&&payload.lat&&payload.lng){
-    dist=distGPS(s.lat,s.lng,payload.lat,payload.lng);
-    estadoGPS=dist<=s.radio?'ok':'fuera_rango';
-  } else {
-    estadoGPS='ok';// No GPS config yet — accept but flag
-  }
+  var dist=null,estadoGPS='sin_gps',sucDetectadaId=payload.suc_id;
+  if(payload.lat&&payload.lng){
+    var sucActivas=suc.filter(function(x){return x.activa!==false&&x.lat&&x.lng&&x.radio;});
+    if(!sucActivas.length){estadoGPS='ok';}
+    else{
+      var sucCercana=null,distMin=Infinity;
+      sucActivas.forEach(function(sx){var d=distGPS(sx.lat,sx.lng,payload.lat,payload.lng);if(d<=sx.radio&&d<distMin){sucCercana=sx;distMin=d;}});
+      if(sucCercana){
+        dist=distMin;estadoGPS='ok';sucDetectadaId=sucCercana.id;
+        if(sucCercana.id!==payload.suc_id){
+          audit('check-in-remoto','Check-in en sucursal diferente a la asignada',
+            'GPS: '+sucCercana.nombre+' | Asignada: '+e.sucursal,empId,e.sucursal,sucCercana.nombre);
+        }
+      } else {estadoGPS='fuera_rango';}
+    }
+  } else {estadoGPS='ok';}
   // Check cobertura autorizada (sustituto en otra suc)
   var cobHoy=ciCoberturas.find(function(c){return c.sustituto_id===empId&&c.fecha===hoy;});
-  var sucIdReal=cobHoy?cobHoy.suc_id:payload.suc_id;
+  var sucIdReal=cobHoy?cobHoy.suc_id:sucDetectadaId;
   if(cobHoy&&cobHoy.suc_id!==payload.suc_id){estadoGPS='cobertura';}
   // Avoid duplicate
   var yaMarcado=ciLogs.find(function(l){return l.emp_id===empId&&l.fecha===hoy&&l.estado==='ok';});
@@ -5696,10 +5706,10 @@ function generarHTMLActa(e){
     '<p>Observaciones: ________________________________________________________________________</p>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px;margin-top:40px">'+
     ['Trabajador — Nombre y firma<br><b>'+sane(e.nombre)+'</b>',
-     'Supervisor / RH — Nombre y firma<br>Ferrepinturas de Tuxtla',
+     'Patrón / Representante — Nombre y firma<br>Ferrepinturas de Tuxtla',
      'Testigo 1 — Nombre y firma',
      'Testigo 2 — Nombre y firma'
-    ].map(function(r){return '<div style="text-align:center;padding-top:40px;border-top:1px solid #333;font-size:10px;color:#555">'+r+'</div>';}).join('')+
+    ].map(function(r){return '<div class="fbox">'+r+'</div>';}).join('')+
     '</div>';
 }
 
@@ -6210,6 +6220,7 @@ function renderPago(){
     var html='';
     sucs.forEach(function(s){
       var emps=lista.filter(function(e){return e.sucursal===s;});
+      emps.sort(function(a,b){return a.nombre.localeCompare(b.nombre,'es');});
       var totalSuc=0;
       var semKey=fechas[0]||'sem';
       var estadoPagoSem=JSON.parse(localStorage.getItem('ferreos_pago_'+semKey)||'{}');
@@ -6423,6 +6434,8 @@ function iniciarRealtime(){
             }
             emp[idx]=updated;
           } else {
+            var yaExiste=emp.some(function(x){return x.nombre===updated.nombre;});
+            if(yaExiste) return;
             emp.push(updated);
           }
           if(nEmp<=updated.id) nEmp=updated.id+1;
