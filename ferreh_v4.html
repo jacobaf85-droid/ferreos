@@ -283,10 +283,13 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
 /* Contrato preview */
 .contrato-preview{background:#fafaf8;border:1px solid var(--border);padding:20px;font-size:12px;line-height:1.8;font-family:Georgia,serif;white-space:pre-line;}
 @media print {
-  body > *:not(.modal-recibo-active) { display: none !important; }
+  body > *:not(.modal-recibo-active):not(.rm-wrap):not(.scr) { display: none !important; }
+  .scr { display: block !important; }
   .modal-recibo-active { position: static !important; background: white !important; box-shadow: none !important; }
   .modal-recibo-active .mhd .mclose,
   .modal-recibo-active .mfoot { display: none !important; }
+  .rm-wrap { position: static !important; background: none !important; padding: 0 !important; }
+  .rm-wrap .rm-footer { display: none !important; }
 }
 
 /* ════════════════════════════════════════════════
@@ -938,7 +941,7 @@ tbody tr.prob{background:#1a0808!important;}
   <div style="margin-top:12px" id="reglamentoFirmaBtns"></div>
 </div><div class="mfoot">
   <button class="btn bo" onclick="cm('modalReglamento')">Cerrar</button>
-  <button class="btn bn" onclick="window.print()">🖨 Imprimir</button>
+  <button class="btn bn" onclick="document.querySelector('.rm-wrap') ? (function(){ var w=document.querySelector('.rm-wrap'); w.classList.add('modal-recibo-active'); window.print(); setTimeout(function(){ w.classList.remove('modal-recibo-active'); },500); })() : window.print()">🖨 Imprimir</button>
 </div></div></div>
 
 <div class="toast" id="toast"></div>
@@ -1253,7 +1256,7 @@ async function syncFromCloud(){
       });
       S.set('prestamos',prestamos);
     }
-    if(r6.data){contratos=r6.data;S.set('contratos',contratos);
+    if(r6.data&&r6.data.length){contratos=r6.data;S.set('contratos',contratos);
       var _maxC=contratos.reduce(function(m,c){return Math.max(m,c.id||0);},0);
       if(_maxC>=nContrato){nContrato=_maxC+1;S.set('nContrato',nContrato);}
     }
@@ -1388,7 +1391,7 @@ function mapSucFromDB(r){return{id:r.id,nombre:r.nombre,ciudad:r.ciudad,activa:r
 async function pushEmp(e){if(!sb)return;try{await sb.from('rh_empleados').upsert(mapEmpToDB(e));}catch(ex){}}
 async function pushSuc(s){if(!sb)return;try{await sb.from('rh_sucursales').upsert(mapSucToDB(s));}catch(ex){}}
 async function pushInc(fecha,empId){if(!sb)return;try{await sb.from('rh_asistencia').upsert({fecha:fecha,emp_id:empId,datos:inc[fecha][empId]},{onConflict:'fecha,emp_id'});}catch(ex){}}
-async function pushContrato(c){if(!sb)return;try{await sb.from('rh_contratos').upsert(c);}catch(ex){}}
+async function pushContrato(c){if(!sb)return;try{var res=await sb.from('rh_contratos').upsert(c);if(res.error){console.error('[pushContrato] ERROR:',res.error.message,res.error.details,JSON.stringify(c));msg('Error al guardar contrato en nube: '+res.error.message,true);}}catch(ex){console.error('[pushContrato] CATCH:',ex);}}
 async function pushEval(e){if(!sb||!e.id)return;try{await sb.from('rh_evaluaciones').upsert(e,{onConflict:'id'});}catch(ex){}}
 async function pushPerm(empId){if(!sb)return;try{var rows=(permisos[empId]||[]).map(function(p){return Object.assign({emp_id:parseInt(empId)},p);});if(rows.length)await sb.from('rh_permisos').upsert(rows);}catch(ex){}}
 async function pushPrestamo(empId){if(!sb)return;try{var rows=(prestamos[empId]||[]).map(function(p){return Object.assign({emp_id:parseInt(empId)},p);});if(rows.length)await sb.from('rh_prestamos').upsert(rows);}catch(ex){}}
@@ -2722,6 +2725,7 @@ function guardarEval(){
     creado_en:hoyFecha()
   };
   evaluaciones.push(ev);
+  ev._localPush = true;
   S.set('evaluaciones',evaluaciones);S.set('nEval',nEval);
   pushEval(ev);
   cm('modalEval');renderEvaluaciones();msg('Evaluación guardada');
@@ -4444,7 +4448,18 @@ window.addEventListener('message',function(ev){
 window.addEventListener('message',function(ev){
   if(!ev.data||ev.data.tipo!=='guardar_firma')return;
   var d=ev.data;
-  if(!sb){alert('Sin conexión a Supabase — firma no guardada');return;}
+  if(!sb){
+    // Guardar localmente si Supabase no disponible
+    try{
+      var r=S.get(d.key,{});
+      if(!r[d.empId])r[d.empId]={};
+      r[d.empId][d.campo]=d.dataUrl;
+      r[d.empId].fecha=new Date().toISOString();
+      S.set(d.key,r);
+      msg('✓ Firma guardada localmente (sin conexión a nube)');
+    }catch(ex){alert('Error al guardar firma: '+ex.message);}
+    return;
+  }
   (async function(){
     try{
       var res=await fetch(d.dataUrl);
@@ -4739,6 +4754,7 @@ function abrirFirma(titulo,callback){
   document.getElementById('mFirmaT').textContent=titulo||'Capturar firma digital';
   firmaCallback=callback;
   om('modalFirma');
+  document.getElementById('modalFirma').style.zIndex='4000';
   setTimeout(iniciarFirmaCanvas,100);
 }
 function confirmarFirma(){
@@ -6478,7 +6494,10 @@ function iniciarRealtime(){
       })
       // Contratos: solo actualiza el contrato que cambió
       .on('postgres_changes',{event:'*',schema:'public',table:'rh_contratos'},function(payload){
-        if(payload.new&&payload.new.id){
+        if(payload.eventType==='DELETE'&&payload.old&&payload.old.id){
+          contratos=contratos.filter(function(x){return x.id!==payload.old.id;});
+          S.set('contratos',contratos);renderHome();renderContratos();
+        } else if(payload.new&&payload.new.id){
           var idx=contratos.findIndex(function(x){return x.id===payload.new.id;});
           if(idx>=0) contratos[idx]=payload.new; else contratos.push(payload.new);
           S.set('contratos',contratos);renderHome();renderContratos();
@@ -6547,7 +6566,13 @@ function iniciarRealtime(){
         }
         if(payload.new&&payload.new.id){
           var idx=evaluaciones.findIndex(function(x){return x.id===payload.new.id;});
-          if(idx>=0){evaluaciones[idx]=payload.new;}else{evaluaciones.push(payload.new);}
+          if(idx>=0){
+            evaluaciones[idx]=payload.new;
+          } else {
+            // Evitar duplicado si ya fue insertado localmente
+            var yaExiste=evaluaciones.some(function(x){return x.id===payload.new.id;});
+            if(!yaExiste) evaluaciones.push(payload.new);
+          }
           S.set('evaluaciones',evaluaciones);
           if(document.getElementById('scr-evaluaciones')&&document.getElementById('scr-evaluaciones').classList.contains('on'))renderEvaluaciones();
         }
