@@ -6142,10 +6142,7 @@ toggleDesc=function(empId,f,val){
 
 // Crear tabla auditoria en Supabase si no existe (se ejecuta una vez)
 async function crearTablaAuditoria(){
-  if(!sb)return;
-  try{
-    await sb.rpc('exec_sql',{sql:'create table if not exists rh_auditoria (id bigint primary key, ts timestamptz, usuario text, rol text, tipo text, accion text, detalle text, emp_id int, emp_nombre text, valor_anterior text, valor_nuevo text);'});
-  }catch(e){}
+  // Tabla rh_auditoria ya existe en Supabase — función desactivada
 }
 
 var _renderExpedienteRHDocs=renderExpediente;

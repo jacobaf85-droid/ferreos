@@ -58,7 +58,7 @@ body{background:var(--bg);display:flex;flex-direction:column;align-items:center;
 .help strong{color:var(--navy);}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -121,10 +121,11 @@ function getParentOrigin(){
     if(window.opener&&window.opener.location) return window.opener.location.origin;
     if(window.parent&&window.parent!==window&&window.parent.location) return window.parent.location.origin;
   }catch(e){}
-  return '*'; // fallback for cross-origin (less ideal but needed for some browsers)
+  return null;
 }
 function postToParent(data){
   var origin=getParentOrigin();
+  if(!origin)return;
   if(window.opener) window.opener.postMessage(data,origin);
   if(window.parent&&window.parent!==window) window.parent.postMessage(data,origin);
 }
@@ -230,7 +231,11 @@ function renderKiosk(){
   }
 }
 
+if(!window._kioskSeen)window._kioskSeen=new Set();
 function addKioskEntry(nombre, fotoUrl){
+  var _key=nombre+'_'+new Date().toDateString();
+  if(window._kioskSeen.has(_key))return;
+  window._kioskSeen.add(_key);
   var log=document.getElementById("kLog");
   var ph=document.getElementById("kPlaceholder");
   if(ph) ph.remove();
@@ -455,10 +460,32 @@ function iniciarCamara(){
     .then(function(stream){
       clearTimeout(camTimeout);
       _camStream=stream;
+      // Verificar que el track de video esté activo
+      var tracks=stream.getVideoTracks();
+      if(!tracks||tracks.length===0||tracks[0].readyState==='ended'){
+        clearTimeout(camTimeout);
+        ocultarCamara();
+        var loader=document.getElementById("camLoader");
+        if(loader){loader.style.display="block";loader.textContent="Camara no disponible en este dispositivo. Continua sin foto.";loader.style.color="#d97706";loader.style.fontSize="13px";loader.style.padding="12px";}
+        var send=document.getElementById("sendBtn");
+        if(send){send.style.display="flex";send.textContent="Registrar llegada sin foto";}
+        return;
+      }
       video.srcObject=stream;
-      video.onloadedmetadata=function(){
+      video.play().then(function(){
         if(loader) loader.style.display="none";
-      };
+        // Verificar que realmente hay imagen después de 2s
+        setTimeout(function(){
+          if(video.videoWidth===0||video.videoHeight===0){
+            ocultarCamara();
+            if(loader){loader.style.display="block";loader.textContent="Camara activada pero sin imagen. Continua sin foto.";loader.style.color="#d97706";loader.style.fontSize="13px";loader.style.padding="12px";}
+            var send=document.getElementById("sendBtn");
+            if(send){send.style.display="flex";send.textContent="Registrar llegada sin foto";}
+          }
+        },2000);
+      }).catch(function(){
+        if(loader) loader.style.display="none";
+      });
     })
     .catch(function(err){
       clearTimeout(camTimeout);
@@ -519,6 +546,8 @@ function saltarFoto(){
 }
 
 function iniciarEnvio(){
+  if(window.__ciBusy)return;
+  window.__ciBusy=true;
   // BUG #3 FIX: Lock para prevenir doble envío por tap rápido o reintento concurrente
   if(_ciEnviando){return;}
   _ciEnviando=true;
@@ -670,9 +699,29 @@ async function enviarCheckin(lat,lng){
     return;
   }
 
-  // Wait for result — use {once:true} to prevent listener accumulation
+  // Wait for result — cleanup guard prevents double-fire and listener leak
+  var cleaned=false;
+  function cleanup(){
+    if(cleaned)return;
+    cleaned=true;
+    clearTimeout(timer);
+    window.removeEventListener("message",onResult);
+  }
   var timer=setTimeout(function(){
-    mostrarResultado("warn","&#x23F1;","Sin respuesta","El sistema tardo en responder. Avisa a tu gerente que verifique tu asistencia.",true);
+    cleanup();
+    var _empIdT=typeof empId!=='undefined'?empId:null;
+    var _fechaT=new Date().toISOString().slice(0,10);
+    if(_empIdT&&typeof sb!=='undefined'&&sb){
+      sb.from('rh_checkin_logs').select('id').eq('emp_id',_empIdT).eq('fecha',_fechaT).limit(1).then(function(r){
+        if(r.data&&r.data.length){
+          mostrarResultado("ok","✓","Asistencia registrada","Tu registro fue confirmado en el sistema.",false);
+        } else {
+          mostrarResultado("warn","&#x23F1;","Sin respuesta","El sistema tardo en responder. Avisa a tu gerente que verifique tu asistencia.",true);
+        }
+      });
+    } else {
+      mostrarResultado("warn","&#x23F1;","Sin respuesta","El sistema tardo en responder. Avisa a tu gerente que verifique tu asistencia.",true);
+    }
   },15000);
 
   function onResult(ev){
@@ -680,10 +729,10 @@ async function enviarCheckin(lat,lng){
     // Accept: same origin, netlify.app, localhost, or when parent is same origin
     var _o=ev.origin||'';
     var _myOrigin=window.location.origin;
-    var _ok=(_o==='null')||(_o===_myOrigin)||(_o.indexOf('netlify.app')!==-1)||(_o.indexOf('localhost')!==-1)||(_o.indexOf('127.0.0.1')!==-1)||(_o.indexOf('ferrepinturas')!==-1);
+    var _h=_o==='null'?'null':(function(){try{return new URL(_o).hostname;}catch(e){return '';}}());
+    var _ok=(_o===_myOrigin)||(_h==='localhost')||(_h==='127.0.0.1')||(_h==='rrhhftpops.netlify.app')||(_h==='ferrepinturas.netlify.app');
     if(!_ok)return;
-    clearTimeout(timer);
-    window.removeEventListener("message",onResult);
+    cleanup();
     var r=ev.data.result;
     var pb=document.getElementById("pb");if(pb)pb.style.width="100%";
     if(r.ok){
@@ -704,6 +753,7 @@ async function enviarCheckin(lat,lng){
 }
 
 function mostrarResultado(tipo,icon,titulo,detalle,retry){
+  window.__ciBusy=false;
   pararCamara();
   var body=document.getElementById("cardBody");
   if(!body) return;

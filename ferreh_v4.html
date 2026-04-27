@@ -282,15 +282,6 @@ tfoot td{background:#f2f1ed!important;font-family:var(--mono);font-size:10px;fon
 .star.off{color:#d1d5db;}
 /* Contrato preview */
 .contrato-preview{background:#fafaf8;border:1px solid var(--border);padding:20px;font-size:12px;line-height:1.8;font-family:Georgia,serif;white-space:pre-line;}
-@media print {
-  body > *:not(.modal-recibo-active):not(.rm-wrap):not(.scr) { display: none !important; }
-  .scr { display: block !important; }
-  .modal-recibo-active { position: static !important; background: white !important; box-shadow: none !important; }
-  .modal-recibo-active .mhd .mclose,
-  .modal-recibo-active .mfoot { display: none !important; }
-  .rm-wrap { position: static !important; background: none !important; padding: 0 !important; }
-  .rm-wrap .rm-footer { display: none !important; }
-}
 
 /* ════════════════════════════════════════════════
    INDUSTRIAL TÁCTICO · DARK MODE v4.2
@@ -791,7 +782,7 @@ tbody tr.prob{background:#1a0808!important;}
     <div><div class="ph-title">📄 Finiquitos</div><div class="ph-sub">Liquidaciones y bajas de empleados (LFT)</div></div>
     <div class="ph-acts">
       <button class="btn bo" onclick="go('home')">← Inicio</button>
-      <button class="btn bn" onclick="abrirFiniquito()" style="display:none">+ Nuevo finiquito</button>
+      <button class="btn bn" onclick="abrirFiniquito()">+ Nuevo finiquito</button>
     </div>
   </div>
   <div id="finiquitosContent"></div>
@@ -1072,7 +1063,6 @@ var docArchivos=S.get('docArchivos',{});
 var prestamos=S.get('prestamos',{});
 var nPrestamo=S.get('nPrestamo',1);
 var contratos=S.get('contratos',[]);
-var nContrato=S.get('nContrato',1);
 var finiquitos=S.get('finiquitos',[]);
 var nFiniquito=S.get('nFiniquito',1);
 // ── CHECK-IN ──
@@ -1229,7 +1219,7 @@ async function syncFromCloud(){
       Promise.resolve(sb.from('rh_bonos_ajuste').select('*')).catch(function(){return {data:[]};}),
       Promise.resolve(sb.from('rh_actas').select('*')).catch(function(){return {data:[]};})
     ]);
-    if(r1.data&&r1.data.length){emp=r1.data.map(mapEmpFromDB);S.set('emp',emp);}
+    if(r1.data&&r1.data.length){emp=r1.data.map(mapEmpFromDB);}
     if(r2.data&&r2.data.length){suc=r2.data.map(mapSucFromDB);S.set('suc',suc);try{localStorage.setItem('ferre_suc_cache',JSON.stringify(suc.map(function(s){return {id:s.id,nombre:s.nombre,lat:s.lat,lng:s.lng,radio:s.radio};})));}catch(ex){}}
     if(r3.data&&r3.data.length){
       inc={};
@@ -1257,8 +1247,6 @@ async function syncFromCloud(){
       S.set('prestamos',prestamos);
     }
     if(r6.data&&r6.data.length){contratos=r6.data;S.set('contratos',contratos);
-      var _maxC=contratos.reduce(function(m,c){return Math.max(m,c.id||0);},0);
-      if(_maxC>=nContrato){nContrato=_maxC+1;S.set('nContrato',nContrato);}
     }
     if(r7.data){evaluaciones=r7.data;S.set('evaluaciones',evaluaciones);}
     // ── CI: dispositivos y logs desde Supabase ──
@@ -2063,7 +2051,7 @@ function renderEmpleados(filtro){
   });
   document.getElementById('tbEmp').innerHTML=rows||'<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--dim)">👥 No hay empleados en la plantilla. Usa el botón <strong>+ Agregar</strong> para comenzar.</td></tr>';
 }
-function toggleEmp(id){var e=emp.find(function(x){return x.id===id;});e.activo=!e.activo;S.set('emp',emp);pushEmp(e);renderEmpleados();renderHome();msg(e.nombre+' '+(e.activo?'reactivado':'dado de baja'));}
+function toggleEmp(id){var e=emp.find(function(x){return x.id===id;});e.activo=!e.activo;pushEmp(e);renderEmpleados();renderHome();msg(e.nombre+' '+(e.activo?'reactivado':'dado de baja'));}
 function togglePuestoOtro(){var sel=document.getElementById('ePuesto');var inp=document.getElementById('ePuestoOtro');if(inp)inp.style.display=sel.value==='Otro'?'block':'none';}
 function calcHoraModal(){var sal=parseFloat(document.getElementById('eSal').value)||0;document.getElementById('eHoraCalc').textContent=sal>0?'$'+fmt(sal/6/9)+'/hora':'— $/hora';}
 function poblarSucSel(){var sel=document.getElementById('eSuc');if(!sel)return;sel.innerHTML='';suc.filter(function(s){return s.activa;}).forEach(function(s){var o=document.createElement('option');o.value=o.textContent=s.nombre;sel.appendChild(o);});}
@@ -2108,7 +2096,7 @@ function guardarEmp(){
     sb.from('rh_empleados').update(mapEmpToDB(data)).eq('id',id).then(function(res){
       if(res.error){msg('Error al actualizar: '+res.error.message,true);return;}
       Object.assign(existente,data);
-      S.set('emp',emp);cm('modalEmp');renderEmpleados();renderHome();msg('Empleado actualizado');
+      cm('modalEmp');renderEmpleados();renderHome();msg('Empleado actualizado');
     }).catch(function(ex){msg('Error al actualizar: '+ex.message,true);});
   } else {
     if(!sb){msg('Sin conexión a Supabase. No se puede agregar empleado.',true);return;}
@@ -2118,7 +2106,7 @@ function guardarEmp(){
       data.id=res.data.id;
       emp.push(data);
       nEmp=res.data.id+1;
-      S.set('emp',emp);S.set('nEmp',nEmp);
+      S.set('nEmp',nEmp);
       renderEmpleados();renderHome();
       msg('Empleado agregado con ID '+res.data.id);
     }).catch(function(ex){msg('Error al guardar: '+ex.message,true);});
@@ -2529,7 +2517,7 @@ function guardarContrato(){
   if(!empId||!fechaIni){msg('Empleado y fecha inicio requeridos',true);return;}
   var e=emp.find(function(x){return x.id===empId;});
   var c={
-    id:nContrato++,emp_id:empId,emp_nombre:e?e.nombre:'',
+    id:Date.now(),emp_id:empId,emp_nombre:e?e.nombre:'',
     tipo:document.getElementById('cTipo').value,
     fecha_inicio:fechaIni,
     fecha_fin:document.getElementById('cFechaFin').value||null,
@@ -2547,7 +2535,7 @@ function guardarContrato(){
     creado_en:hoyFecha()
   };
   contratos.push(c);
-  S.set('contratos',contratos);S.set('nContrato',nContrato);
+  S.set('contratos',contratos);
   pushContrato(c);
   cm('modalContrato');renderContratos();renderHome();msg('Contrato registrado');
 }
@@ -4141,15 +4129,32 @@ function renderDashboard(){
 // ═══════════════════════════════════════════════════════════
 
 function renderFiniquitos(){
+  var rows=finiquitos.length?finiquitos.map(function(f){
+    var e=emp.find(function(x){return x.id===(f.empId||f.emp_id);});
+    var nombre=e?e.nombre:(f.empNombre||f.emp_nombre||'—');
+    var total=parseFloat(f.total||0);
+    var fmt=function(n){return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2});};
+    return '<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:10px 8px;font-weight:600">'+nombre+'</td>'+
+      '<td style="padding:10px 8px;color:var(--dim)">'+(f.fechaBaja||f.fecha_baja||'—')+'</td>'+
+      '<td style="padding:10px 8px;color:var(--dim)">'+(f.tipo||'—')+'</td>'+
+      '<td style="padding:10px 8px;font-weight:700;color:#16a34a">'+fmt(total)+'</td>'+
+      '<td style="padding:10px 8px">'+
+        '<button class="btn bo" style="font-size:11px;padding:3px 10px" onclick="abrirFiniquito('+(f.id||f.empId)+')">Editar</button> '+
+        '<button class="btn bn" style="font-size:11px;padding:3px 10px" onclick="verFiniquitoPDF('+(f.id||f.empId)+')">Ver PDF</button>'+
+      '</td>'+
+    '</tr>';
+  }).join(''):
+    '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--dim)">Sin finiquitos registrados. Usa <strong>+ Nuevo finiquito</strong>.</td></tr>';
   document.getElementById('finiquitosContent').innerHTML=
-    '<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:20px;margin:20px 0">'+
-    '<div style="font-weight:700;font-size:14px;color:#92400e;margin-bottom:8px">⚠ MÓDULO EN REDISEÑO</div>'+
-    '<div style="font-size:12px;color:#78350f;line-height:1.6">'+
-    'El cálculo automático de finiquitos está siendo rediseñado para cumplir estrictamente con LFT 2024, '+
-    'incluyendo factor SDI por antigüedad, descuento de préstamos activos, cálculo ISR y blindaje legal para defensa patronal.<br><br>'+
-    '<strong>NO usar para pagos reales hasta nuevo aviso.</strong><br><br>'+
-    'Para liquidaciones urgentes, calcular manualmente y validar con contador antes de pagar.'+
-    '</div></div>';
+    '<table style="width:100%;border-collapse:collapse;font-size:12px">'+
+    '<thead><tr style="border-bottom:2px solid var(--border)">'+
+    '<th style="text-align:left;padding:8px">Empleado</th>'+
+    '<th style="text-align:left;padding:8px">Fecha baja</th>'+
+    '<th style="text-align:left;padding:8px">Tipo</th>'+
+    '<th style="text-align:left;padding:8px">Total</th>'+
+    '<th style="text-align:left;padding:8px">Acciones</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
 function abrirFiniquito(id){
@@ -4224,6 +4229,153 @@ function fqCalcular(){
   el.dataset.desglose=JSON.stringify({aguinaldo,vacProp,primaVac,primaAntig,indem,total,dias,anos:Math.floor(anos)});
 }
 
+function generarNDA(e){
+  if(!e){msg('Empleado no encontrado',true);return;}
+  var sane=function(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  var fmt=function(n){return '$'+(parseFloat(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2});};
+  var esPuestoSensible=['RH','Sistemas','Gerente de sucursal','Gerente de operaciones','Administradora de sucursal'].indexOf(e.puesto||'')>=0;
+  var aniosConf=esPuestoSensible?3:2;
+  var folio='RH-NDA-'+String(Date.now()).slice(-6);
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8">'+
+    '<title>NDA — '+sane(e.nombre)+'</title>'+
+    '<style>body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:0;padding:24px}'+
+    'h1{font-size:15px;text-align:center;margin:0}h2{font-size:11px;text-align:center;color:#555;margin:2px 0 16px}'+
+    'h3{font-size:11px;background:#1A2B4A;color:#fff;padding:5px 8px;margin:14px 0 6px}'+
+    'table{width:100%;border-collapse:collapse;font-size:11px}'+
+    'th{background:#f0f0f0;padding:5px 8px;text-align:left;border:1px solid #ddd}'+
+    'td{padding:5px 8px;border:1px solid #ddd}'+
+    'ol,ul{font-size:11px;line-height:1.8;padding-left:18px}'+
+    '.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px}'+
+    '.fbox{border-top:1px solid #333;padding-top:8px;font-size:10px;text-align:center}'+
+    '@media print{body{padding:12px}.no-print{display:none}}</style></head><body>'+
+    '<div class="no-print" style="text-align:right;margin-bottom:12px">'+
+    '<button onclick="window.print()" style="padding:6px 18px;background:#1A2B4A;color:#fff;border:none;cursor:pointer;font-size:12px">🖨 Imprimir / PDF</button>'+
+    '<button onclick="window.close()" style="padding:6px 18px;margin-left:8px;border:1px solid #aaa;cursor:pointer;font-size:12px">✕ Cerrar</button></div>'+
+    '<h1>CONVENIO DE CONFIDENCIALIDAD Y NO DIVULGACIÓN</h1>'+
+    '<h2>FERREPINTURAS DE TUXTLA S.A.P.I. DE C.V.</h2>'+
+    '<p style="text-align:center;font-size:10px;color:#555">Folio: '+folio+' | Fecha: '+new Date().toLocaleDateString('es-MX')+'</p>'+
+    '<h3>I. PARTES</h3>'+
+    '<table><tr><td><b>EL PATRÓN</b></td><td>FERREPINTURAS DE TUXTLA S.A.P.I. DE C.V., representada por Karina Isabel — Directora General</td></tr>'+
+    '<tr><td><b>EL TRABAJADOR</b></td><td>'+sane(e.nombre)+'</td></tr>'+
+    '<tr><td><b>CURP</b></td><td>'+(e.curp||'________________')+'</td></tr>'+
+    '<tr><td><b>Puesto</b></td><td>'+sane(e.puesto||'—')+'</td></tr>'+
+    '<tr><td><b>Sucursal</b></td><td>'+sane(e.sucursal||'—')+'</td></tr>'+
+    '</table>'+
+    '<h3>II. DEFINICIÓN DE INFORMACIÓN CONFIDENCIAL</h3>'+
+    '<p>Para efectos de este convenio, se considera <b>Información Confidencial</b> toda aquella a la que EL TRABAJADOR tenga acceso con motivo de su relación laboral, incluyendo sin limitación:</p>'+
+    '<ol>'+
+    '<li>Listas de clientes, prospectos, proveedores y condiciones comerciales pactadas.</li>'+
+    '<li>Precios, márgenes, descuentos, costos y estrategias de venta.</li>'+
+    '<li>Sistemas propietarios: FerreOS POS, FerreRH y cualquier otro sistema de información de la empresa.</li>'+
+    '<li>Fórmulas, recetas y procedimientos de colorimetría e igualación de pinturas.</li>'+
+    '<li>Rutas de distribución, zonas geográficas y logística de reparto.</li>'+
+    '<li>Información financiera, estados de cuenta, nómina y datos de empleados.</li>'+
+    '<li>Estrategias de expansión, planes de negocio y alianzas comerciales.</li>'+
+    '<li>Cualquier dato, documento o conocimiento no público relacionado con la operación.</li>'+
+    '</ol>'+
+    (esPuestoSensible?'<p style="background:#fef3c7;padding:8px;border-left:3px solid #f59e0b"><b>⚠ Cláusula reforzada por puesto sensible ('+sane(e.puesto)+'):</b> Por la naturaleza del puesto, EL TRABAJADOR tiene acceso a información de nivel estratégico o altamente confidencial. El período de confidencialidad post-laboral se amplía a <b>3 (tres) años</b> y cualquier violación se considerará de suficiente gravedad para iniciar acciones civiles y penales.</p>':'')+
+    '<h3>III. OBLIGACIONES DE EL TRABAJADOR</h3>'+
+    '<ol>'+
+    '<li>Mantener en estricta confidencialidad toda la Información Confidencial durante la vigencia de la relación laboral y por <b>'+aniosConf+' ('+(aniosConf===3?'tres':'dos')+') años</b> posteriores a su terminación, por cualquier causa.</li>'+
+    '<li>No divulgar, compartir, vender, ceder ni transmitir la Información Confidencial a terceros por ningún medio, incluyendo redes sociales, aplicaciones de mensajería o cualquier plataforma digital.</li>'+
+    '<li>No utilizar la Información Confidencial en beneficio propio ni de terceros, ni para prestar servicios a empresas competidoras.</li>'+
+    '<li>Usar la Información Confidencial únicamente para el desempeño de sus funciones laborales.</li>'+
+    '<li>Notificar de inmediato a EL PATRÓN cualquier uso no autorizado o fuga de información de la que tenga conocimiento.</li>'+
+    '<li>Devolver o destruir toda Información Confidencial en soporte físico o digital al término de la relación laboral.</li>'+
+    '</ol>'+
+    '<h3>IV. EXCEPCIONES</h3>'+
+    '<p>Las obligaciones de confidencialidad no aplican cuando la información: (i) sea de dominio público sin responsabilidad de EL TRABAJADOR; (ii) deba divulgarse por mandato de autoridad competente; (iii) haya sido conocida por EL TRABAJADOR antes de su contratación sin obligación de reserva previa.</p>'+
+    '<h3>V. CONSECUENCIAS DEL INCUMPLIMIENTO</h3>'+
+    '<p>El incumplimiento de este convenio faculta a EL PATRÓN para: (i) rescindir la relación laboral sin responsabilidad conforme al Art. 47 Fr. VIII y IX LFT; (ii) exigir indemnización por daños y perjuicios en la vía civil; (iii) presentar denuncia penal cuando los hechos configuren delitos previstos en el Código Penal Federal o en la Ley Federal de Protección al Secreto Industrial.</p>'+
+    '<h3>VI. DISPOSICIONES GENERALES</h3>'+
+    '<p><b>6.1</b> Este convenio complementa el contrato individual de trabajo y el Reglamento Interior; en caso de contradicción prevalece la disposición más favorable al trabajador conforme a la LFT. <b>6.2</b> La nulidad de una cláusula no afecta las restantes. <b>6.3</b> Las partes se someten a los tribunales laborales de Tuxtla Gutiérrez, Chiapas.</p>'+
+    '<p style="margin-top:16px;text-align:justify">Leído y encontrado conforme, las partes lo ratifican y firman en Tuxtla Gutiérrez, Chiapas, a '+new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'})+'.</p>'+
+    '<div class="fgrid">'+
+    '<div class="fbox">EL PATRÓN<br><b>FERREPINTURAS DE TUXTLA S.A.P.I. DE C.V.</b><br>Karina Isabel — Directora General</div>'+
+    '<div class="fbox">EL TRABAJADOR<br><b>'+sane(e.nombre)+'</b><br>CURP: '+(e.curp||'________________')+'</div>'+
+    '</div>'+
+    '<div class="fgrid" style="margin-top:20px">'+
+    '<div class="fbox">TESTIGO 1 — Nombre, INE y firma</div>'+
+    '<div class="fbox">TESTIGO 2 — Nombre, INE y firma</div>'+
+    '</div>'+
+    '</body></html>';
+  var w=window.open('','_blank','width=900,height=700');
+  if(w){w.document.write(html);w.document.close();}
+}
+
+function verFiniquitoPDF(id){
+  var f=finiquitos.find(function(x){return x.id===id;});
+  if(!f){msg('Finiquito no encontrado',true);return;}
+  var e=emp.find(function(x){return x.id===(f.empId||f.emp_id);});
+  if(!e){msg('Empleado no encontrado',true);return;}
+  var d=f.desglose||{};
+  var fmt=function(n){return '$'+(parseFloat(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2});};
+  var sane=function(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  var folio='RH-FIN-'+String(id).slice(-6);
+  var salDiario=parseFloat(e.salario||0)/7;
+  var prestamosEmp=(prestamos[e.id]||[]).filter(function(p){return p.saldo>0;});
+  var totalPrestamos=prestamosEmp.reduce(function(s,p){return s+parseFloat(p.saldo||0);},0);
+  var neto=(d.total||0)-totalPrestamos;
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8">'+
+    '<title>Finiquito — '+sane(e.nombre)+'</title>'+
+    '<style>body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:0;padding:24px}'+
+    'h1{font-size:15px;text-align:center;margin:0}h2{font-size:11px;text-align:center;color:#555;margin:2px 0 16px}'+
+    'h3{font-size:11px;background:#1A2B4A;color:#fff;padding:5px 8px;margin:14px 0 6px}'+
+    'table{width:100%;border-collapse:collapse;font-size:11px}'+
+    'th{background:#f0f0f0;padding:5px 8px;text-align:left;border:1px solid #ddd}'+
+    'td{padding:5px 8px;border:1px solid #ddd}'+
+    '.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px}'+
+    '.fbox{border-top:1px solid #333;padding-top:8px;font-size:10px;text-align:center}'+
+    '@media print{body{padding:12px}.no-print{display:none}}</style></head><body>'+
+    '<div class="no-print" style="text-align:right;margin-bottom:12px">'+
+    '<button onclick="window.print()" style="padding:6px 18px;background:#1A2B4A;color:#fff;border:none;cursor:pointer;font-size:12px">🖨 Imprimir / PDF</button>'+
+    '<button onclick="window.close()" style="padding:6px 18px;margin-left:8px;border:1px solid #aaa;cursor:pointer;font-size:12px">✕ Cerrar</button></div>'+
+    '<h1>FINIQUITO Y LIQUIDACIÓN</h1>'+
+    '<h2>FERREPINTURAS DE TUXTLA S.A.P.I. DE C.V.</h2>'+
+    '<h3>I. DATOS GENERALES</h3>'+
+    '<table><tr><td><b>Folio</b></td><td>'+folio+'</td><td><b>Fecha de elaboración</b></td><td>'+new Date().toLocaleDateString('es-MX')+'</td></tr>'+
+    '<tr><td><b>Nombre del trabajador</b></td><td colspan="3">'+sane(e.nombre)+'</td></tr>'+
+    '<tr><td><b>CURP</b></td><td>'+(e.curp||'________________')+'</td><td><b>NSS</b></td><td>'+(e.nss||'________________')+'</td></tr>'+
+    '<tr><td><b>Puesto</b></td><td>'+(e.puesto||'—')+'</td><td><b>Sucursal</b></td><td>'+(e.sucursal||'—')+'</td></tr>'+
+    '<tr><td><b>Fecha de ingreso</b></td><td>'+(e.fechaIngreso||e.fecha_ingreso||'—')+'</td><td><b>Fecha de baja</b></td><td>'+(f.fechaBaja||f.fecha_baja||'—')+'</td></tr>'+
+    '<tr><td><b>Antigüedad</b></td><td>'+(d.anos||0)+' años</td><td><b>Salario diario</b></td><td>'+fmt(salDiario)+' MXN</td></tr>'+
+    '<tr><td><b>Motivo de baja</b></td><td colspan="3">'+(f.tipo||'—')+'</td></tr>'+
+    '</table>'+
+    '<h3>II. TABLA DE CÁLCULO</h3>'+
+    '<table><tr><th>Concepto</th><th>Importe</th></tr>'+
+    '<tr id="fin-fila-a"><td>A — Días laborados en el último período</td><td>'+fmt(d.diasUltPeriodo||0)+'</td></tr>'+
+    '<tr><td>B — Vacaciones proporcionales no disfrutadas</td><td>'+fmt(d.vacProp||0)+'</td></tr>'+
+    '<tr><td>C — Prima vacacional (25%)</td><td>'+fmt(d.primaVac||0)+'</td></tr>'+
+    '<tr><td>D — Aguinaldo proporcional (15 días/año)</td><td>'+fmt(d.aguinaldo||0)+'</td></tr>'+
+    '<tr id="fin-fila-f" style="'+(f.tipo==='rescision'?'':'color:#aaa;background:#f9f9f9')+'"><td>F — Indemnización 3 meses (solo despido injustificado)</td><td>'+(f.tipo==='rescision'?fmt(d.indem||0):'No aplica')+'</td></tr>'+
+    '<tr><td>H — Prima de antigüedad Art. 162 LFT</td><td>'+fmt(d.primaAntig||0)+'</td></tr>'+
+    '<tr style="font-weight:700;background:#f0f4ff"><td>TOTAL PERCEPCIONES</td><td>'+fmt(d.total||0)+'</td></tr>'+
+    '</table>'+
+    '<h3>III. DEDUCCIONES</h3>'+
+    '<table><tr><th>Concepto</th><th>Importe</th></tr>'+
+    (prestamosEmp.length?prestamosEmp.map(function(p){return '<tr><td>Préstamo: '+(p.concepto||'Adeudo')+'</td><td>'+fmt(p.saldo)+'</td></tr>';}).join(''):'<tr><td>Sin deducciones</td><td>$0.00</td></tr>')+
+    '<tr style="font-weight:700"><td>TOTAL DEDUCCIONES</td><td>'+fmt(totalPrestamos)+'</td></tr>'+
+    '</table>'+
+    '<div style="margin:16px 0;padding:12px;border:2px solid #1A2B4A;text-align:right;font-size:14px;font-weight:700">'+
+    'NETO A PAGAR: <span style="font-size:18px;color:#16a34a">'+fmt(neto)+'</span> MXN</div>'+
+    '<h3>IV. DECLARACIÓN DEL TRABAJADOR</h3>'+
+    '<p style="font-size:10px;line-height:1.6">El trabajador declara que las cantidades consignadas corresponden al pago total de las prestaciones derivadas de la relación laboral con FERREPINTURAS DE TUXTLA S.A.P.I. DE C.V. hasta la fecha de baja indicada. Los efectos liberatorios plenos quedarán condicionados a su RATIFICACIÓN ante el Centro de Conciliación Laboral del Estado de Chiapas conforme a los artículos 33 y 684-A a 684-E LFT.</p>'+
+    (f.obs?'<p><b>Observaciones:</b> '+sane(f.obs)+'</p>':'')+
+    '<div class="fgrid">'+
+    '<div class="fbox">TRABAJADOR<br><b>'+sane(e.nombre)+'</b><br>CURP: '+(e.curp||'________________')+'</div>'+
+    '<div class="fbox">REPRESENTANTE DE LA EMPRESA<br><b>FERREPINTURAS DE TUXTLA S.A.P.I. DE C.V.</b><br>Karina Isabel — Directora General</div>'+
+    '</div>'+
+    '<div class="fgrid" style="margin-top:20px">'+
+    '<div class="fbox">TESTIGO 1 — Nombre, INE y firma</div>'+
+    '<div class="fbox">TESTIGO 2 — Nombre, INE y firma</div>'+
+    '</div>'+
+    '<div style="border-top:1px dashed #aaa;margin-top:30px;padding-top:10px;font-size:10px">'+
+    '✂ TALÓN DE RECIBIDO — Folio: '+folio+' | Empleado: '+sane(e.nombre)+' | Importe: '+fmt(neto)+' | Firma: ___________________________</div>'+
+    '</body></html>';
+  var w=window.open('','_blank','width=900,height=700');
+  if(w){w.document.write(html);w.document.close();}
+}
+
 async function guardarFiniquito(){
   var empId=parseInt(document.getElementById('fqEmpId').value);
   var fechaBaja=document.getElementById('fqFechaBaja').value;
@@ -4232,7 +4384,7 @@ async function guardarFiniquito(){
   try{desglose=JSON.parse(document.getElementById('fqResumen').dataset.desglose||'{}');}catch(e){}
   var fId=parseInt(document.getElementById('fqId').value)||null;
   var obj={
-    id:fId||nFiniquito,
+    id:fId||Date.now(),
     empId:empId,
     fechaBaja:fechaBaja,
     tipo:document.getElementById('fqTipo').value,
@@ -4247,8 +4399,7 @@ async function guardarFiniquito(){
     if(idx>=0) finiquitos[idx]=obj; else finiquitos.push(obj);
   }else{
     finiquitos.push(obj);
-    nFiniquito++;
-    S.set('nFiniquito',nFiniquito);
+
   }
   S.set('finiquitos',finiquitos);
   var e=emp.find(function(x){return x.id===empId;});
@@ -5098,7 +5249,7 @@ function hdrDoc(t1,t2){
 }
 function d(l,v){return '<div class="dato"><b>'+l+'</b><span>'+(v||'____________')+'</span></div>';}
 function fgrid(roles){return '<div class="fgrid">'+roles.map(function(r){return '<div class="fbox">'+r+'</div>';}).join('')+'</div>';}
-function cb(t){return '<div style="margin:3px 0;font-size:11px"><span class="cb"></span>'+t+'</div>';}
+function cb(t){return '<label style="display:flex;align-items:flex-start;gap:8px;margin:4px 0;font-size:11px;cursor:pointer"><input type="checkbox" style="margin-top:2px;cursor:pointer">'+t+'</label>';}
 
 function generarHTMLContrato(e,_c){
   // ── Datos base ──────────────────────────────────────────
@@ -5728,9 +5879,10 @@ function generarHTMLActa(e){
     '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaSan3" name="sancion" value="escrita2"> Amonestación escrita (2ª — reincidencia)</label>'+
     '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaSan4" name="sancion" value="suspension"> Suspensión temporal: <input type="number" min="1" max="8" style="width:40px;border:1px solid #aaa;padding:1px 4px;font-size:11px"> días sin goce de sueldo</label>'+
     '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaSan5" name="sancion" value="rescision"> Rescisión de contrato sin responsabilidad patronal (Art. 47 LFT)</label>'+
-    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaSan6" name="sancion" value="otra"> Otra: <input type="text" style="border:1px solid #aaa;padding:1px 6px;font-size:11px;width:180px"></label>'+
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="checkbox" id="actaSan6" name="sancion" value="otra" onclick="var i=document.getElementById(\'actaSan6Txt\');i.disabled=!this.checked;if(this.checked)i.focus()"> Otra: <input type="text" id="actaSan6Txt" disabled style="border:1px solid #aaa;padding:1px 6px;font-size:11px;width:180px;background:#f5f5f5" placeholder="Especifica..."></label>'+
     '</div>'+
-    '<h3>VIII. RESULTADO DE NOTIFICACIÓN</h3>'+
+    '<h3>IX. RESULTADO DE NOTIFICACIÓN</h3>'+
+    '<p style="font-size:11px"><b>Hora de entrega del acta al trabajador:</b> <input type="text" style="border:none;border-bottom:1px solid #aaa;width:120px;font-size:11px;padding:1px 4px" placeholder="__:__ hrs"></p>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">'+
     '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="radio" name="actaNotif" id="actaNotif1" value="conformidad"> El trabajador firmó de conformidad</label>'+
     '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="radio" name="actaNotif" id="actaNotif2" value="protesta"> El trabajador firmó bajo protesta</label>'+
@@ -5738,7 +5890,7 @@ function generarHTMLActa(e){
     '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px"><input type="radio" name="actaNotif" id="actaNotif4" value="dostest"> Notificación ante dos testigos por negativa</label>'+
     '</div>'+
     '</div>'+
-    '<p>Observaciones: ________________________________________________________________________</p>'+
+    '<p style="margin-top:12px"><b>Observaciones:</b><br><textarea style="width:100%;border:1px solid #aaa;padding:6px;font-size:11px;font-family:inherit;min-height:48px;resize:vertical;margin-top:4px" placeholder="Escribe observaciones aquí..."></textarea></p>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px;margin-top:40px">'+
     ['Trabajador — Nombre y firma<br><b>'+sane(e.nombre)+'</b>',
      'Patrón / Representante — Nombre y firma<br>Ferrepinturas de Tuxtla',
@@ -6158,10 +6310,7 @@ toggleDesc=function(empId,f,val){
 
 // Crear tabla auditoria en Supabase si no existe (se ejecuta una vez)
 async function crearTablaAuditoria(){
-  if(!sb)return;
-  try{
-    await sb.rpc('exec_sql',{sql:'create table if not exists rh_auditoria (id bigint primary key, ts timestamptz, usuario text, rol text, tipo text, accion text, detalle text, emp_id int, emp_nombre text, valor_anterior text, valor_nuevo text);'});
-  }catch(e){}
+  // Tabla rh_auditoria ya existe en Supabase — función desactivada
 }
 
 var _renderExpedienteRHDocs=renderExpediente;
@@ -6461,22 +6610,7 @@ function iniciarRealtime(){
           return;
         }
         if(payload.new&&payload.new.id){
-          var updated=mapEmpFromDB(payload.new);
-          var idx=emp.findIndex(function(x){return x.id===updated.id;});
-          if(idx>=0){
-            if(emp[idx].nombre!==updated.nombre && emp[idx].nombre && updated.nombre){
-              console.warn('COLISIÓN ID '+updated.id+': local='+emp[idx].nombre+' remoto='+updated.nombre);
-            }
-            emp[idx]=updated;
-          } else {
-            var yaExiste=emp.some(function(x){return x.nombre===updated.nombre;});
-            if(yaExiste) return;
-            emp.push(updated);
-          }
-          if(nEmp<=updated.id) nEmp=updated.id+1;
-          S.set('emp',emp);S.set('nEmp',nEmp);
-          renderHome();
-          if(document.getElementById('scr-empleados')&&document.getElementById('scr-empleados').classList.contains('on'))renderEmpleados();
+          syncFromCloud();
         }
       })
       // Asistencia: solo actualiza la fecha+empleado que cambió
