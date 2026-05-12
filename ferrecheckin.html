@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -288,100 +288,74 @@ function renderEnrol(){
     "</div></div>";
 }
 
-async function confirmarEnrol(){
-  var btn=document.getElementById("enrolBtn");
-  var statusDiv=document.getElementById("enrolStatus");
-  function setEnrolErr(msg){
-    statusDiv.innerHTML="<div style='margin-top:14px;padding:12px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;font-size:14px;color:#991b1b;text-align:center'>"+msg+"</div>";
-    btn.disabled=false;
-    btn.innerHTML="&#x1F504; Intentar de nuevo";
+function setEnrolErr(msg){
+  var statusDiv=document.getElementById('enrolStatus');
+  if(statusDiv) statusDiv.innerHTML="<div style='margin-top:14px;padding:12px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;font-size:14px;color:#991b1b;text-align:center'>"+msg+"</div>";
+}
+
+async function confirmarEnrol(enrol){
+  setEnrolErr('');
+  var enrolBtn=document.getElementById('enrolBtn');
+  if(enrolBtn){enrolBtn.disabled=true;enrolBtn.innerHTML='<span class="spin"></span> Activando...';}
+
+  var t=getToken();
+  if(!t){
+    t=genToken();
+    localStorage.setItem('ferre_disp_token',t);
   }
-  btn.disabled=true;
-  btn.innerHTML="<span class='spin'></span> Activando...";
-  statusDiv.innerHTML="";
-  var t=genToken();
-  var ua=navigator.userAgent.substring(0,80);
-  var pn=empN?empN.split(" ")[0]:"";
+  var ua=navigator.userAgent.substring(0,120);
 
-  // Flujo 1: Supabase directo (celular remoto)
-  if(_sb){
-    try{
-      // Paso 1 — Verificar token válido, no usado y no expirado en una sola query
-      var {data:tkRow,error:tkErr}=await _sb.from('rh_enrol_tokens')
-        .select('emp_id')
-        .eq('token',enrol)
-        .eq('usado',false)
-        .gt('expira',new Date().toISOString())
-        .single();
-      if(tkErr||!tkRow){setEnrolErr("Token inv\xe1lido, expirado o ya usado. Pide un nuevo enlace a RH.");return;}
-      console.log('[Enrol] Paso 1 OK \u2014 token v\xe1lido, emp_id:'+tkRow.emp_id);
+  if(!_sb){
+    setEnrolErr('Sin conexión con el servidor. Activa datos móviles o WiFi.');
+    if(enrolBtn){enrolBtn.disabled=false;enrolBtn.innerHTML='<span class="spin-icon">↺</span> Intentar de nuevo';}
+    return;
+  }
 
-      // Paso 2 — INSERT puro (no upsert — policy anon_insert_disp_con_token solo cubre INSERT)
-      console.log("[Enrol] Paso 2 — registrando dispositivo...");
-      var {data:dispData,error:dispErr}=await _sb.from("rh_dispositivos").insert(
-        {emp_id:tkRow.emp_id,token:t,ua:ua,activo:true,enrol_token:enrol}
-      ).select("token").single();
-      if(dispErr && dispErr.code==='23505'){
-        console.log("[Enrol] Paso 2 — emp_id ya tiene dispositivo, actualizando...");
-        var {data:updData,error:updErr}=await _sb.from("rh_dispositivos").update(
-          {token:t,ua:ua,activo:true,enrol_token:enrol}
-        ).eq('emp_id',tkRow.emp_id).select("token").single();
-        if(updErr||!updData||!updData.token){
-          console.error("[Enrol] Paso 2 UPDATE FAIL",updErr,"updData:",updData);
-          setEnrolErr("Error al actualizar el celular: "+((updErr&&updErr.message)||"sin datos"));
-          return;
-        }
-        dispData=updData;
-        console.log("[Enrol] Paso 2 OK (UPDATE) — token local:"+t+" token DB:"+dispData.token+(t!==dispData.token?" *** DIFIEREN ***":""));
-      } else if(dispErr||!dispData||!dispData.token){
-        console.error("[Enrol] Paso 2 FAIL",dispErr,"dispData:",dispData);
-        setEnrolErr("Error al registrar el celular: "+((dispErr&&dispErr.message)||"sin datos")+(dispErr&&dispErr.code?" ["+dispErr.code+"]":""));
-        return;
-      } else {
-        console.log("[Enrol] Paso 2 OK (INSERT) — token local:"+t+" token DB:"+dispData.token+(t!==dispData.token?" *** DIFIEREN ***":""));
-      }
+  try{
+    var {data:rpcData,error:rpcErr}=await _sb.rpc('registrar_dispositivo',{
+      p_enrol_token: enrol,
+      p_device_token: t,
+      p_ua: ua
+    });
 
-      // Paso 3 — Marcar token como usado (después del INSERT exitoso)
-      console.log("[Enrol] Paso 3 — marcando token como usado...");
-      var {error:markErr}=await _sb.from("rh_enrol_tokens").update({usado:true}).eq("token",enrol);
-      if(markErr){console.error("[Enrol] Paso 3 FAIL",markErr);}
-      else{console.log("[Enrol] Paso 3 OK — token marcado como usado");}
-
-      // Paso 4 — Guardar el token real retornado por DB (no el generado localmente)
-      setToken(dispData.token);
-      console.log("[Enrol] Paso 4 OK — token guardado en localStorage:"+dispData.token);
-
-      // \xc9xito confirmado
-      document.getElementById("app").innerHTML=
-        "<div class='logo'>Ferrepinturas de Tuxtla</div>"+
-        "<div class='card'><div class='card-body' style='text-align:center;padding:32px 24px'>"+
-        "<div style='font-size:56px;margin-bottom:12px'>&#x1F389;</div>"+
-        "<div style='font-size:22px;font-weight:800;color:var(--green);margin-bottom:8px'>Listo"+(pn?", "+pn:"")+"!</div>"+
-        "<div style='font-size:15px;color:#374151;line-height:1.7;margin-bottom:24px'>Tu celular ya est\xe1 registrado.<br><strong>Ma\xf1ana y cada d\xeda:</strong><br>Llega a tu sucursal, abre la c\xe1mara<br>y escanea el c\xf3digo QR.</div>"+
-        "<div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:3px;padding:14px;font-size:13px;color:#14532d'>Ya puedes cerrar esta pantalla</div>"+
-        "</div></div>";
-      return;
-    }catch(ex){
-      setEnrolErr("Error: "+(ex.message||ex.toString())+" [EXC]");
+    if(rpcErr){
+      setEnrolErr('Error de conexión: '+(rpcErr.message||'intenta de nuevo.'));
+      if(enrolBtn){enrolBtn.disabled=false;enrolBtn.innerHTML='<span class="spin-icon">↺</span> Intentar de nuevo';}
       return;
     }
-  }
 
-  // Flujo 2: postMessage fallback (solo cuando está en kiosk — misma PC sin Supabase)
-  var payload={type:"ferrecheckin_enrol",enrol_token:enrol,disp_token:t,ua:ua};
-  setToken(t);
-  localStorage.setItem("ferre_enrol_p",JSON.stringify(payload));
-  postToParent(payload);
-  setTimeout(function(){
-    document.getElementById("app").innerHTML=
-      "<div class='logo'>Ferrepinturas de Tuxtla</div>"+
-      "<div class='card'><div class='card-body' style='text-align:center;padding:32px 24px'>"+
-      "<div style='font-size:56px;margin-bottom:12px'>&#x1F389;</div>"+
-      "<div style='font-size:22px;font-weight:800;color:var(--green);margin-bottom:8px'>Listo"+(pn?", "+pn:"")+"!</div>"+
-      "<div style='font-size:15px;color:#374151;line-height:1.7;margin-bottom:24px'>Tu celular ya est\xe1 registrado.<br><strong>Ma\xf1ana y cada d\xeda:</strong><br>Llega a tu sucursal, abre la c\xe1mara<br>y escanea el c\xf3digo QR.</div>"+
-      "<div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:3px;padding:14px;font-size:13px;color:#14532d'>Ya puedes cerrar esta pantalla</div>"+
-      "</div></div>";
-  },600);
+    var r=rpcData;
+
+    if(!r.ok){
+      if(r.code==='TOKEN_USED'){
+        setEnrolErr('Este enlace ya fue usado. Pide uno nuevo a tu gerente.');
+      } else if(r.code==='TOKEN_EXPIRED'){
+        setEnrolErr('Este enlace expiró. Pide uno nuevo a tu gerente.');
+      } else if(r.code==='TOKEN_NOT_FOUND'){
+        setEnrolErr('Enlace inválido. Verifica el link o pide uno nuevo.');
+      } else {
+        setEnrolErr(r.msg||'Error al activar. Intenta de nuevo.');
+      }
+      if(enrolBtn){enrolBtn.disabled=false;enrolBtn.innerHTML='<span class="spin-icon">↺</span> Intentar de nuevo';}
+      return;
+    }
+
+    // Éxito — guardar datos localmente
+    localStorage.setItem('ferre_disp_token',t);
+    localStorage.setItem('ferre_emp_nombre',r.emp_nombre||'');
+    localStorage.setItem('ferre_emp_sucursal',r.sucursal||'');
+
+    // Recargar para mostrar pantalla de check-in
+    location.reload();
+
+  }catch(ex){
+    var msg=ex&&ex.message?ex.message:'Error de conexión.';
+    if(msg.indexOf('Failed to fetch')!==-1||msg.indexOf('NetworkError')!==-1){
+      msg='Sin conexión a internet. Activa datos móviles o WiFi e intenta de nuevo.';
+    }
+    setEnrolErr(msg);
+    if(enrolBtn){enrolBtn.disabled=false;enrolBtn.innerHTML='<span class="spin-icon">↺</span> Intentar de nuevo';}
+  }
 }
 
 // ════════════════════════════════════════════
@@ -580,176 +554,91 @@ function iniciarEnvio(){
 
 async function enviarCheckin(lat,lng){
   var btn=document.getElementById("sendBtn");
-  if(btn) btn.innerHTML="<span class='spin'></span> "+(_selfieB64?"Subiendo foto..":"Registrando...");
+  if(btn) btn.innerHTML="<span class='spin'></span> Registrando...";
   var st=document.getElementById("ciStatus");
   if(st){
-    var progMsg=_selfieB64?"Subiendo foto... no cierres esta pantalla":"Procesando tu llegada...";
-    st.innerHTML="<div class='prog-wrap'><div class='prog-bar-bg'><div class='prog-bar' id='pb'></div></div>"+progMsg+"</div>";
+    st.innerHTML="<div class='prog-wrap'><div class='prog-bar-bg'><div class='prog-bar' id='pb'></div></div>Procesando tu llegada...</div>";
     setTimeout(function(){var pb=document.getElementById("pb");if(pb)pb.style.width="40%";},200);
   }
+
   var ua=navigator.userAgent.substring(0,80);
   var token_disp=getToken();
 
   if(!token_disp){
-    mostrarResultado("err","&#x26D4;","Sin token local","localStorage vac\xedo. El enrolamiento no guard\xf3 token. Recarga el enlace de activaci\xf3n y vuelve a activar.",false);return;
-  }
-
-  // ── FLUJO 1: Supabase directo (celular remoto) ──
-  if(_sb&&token_disp){
-    try{
-      var pb2=document.getElementById("pb");if(pb2)pb2.style.width="55%";
-      // Validar dispositivo
-      var {data:dispRow,error:dispErr}=await _sb.from('rh_dispositivos').select('emp_id,activo,rh_empleados(sucursal)').eq('token',token_disp).single();
-      if(dispErr||!dispRow||!dispRow.activo){
-        var dbg="tk_local="+((token_disp||"NULL").substring(0,12))+" | err="+(dispErr?dispErr.code||"err":"-")+" | row="+(dispRow?"si":"no")+" | act="+(dispRow?dispRow.activo:"-");
-        mostrarResultado("err","&#x26D4;","No registrado",dbg,false);return;
-      }
-      var empId=dispRow.emp_id;
-      var hoyStr=fechaLocalCST(); // fecha local Chiapas CST
-      // Seed eliminado — validacion 100% por GPS (radio 100m)
-      // Verificar duplicado
-      var {data:dupRow}=await _sb.from('rh_checkin_logs').select('id,hora').eq('emp_id',empId).eq('fecha',hoyStr).eq('estado','ok').maybeSingle();
-      if(dupRow){mostrarResultado("warn","&#x2714;","Ya marcaste","Ya registraste tu asistencia hoy a las "+dupRow.hora+". Buen dia!",false);return;}
-      // Subir selfie a Storage si hay foto
-      var selfieUrl=null;
-      if(_selfieB64){
-        var pb3=document.getElementById("pb");if(pb3)pb3.style.width="75%";
-        try{
-          var parts=_selfieB64.split(",");
-          var mime=parts[0].match(/:(.*?);/)[1];
-          var bin=atob(parts[1]);var arr=new Uint8Array(bin.length);
-          for(var ii=0;ii<bin.length;ii++) arr[ii]=bin.charCodeAt(ii);
-          var blob=new Blob([arr],{type:mime});
-          var fDate=hoyStr.replace(/-/g,'');
-          var fname="checkin/"+fDate+"/suc"+sucId+"/"+Date.now()+"_emp"+empId+".jpg";
-          var upRes=await _sb.storage.from('checkin-selfies').upload(fname,blob,{contentType:'image/jpeg',upsert:true});
-          if(!upRes.error){var {data:signedData,error:signErr}=await _sb.storage.from('checkin-selfies').createSignedUrl(fname,86400);selfieUrl=(!signErr&&signedData)?signedData.signedUrl:null;}
-        }catch(ex){}
-      }
-      // GPS obligatorio — sin ubicacion no se puede marcar
-      if(!lat||!lng){
-        mostrarResultado("err","&#x1F4CD;","Ubicacion requerida","Activa el GPS de tu celular y recarga la pagina. Sin ubicacion no se puede verificar que estas en la sucursal.",true);return;
-      }
-      // Calcular estado GPS
-      var estadoGPS='ok';var dist=null;
-      if(lat&&lng){
-        var {data:sucRow}=await _sb.from('rh_sucursales').select('lat,lng,radio,nombre').eq('id',sucId).single();
-        var empSuc=dispRow.rh_empleados&&dispRow.rh_empleados.sucursal;
-        var fueraAsignacion=false;
-        if(sucRow&&sucRow.lat&&sucRow.lng){
-          var R=6371000,r=Math.PI/180;
-          var dLat=(lat-sucRow.lat)*r,dLng=(lng-sucRow.lng)*r;
-          var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(sucRow.lat*r)*Math.cos(lat*r)*Math.sin(dLng/2)*Math.sin(dLng/2);
-          dist=Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
-          estadoGPS=dist<=(sucRow.radio||100)?'ok':'fuera_rango';
-        }
-        // fuera_asignacion solo aplica cuando está DENTRO del radio pero la sucursal no es la asignada
-        if(estadoGPS==='ok' && empSuc && sucRow && empSuc!==sucRow.nombre){
-          fueraAsignacion=true;
-        }
-      }
-      var hora=(function(){var d=new Date();return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);})();
-      // Obtener nombre ANTES del insert para incluirlo en el log (kiosk realtime lo necesita)
-      var {data:empRow}=await _sb.from('rh_empleados').select('nombre').eq('id',empId).single();
-      var nombre=empRow?empRow.nombre:"Empleado";
-      if(estadoGPS==='fuera_rango'){
-        mostrarResultado("err","&#x1F4CD;","Fuera de rango","No puedes registrar tu asistencia. No estas dentro del rango permitido de esta sucursal.",true);return;
-      }
-      var pb4=document.getElementById("pb");if(pb4)pb4.style.width="90%";
-      // Insertar log con emp_nombre para kiosk realtime
-      // hora y fecha NO se envían — Supabase las asigna con el trigger server_timestamp
-      // REQUIERE: ALTER TABLE rh_checkin_logs ADD COLUMN fuera_asignacion boolean DEFAULT false;
-      var _insPayload={emp_id:empId,emp_nombre:nombre,suc_id:sucId,lat:lat,lng:lng,dist:dist,estado:estadoGPS,ua:ua,selfie_url:selfieUrl,fuera_asignacion:fueraAsignacion};
-      var _insRes=await _sb.from('rh_checkin_logs').insert(_insPayload).select('hora').single();
-      if(_insRes.error && _insRes.error.code==='42703'){
-        delete _insPayload.fuera_asignacion;
-        _insRes=await _sb.from('rh_checkin_logs').insert(_insPayload).select('hora').single();
-      }
-      var logData=_insRes.data,logErr=_insRes.error;
-      if(logErr){
-        // Manejar violación de constraint único (doble check-in por race condition)
-        if(logErr.code==='23505'){
-          var {data:dup2}=await _sb.from('rh_checkin_logs').select('hora').eq('emp_id',empId).eq('fecha',hoyStr).eq('estado','ok').maybeSingle();
-          mostrarResultado("warn","&#x2714;","Ya marcaste","Ya registraste tu asistencia hoy"+(dup2?' a las '+dup2.hora:'')+". ¡Buen dia!",false);return;
-        }
-        throw new Error(logErr.message);
-      }
-      var pb5=document.getElementById("pb");if(pb5)pb5.style.width="100%";
-      var fotoHtml=selfieUrl?"<img src='"+selfieUrl+"' style='width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;border:2px solid #86efac'>": "";
-      var horaFinal=(logData&&logData.hora)||hora;
-      var _crossMsg=fueraAsignacion?"<br><small style='color:#92400e'>&#x26A0; Marcaste en sucursal distinta a tu asignaci\xf3n. Registrado en auditor\xeda.</small>":"";
-      mostrarResultado("ok","","Llegada registrada",fotoHtml+"Buen dia, <strong>"+nombre+"</strong>!<br>"+horaFinal+_crossMsg,false);
-      return;
-    }catch(ex){
-      // Supabase failed — try postMessage fallback
-      console.warn('CI Supabase error:',ex);
-    }
-  }
-
-  // ── FLUJO 2: postMessage (kiosk — misma PC) ──
-  var payload={type:"ferrecheckin",payload:{token_disp:token_disp,suc_id:sucId,seed:seed,lat:lat,lng:lng,ua:ua,selfie_b64:_selfieB64,hora_servidor:(typeof logData!=='undefined'&&logData?logData.hora:null)}};
-  var sent=false;
-  var _pOrigin=getParentOrigin();
-  if(window.opener){window.opener.postMessage(payload,_pOrigin);sent=true;}
-  if(window.parent&&window.parent!==window){window.parent.postMessage(payload,_pOrigin);sent=true;}
-
-  if(!sent){
-    // Sin internet = sin check-in (evita fraude de hora y GPS offline)
-    mostrarResultado("err","&#x1F4F5;","Sin conexion a internet","Necesitas internet para registrar tu asistencia. Activa tus datos moviles o WiFi e intenta de nuevo.",true);
+    mostrarResultado("err","⛔","Sin token local","El enrolamiento no guardó token. Recarga el enlace de activación y vuelve a activar.",false);
     return;
   }
 
-  // Wait for result — cleanup guard prevents double-fire and listener leak
-  var cleaned=false;
-  function cleanup(){
-    if(cleaned)return;
-    cleaned=true;
-    clearTimeout(timer);
-    window.removeEventListener("message",onResult);
+  if(!_sb){
+    mostrarResultado("err","⛔","Sin conexión","No se pudo conectar con el servidor. Activa datos móviles o WiFi.",true);
+    return;
   }
-  var timer=setTimeout(function(){
-    cleanup();
-    var _empIdT=typeof empId!=='undefined'?empId:null;
-    var _fechaT=new Date().toISOString().slice(0,10);
-    if(_empIdT&&typeof sb!=='undefined'&&sb){
-      sb.from('rh_checkin_logs').select('id').eq('emp_id',_empIdT).eq('fecha',_fechaT).limit(1).then(function(r){
-        if(r.data&&r.data.length){
-          mostrarResultado("ok","✓","Asistencia registrada","Tu registro fue confirmado en el sistema.",false);
-        } else {
-          mostrarResultado("warn","&#x23F1;","Sin respuesta","El sistema tardo en responder. Avisa a tu gerente que verifique tu asistencia.",true);
-        }
-      });
-    } else {
-      mostrarResultado("warn","&#x23F1;","Sin respuesta","El sistema tardo en responder. Avisa a tu gerente que verifique tu asistencia.",true);
-    }
-  },15000);
 
-  function onResult(ev){
-    if(!ev.data||ev.data.type!=="ferrecheckin_result")return;
-    // Accept: same origin, netlify.app, localhost, or when parent is same origin
-    var _o=ev.origin||'';
-    var _myOrigin=window.location.origin;
-    var _h=_o==='null'?'null':(function(){try{return new URL(_o).hostname;}catch(e){return '';}}());
-    var _ok=(_o===_myOrigin)||(_h==='localhost')||(_h==='127.0.0.1')||(_h==='rrhhftpops.netlify.app')||(_h==='ferrepinturas.netlify.app');
-    if(!_ok)return;
-    cleanup();
-    var r=ev.data.result;
-    var pb=document.getElementById("pb");if(pb)pb.style.width="100%";
-    if(r.ok){
-      var fotoHtml=r.selfie_url?"<img src='"+r.selfie_url+"' style='width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;border:2px solid #86efac'>":"";
-      mostrarResultado("ok","",
-        "Llegada registrada",
-        fotoHtml+"Buen dia, <strong>"+(r.nombre||"")+"</strong>!<br>"+horaStr()+"",
-        false);
-    } else {
-      var msg=r.msg||"Algo salio mal.";
-      if(msg.indexOf("enrol")!==-1||msg.indexOf("dispositivo")!==-1) msg="Este celular no esta activado. Avisa a tu gerente.";
-      else if(msg.indexOf("QR")!==-1||msg.indexOf("expirado")!==-1) msg="El codigo QR no es de hoy. Escanea el que esta en tu sucursal ahora.";
-      else if(msg.indexOf("rango")!==-1) msg="Estas lejos de la sucursal. Asegurate de estar adentro del local.";
-      mostrarResultado("err","&#x26D4;","No se registro",msg,true);
-    }
+  // Subir selfie si hay foto
+  var selfieUrl=null;
+  if(_selfieB64){
+    var pb3=document.getElementById("pb");if(pb3)pb3.style.width="60%";
+    try{
+      var parts=_selfieB64.split(",");
+      var mime=parts[0].match(/:(.*?);/)[1];
+      var bin=atob(parts[1]);var arr=new Uint8Array(bin.length);
+      for(var ii=0;ii<bin.length;ii++) arr[ii]=bin.charCodeAt(ii);
+      var blob=new Blob([arr],{type:mime});
+      var fDate=fechaLocalCST().replace(/-/g,'');
+      var fname="checkin/"+fDate+"/suc"+sucId+"/"+Date.now()+"_tmp.jpg";
+      var upRes=await _sb.storage.from('checkin-selfies').upload(fname,blob,{contentType:'image/jpeg',upsert:true});
+      if(!upRes.error){
+        var {data:signedData,error:signErr}=await _sb.storage.from('checkin-selfies').createSignedUrl(fname,2592000);
+        selfieUrl=(!signErr&&signedData)?signedData.signedUrl:null;
+      }
+    }catch(ex){ console.warn('Selfie upload error:',ex); }
   }
-  window.addEventListener("message",onResult);
+
+  var pb4=document.getElementById("pb");if(pb4)pb4.style.width="80%";
+
+  try{
+    var {data:rpcData,error:rpcErr}=await _sb.rpc('registrar_checkin',{
+      p_token: token_disp,
+      p_suc_id: sucId,
+      p_lat: lat,
+      p_lng: lng,
+      p_ua: ua,
+      p_selfie_url: selfieUrl
+    });
+
+    if(rpcErr){
+      mostrarResultado("err","⚠️","Error al registrar",rpcErr.message||"Error de conexión. Intenta de nuevo.",true);
+      return;
+    }
+
+    var pb5=document.getElementById("pb");if(pb5)pb5.style.width="100%";
+    var r=rpcData;
+
+    if(!r.ok){
+      if(r.code==='ALREADY_CHECKED'){
+        mostrarResultado("warn","✔","Ya marcaste",r.msg,false);
+      } else if(r.code==='OUT_OF_RANGE'){
+        mostrarResultado("err","📍","Fuera de rango",r.msg,true);
+      } else if(r.code==='DEVICE_NOT_FOUND'){
+        mostrarResultado("err","⛔","No registrado","Este celular no está activado. Pide a tu gerente un nuevo enlace de activación.",false);
+      } else {
+        mostrarResultado("err","⚠️","Error",r.msg||"Error desconocido. Avisa a tu gerente.",true);
+      }
+      return;
+    }
+
+    // Éxito
+    var fotoHtml=selfieUrl?"<img src='"+selfieUrl+"' style='width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;border:2px solid #86efac'>":"";
+    var crossMsg=r.fuera_asignacion?"<br><small style='color:#92400e'>⚠ Marcaste en sucursal distinta a tu asignación. Registrado en auditoría.</small>":"";
+    mostrarResultado("ok","","Llegada registrada",fotoHtml+"Buen día, <strong>"+r.nombre+"</strong>!<br>"+r.hora+crossMsg,false);
+
+  }catch(ex){
+    var msg=ex&&ex.message?ex.message:'Error de conexión.';
+    if(msg.indexOf('Failed to fetch')!==-1||msg.indexOf('NetworkError')!==-1){
+      msg='Sin conexión a internet. Activa tus datos móviles o WiFi e intenta de nuevo.';
+    }
+    mostrarResultado("err","⚠️","Error al registrar",msg,true);
+  }
 }
 
 function mostrarResultado(tipo,icon,titulo,detalle,retry){
